@@ -1,0 +1,30 @@
+env:
+  browser: true
+  es6: true
+extends:
+  - airbnb
+  - eslint:recommended
+  - plugin:react/recommended
+globals:
+  Atomics: readonly
+  SharedArrayBuffer: readonly
+parserOptions:
+  ecmaFeatures:
+    jsx: true
+  ecmaVersion: 2018
+  sourceType: module
+parser: babel-eslint
+plugins:
+  - react
+rules:
+  react/jsx-filename-extension: off
+  react/jsx-one-expression-per-line: off
+  object-curly-spacing: off
+  prefer-template: off
+  no-console: off
+  react/destructuring-assignment: off
+  react/button-has-type: off
+  max-len: off
+  quotes: off
+  import/extensions: off
+  react/prop-types: off
