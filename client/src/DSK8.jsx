@@ -10,7 +10,7 @@ import "ag-grid-enterprise";
 export default class Dsk8 extends ServerSideGrid {
   constructor(props) {
     super(props);
-    this.state = {path: "/dsk8"};
+    this.state = {path: "/api/dsk8"};
   }
 
   render() {

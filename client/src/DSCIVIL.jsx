@@ -10,7 +10,7 @@ import "ag-grid-enterprise";
 export default class Dscivil extends ServerSideGrid {
   constructor(props) {
     super(props);
-    this.state = {path: "/dscivil"};
+    this.state = {path: "/api/dscivil"};
   }
 
   render() {

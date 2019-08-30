@@ -10,7 +10,7 @@ import "ag-grid-enterprise";
 export default class Cc extends ServerSideGrid {
   constructor(props) {
     super(props);
-    this.state = {path: "/cc"};
+    this.state = {path: "/api/cc"};
   }
 
   render() {

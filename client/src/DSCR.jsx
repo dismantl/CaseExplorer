@@ -10,7 +10,7 @@ import "ag-grid-enterprise";
 export default class Dscr extends ServerSideGrid {
   constructor(props) {
     super(props);
-    this.state = {path: "/dscr"};
+    this.state = {path: "/api/dscr"};
   }
 
   render() {

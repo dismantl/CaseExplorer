@@ -10,7 +10,7 @@ import "ag-grid-enterprise";
 export default class Cases extends ServerSideGrid {
   constructor(props) {
     super(props);
-    this.state = {path: "/cases"};
+    this.state = {path: "/api/cases"};
   }
 
   render() {

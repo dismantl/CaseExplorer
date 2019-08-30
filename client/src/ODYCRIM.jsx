@@ -10,7 +10,7 @@ import "ag-grid-enterprise";
 export default class Odycrim extends ServerSideGrid {
   constructor(props) {
     super(props);
-    this.state = {path: "/odycrim"};
+    this.state = {path: "/api/odycrim"};
   }
 
   render() {

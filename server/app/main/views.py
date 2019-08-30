@@ -87,31 +87,31 @@ ODYTRAF_FIELDS = [
     'violation_county'
 ]
 
-@main.route('/cases', methods=['POST'])
+@main.route('/api/cases', methods=['POST'])
 def cases():
     return retriever(Case, CASE_FIELDS)
 
-@main.route('/dscr', methods=['POST'])
+@main.route('/api/dscr', methods=['POST'])
 def dscr():
     return retriever(DSCR, DSCR_FIELDS)
 
-@main.route('/dsk8', methods=['POST'])
+@main.route('/api/dsk8', methods=['POST'])
 def dsk8():
     return retriever(DSK8, DSK8_FIELDS)
 
-@main.route('/cc', methods=['POST'])
+@main.route('/api/cc', methods=['POST'])
 def cc():
     return retriever(CC, CC_FIELDS)
 
-@main.route('/dscivil', methods=['POST'])
+@main.route('/api/dscivil', methods=['POST'])
 def dscivil():
     return retriever(DSCIVIL, DSCIVIL_FIELDS)
 
-@main.route('/odycrim', methods=['POST'])
+@main.route('/api/odycrim', methods=['POST'])
 def odycrim():
     return retriever(ODYCRIM, ODYCRIM_FIELDS)
 
-@main.route('/odytraf', methods=['POST'])
+@main.route('/api/odytraf', methods=['POST'])
 def odytraf():
     return retriever(ODYTRAF, ODYTRAF_FIELDS)
 

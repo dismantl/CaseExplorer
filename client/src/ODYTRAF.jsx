@@ -10,7 +10,7 @@ import "ag-grid-enterprise";
 export default class Odytraf extends ServerSideGrid {
   constructor(props) {
     super(props);
-    this.state = {path: "/odytraf"};
+    this.state = {path: "/api/odytraf"};
   }
 
   render() {
