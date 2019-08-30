@@ -1,0 +1,14 @@
+{
+  "name": "caseexplorerlambda",
+  "version": "1.0.0",
+  "description": "",
+  "main": "lambda.py",
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "postinstall": "npm run install-py-deps",
+    "install-py-deps": "pip install --target ./.requirements -r requirements.txt"
+  },
+  "author": "Dan Staples <dan@disman.tl>",
+  "license": "GPLv3"
+}
