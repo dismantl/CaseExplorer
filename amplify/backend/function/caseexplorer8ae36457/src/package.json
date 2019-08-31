@@ -5,10 +5,7 @@
   "main": "lambda.py",
   "dependencies": {},
   "devDependencies": {},
-  "scripts": {
-    "postinstall": "npm run install-py-deps",
-    "install-py-deps": "pip install --target ./.requirements -r requirements.txt"
-  },
+  "scripts": {},
   "author": "",
   "license": "ISC"
 }
