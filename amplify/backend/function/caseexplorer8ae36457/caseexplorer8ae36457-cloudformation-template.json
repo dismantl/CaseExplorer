@@ -63,7 +63,7 @@
 				"Timeout": "25",
 				"Code": {
 					"S3Bucket": "caseexplorer-dev-20190830180218-deployment",
-					"S3Key": "amplify-builds/caseexplorer8ae36457-6b304a323252444c3161-build.zip"
+					"S3Key": "amplify-builds/caseexplorer8ae36457-732b56686d576e445735-build.zip"
 				}
 			}
 		},
