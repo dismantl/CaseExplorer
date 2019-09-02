@@ -4,8 +4,16 @@
     "Parameters": {
         "env": {
             "Type": "String"
+        },
+        "VpcSecurityGroup": {
+          "Type": "String"
+        },
+        "VpcSubnet1": {
+          "Type": "String"
+        },
+        "VpcSubnet2": {
+          "Type": "String"
         }
-
     },
     "Conditions": {
         "ShouldNotCreateEnvResources": {
@@ -58,7 +66,22 @@
             },
             "Role": { "Fn::GetAtt" : ["LambdaExecutionRole", "Arn"] },
             "Runtime": "python3.7",
-            "Timeout": "25"
+            "Timeout": "25",
+            "VpcConfig": {
+                "SecurityGroupIds": [
+                    {
+                        "Ref": "VpcSecurityGroup"
+                    }
+                ],
+                "SubnetIds": [
+                    {
+                        "Ref": "VpcSubnet1"
+                    },
+                    {
+                        "Ref": "VpcSubnet2"
+                    }
+                ]
+            }
           }
         },
         "LambdaExecutionRole": {
@@ -98,7 +121,26 @@
                             ]
                         }
                     ]
-                }
+                },
+                "Policies": [
+                    {
+                        "PolicyName": "root",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "ec2:CreateNetworkInterface",
+                                        "ec2:DescribeNetworkInterfaces",
+                                        "ec2:DeleteNetworkInterface"
+                                    ],
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    }
+                ]
             }
         }
         ,"lambdaexecutionpolicy": {

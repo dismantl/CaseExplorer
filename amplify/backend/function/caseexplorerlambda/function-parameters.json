@@ -1,1 +1,5 @@
-{}
+{
+    "VpcSecurityGroup": "sg-0cc01ac9995aae171",
+    "VpcSubnet1": "subnet-01fba1fb2247d2bab",
+    "VpcSubnet2": "subnet-069068444b16fc5bb"
+}
