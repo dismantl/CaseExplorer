@@ -9,9 +9,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# C extensions
-*.so
-
 # Distribution / packaging
 .Python
 env/
@@ -74,5 +71,3 @@ Gemfile.lock
 .idea/
 .vscode/
 .vscode/**
-
-node_modules/

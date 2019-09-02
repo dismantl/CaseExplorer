@@ -35,3 +35,6 @@ dist/
 node_modules/
 aws-exports.js
 awsconfiguration.json
+team-provider-info.json
+
+server/.requirements

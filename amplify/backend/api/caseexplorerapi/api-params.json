@@ -1,0 +1,34 @@
+{
+    "paths": [
+        {
+            "name": "/api",
+            "lambdaFunction": "caseexplorerlambda",
+            "privacy": {
+                "open": true
+            }
+        }
+    ],
+    "resourceName": "caseexplorerapi",
+    "apiName": "caseexplorerapi",
+    "functionArns": [
+        {
+            "lambdaFunction": "caseexplorerlambda"
+        }
+    ],
+    "privacy": {
+        "auth": 0,
+        "unauth": 0,
+        "authRoleName": "caseexplorer-prod-20190902104322-authRole",
+        "unAuthRoleName": "caseexplorer-prod-20190902104322-unauthRole"
+    },
+    "dependsOn": [
+        {
+            "category": "function",
+            "resourceName": "caseexplorerlambda",
+            "attributes": [
+                "Name",
+                "Arn"
+            ]
+        }
+    ]
+}
