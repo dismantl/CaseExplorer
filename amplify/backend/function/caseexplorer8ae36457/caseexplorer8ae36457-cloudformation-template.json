@@ -60,11 +60,7 @@
 					]
 				},
 				"Runtime": "python3.7",
-				"Timeout": "25",
-				"Code": {
-					"S3Bucket": "caseexplorer-dev-20190830180218-deployment",
-					"S3Key": "amplify-builds/caseexplorer8ae36457-732b56686d576e445735-build.zip"
-				}
+				"Timeout": "25"
 			}
 		},
 		"LambdaExecutionRole": {
