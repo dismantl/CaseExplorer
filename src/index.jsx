@@ -2,7 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter as Router, Route, NavLink } from 'react-router-dom';
 import Amplify from 'aws-amplify';
-import awsconfig from './aws-exports';
 import './index.css';
 import Cases from './Cases';
 import Dscr from './DSCR';
@@ -11,8 +10,19 @@ import Cc from './CC';
 import Dscivil from './DSCIVIL';
 import Odycrim from './ODYCRIM';
 import Odytraf from './ODYTRAF';
+import config from './config';
 
-Amplify.configure(awsconfig);
+Amplify.configure({
+  API: {
+    endpoints: [
+      {
+        name: 'caseexplorerapi',
+        endpoint: config.apiGateway.URL,
+        region: config.apiGateway.REGION
+      }
+    ]
+  }
+});
 
 ReactDOM.render(
   <Router>

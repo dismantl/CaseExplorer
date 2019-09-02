@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { API } from 'aws-amplify';
 
-const apiName = 'apicf08954a';
+const apiName = 'caseexplorerapi';
 
 export default class ServerSideGrid extends Component {
   onGridReady = params => {
