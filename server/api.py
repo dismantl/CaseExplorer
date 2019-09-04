@@ -5,7 +5,7 @@ from sqlalchemy.sql import select, func, and_, or_, text
 from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
 
-from lib.mjcs.models import Case, DSCR, DSK8, CC, DSCIVIL, ODYCRIM, ODYTRAF
+import lib.mjcs.models as models
 
 
 CASE_FIELDS = [
@@ -88,13 +88,13 @@ ODYTRAF_FIELDS = [
 
 config = {
     'endpoints': {
-        '/api/cases': (Case, CASE_FIELDS),
-        '/api/cc': (CC, CC_FIELDS),
-        '/api/dscivil': (DSCIVIL, DSCIVIL_FIELDS),
-        '/api/dscr': (DSCR, DSCR_FIELDS),
-        '/api/dsk8': (DSK8, DSK8_FIELDS),
-        '/api/odycrim': (ODYCRIM, ODYCRIM_FIELDS),
-        '/api/odytraf': (ODYTRAF, ODYTRAF_FIELDS)
+        '/api/cases': (models.Case, CASE_FIELDS),
+        '/api/cc': (models.CC, CC_FIELDS),
+        '/api/dscivil': (models.DSCIVIL, DSCIVIL_FIELDS),
+        '/api/dscr': (models.DSCR, DSCR_FIELDS),
+        '/api/dsk8': (models.DSK8, DSK8_FIELDS),
+        '/api/odycrim': (models.ODYCRIM, ODYCRIM_FIELDS),
+        '/api/odytraf': (models.ODYTRAF, ODYTRAF_FIELDS)
     }
 }
 
