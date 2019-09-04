@@ -4,15 +4,6 @@
 	"Parameters": {
 		"env": {
 			"Type": "String"
-		},
-		"VpcSecurityGroup": {
-			"Type": "String"
-		},
-		"VpcSubnet1": {
-			"Type": "String"
-		},
-		"VpcSubnet2": {
-			"Type": "String"
 		}
 	},
 	"Conditions": {
@@ -33,16 +24,16 @@
 				"aws:asset:property": "Code"
 			},
 			"Properties": {
-				"Handler": "lambda.handler",
+				"Handler": "index.handler",
 				"FunctionName": {
 					"Fn::If": [
 						"ShouldNotCreateEnvResources",
-						"caseexplorerlambda",
+						"echofunction",
 						{
 							"Fn::Join": [
 								"",
 								[
-									"caseexplorerlambda",
+									"echofunction",
 									"-",
 									{
 										"Ref": "env"
@@ -68,26 +59,11 @@
 						"Arn"
 					]
 				},
-				"Runtime": "python3.7",
+				"Runtime": "nodejs10.x",
 				"Timeout": "25",
-				"VpcConfig": {
-					"SecurityGroupIds": [
-						{
-							"Ref": "VpcSecurityGroup"
-						}
-					],
-					"SubnetIds": [
-						{
-							"Ref": "VpcSubnet1"
-						},
-						{
-							"Ref": "VpcSubnet2"
-						}
-					]
-				},
 				"Code": {
 					"S3Bucket": "caseexplorer-graphql-20190904122223-deployment",
-					"S3Key": "amplify-builds/caseexplorerlambda-517a7035347851345a38-build.zip"
+					"S3Key": "amplify-builds/echofunction-354d37454f4471754c30-build.zip"
 				}
 			}
 		},
@@ -97,12 +73,12 @@
 				"RoleName": {
 					"Fn::If": [
 						"ShouldNotCreateEnvResources",
-						"caseexplorerLambdaRole6e0b19fb",
+						"caseexplorerLambdaRole9c2f6a78",
 						{
 							"Fn::Join": [
 								"",
 								[
-									"caseexplorerLambdaRole6e0b19fb",
+									"caseexplorerLambdaRole9c2f6a78",
 									"-",
 									{
 										"Ref": "env"
@@ -127,26 +103,7 @@
 							]
 						}
 					]
-				},
-				"Policies": [
-					{
-						"PolicyName": "root",
-						"PolicyDocument": {
-							"Version": "2012-10-17",
-							"Statement": [
-								{
-									"Effect": "Allow",
-									"Action": [
-										"ec2:CreateNetworkInterface",
-										"ec2:DescribeNetworkInterfaces",
-										"ec2:DeleteNetworkInterface"
-									],
-									"Resource": "*"
-								}
-							]
-						}
-					}
-				]
+				}
 			}
 		},
 		"lambdaexecutionpolicy": {
