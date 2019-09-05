@@ -6,10 +6,11 @@
   "dependencies": {},
   "devDependencies": {},
   "scripts": {
+    "clean-src-dir": "rm -r ../amplify/backend/function/caseexplorerlambda/src && mkdir -p ../amplify/backend/function/caseexplorerlambda/src",
     "install-py-deps": "pip install --target ./.requirements -r requirements.txt",
-    "copy-backend-files": "cp -r {lib,.gitignore,api.py,lambda.py,package.json,.requirements} ../amplify/backend/function/caseexplorerlambda/src/",
+    "copy-backend-files": "cp -r {app,.gitignore,lambda.py,package.json,.requirements} ../amplify/backend/function/caseexplorerlambda/src/",
     "copy-psycopg2": "cp -r psycopg2-3.7 ../amplify/backend/function/caseexplorerlambda/src/psycopg2",
-    "build-backend": "npm run install-py-deps && npm run copy-backend-files && npm run copy-psycopg2"
+    "build-backend": "npm run clean-src-dir && npm run install-py-deps && npm run copy-backend-files && npm run copy-psycopg2"
   },
   "author": "Dan Staples <dan@disman.tl>",
   "license": "GPLv3"
