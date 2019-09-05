@@ -94,6 +94,7 @@ class CCPlaintiff(SQLAlchemyObjectType):
 class CCDefendant(SQLAlchemyObjectType):
     class Meta:
         model = models.CCDefendant
+        exclude_fields = ('name', )
 
 class CCRelatedPerson(SQLAlchemyObjectType):
     class Meta:
@@ -147,6 +148,7 @@ class DSCIVIL(SQLAlchemyObjectType):
 class DSCIVILComplaint(SQLAlchemyObjectType):
     class Meta:
         model = models.DSCIVILComplaint
+        exclude_fields = ('defendant', )
 
 class DSCIVILHearing(SQLAlchemyObjectType):
     class Meta:
