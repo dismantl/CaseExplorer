@@ -5,11 +5,13 @@ import logging
 from logging.handlers import RotatingFileHandler
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
+from flask_graphql import GraphQLView
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 from .config import config
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-from api import set_db_uri
+from .models.common import TableBase
+from .schema import schema
 
 def create_app(config_name='default'):
     app = Flask(__name__)
@@ -18,7 +20,6 @@ def create_app(config_name='default'):
     db = SQLAlchemy(app)
 
     db.init_app(app)
-    set_db_uri(config[config_name].SQLALCHEMY_DATABASE_URI)
 
     from .main import main as main_blueprint  # noqa
     app.register_blueprint(main_blueprint)
@@ -39,7 +40,23 @@ def create_app(config_name='default'):
     app.logger.addHandler(file_handler)
     app.logger.info('CaseExplorer startup')
 
+    db_engine = create_engine(config[config_name].SQLALCHEMY_DATABASE_URI)
+    db_session = scoped_session(sessionmaker(autocommit=False,
+                                         autoflush=False,
+                                         bind=db_engine))
+    TableBase.query = db_session.query_property()
+    app.config['db_session'] = db_session
+
     return app
 
 
 app = create_app()
+
+app.add_url_rule(
+    '/graphql',
+    view_func=GraphQLView.as_view(
+        'graphql',
+        schema=schema,
+        graphiql=True # for having the GraphiQL interface
+    )
+)

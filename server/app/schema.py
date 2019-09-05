@@ -1,19 +1,13 @@
 import json
-from graphene import ObjectType, InputObjectType, List, NotNull, Schema, Field, Int, Enum, Union
+from graphene import ObjectType, InputObjectType, List, Schema, Field, Int, Union, String
 from graphene.types import Scalar
 from graphene.types.scalars import MIN_INT, MAX_INT
 from graphql.language import ast
 from graphql.language.ast import BooleanValue, StringValue, IntValue, ListValue, ObjectValue, FloatValue
 from graphene_sqlalchemy import SQLAlchemyObjectType
-import lib.mjcs.models as models
 
-defendant_redacted_fields = (
-    "name",
-    "DOB",
-    "DOB_str",
-    "address_1",
-    "address_2",
-)
+from app import models
+from .api import fetch_rows_orm, defendant_redacted_fields
 
 
 class Case(SQLAlchemyObjectType):
@@ -32,7 +26,7 @@ class DSCRCharge(SQLAlchemyObjectType):
 class DSCRDefendant(SQLAlchemyObjectType):
     class Meta:
         model = models.DSCRDefendant
-        exclude_fields = defendant_redacted_fields
+        exclude_fields = tuple(defendant_redacted_fields)
 
 class DSCRRelatedPerson(SQLAlchemyObjectType):
     class Meta:
@@ -70,7 +64,7 @@ class DSK8Bondsman(SQLAlchemyObjectType):
 class DSK8Defendant(SQLAlchemyObjectType):
     class Meta:
         model = models.DSK8Defendant
-        exclude_fields = defendant_redacted_fields
+        exclude_fields = tuple(defendant_redacted_fields)
 
 class DSK8RelatedPerson(SQLAlchemyObjectType):
     class Meta:
@@ -186,7 +180,7 @@ class ODYCRIMReferenceNumber(SQLAlchemyObjectType):
 class ODYCRIMDefendant(SQLAlchemyObjectType):
     class Meta:
         model = models.ODYCRIMDefendant
-        exclude_fields = defendant_redacted_fields
+        exclude_fields = tuple(defendant_redacted_fields)
 
 class ODYCRIMInvolvedParty(SQLAlchemyObjectType):
     class Meta:
@@ -244,7 +238,7 @@ class ODYTRAFReferenceNumber(SQLAlchemyObjectType):
 class ODYTRAFDefendant(SQLAlchemyObjectType):
     class Meta:
         model = models.ODYTRAFDefendant
-        exclude_fields = defendant_redacted_fields
+        exclude_fields = tuple(defendant_redacted_fields)
 
 class ODYTRAFInvolvedParty(SQLAlchemyObjectType):
     class Meta:
@@ -330,91 +324,95 @@ class FilterModel(InputObjectType):
 
 def transform_filter_model(filter_model):
     new_model = {}
-    for filter in filter_model.text_filters:
-        if filter.filter_type != 'text':
-            raise Exception('Bad text filter model')
-        new_model[filter.field] = {
-            'filterType': filter.filter_type,
-            'type': filter.type
-        }
-        if hasattr(filter, 'filter'):
-            new_model[filter.field]['filter'] = filter.filter
-    for filter in filter_model.number_filters:
-        if filter.filter_type != 'number':
-            raise Exception('Bad number filter model')
-        new_model[filter.field] = {
-            'filterType': filter.filter_type,
-            'type': filter.type
-        }
-        if hasattr(filter, 'filter'):
-            new_model[filter.field]['filter'] = filter.filter
-        if hasattr(filter, 'filter_to'):
-            new_model[filter.field]['filterTo'] = filter.filter_to
-    for filter in filter_model.date_filters:
-        if filter.filter_type != 'date':
-            raise Exception('Bad date filter model')
-        new_model[filter.field] = {
-            'filterType': filter.filter_type,
-            'type': filter.type
-        }
-        if hasattr(filter, 'date_from'):
-            new_model[filter.field]['dateFrom'] = filter.date_from
-        if hasattr(filter, 'date_to'):
-            new_model[filter.field]['dateTo'] = filter.date_to
-    for filter in filter_model.combo_filters:
-        new_model[filter.field] = {
-            'filterType': filter.filter_type,
-            'operator': filter.operator
-        }
-        if filter.filter_type == 'text':
-            new_model[filter.field]['condition1'] = {
-                'filterType': filter.condition1.text_filter.filter_type,
-                'type': filter.condition1.text_filter.type
+    if filter_model.text_filters:
+        for filter in filter_model.text_filters:
+            if filter.filter_type != 'text':
+                raise Exception('Bad text filter model')
+            new_model[filter.field] = {
+                'filterType': filter.filter_type,
+                'type': filter.type
             }
-            if hasattr(filter.condition1.text_filter, 'filter'):
-                new_model[filter.field]['condition1']['filter'] = filter.condition1.text_filter.filter
-            new_model['condition2'] = {
-                'filterType': filter.condition2.text_filter.filter_type,
-                'type': filter.condition2.text_filter.type
+            if hasattr(filter, 'filter'):
+                new_model[filter.field]['filter'] = filter.filter
+    if filter_model.number_filters:
+        for filter in filter_model.number_filters:
+            if filter.filter_type != 'number':
+                raise Exception('Bad number filter model')
+            new_model[filter.field] = {
+                'filterType': filter.filter_type,
+                'type': filter.type
             }
-            if hasattr(filter.condition2.text_filter, 'filter'):
-                new_model[filter.field]['condition2']['filter'] = filter.condition2.text_filter.filter
-        elif filter.filter_type == 'number':
-            new_model[filter.field]['condition1'] = {
-                'filterType': filter.condition1.number_filter.filter_type,
-                'type': filter.condition1.number_filter.type
+            if hasattr(filter, 'filter'):
+                new_model[filter.field]['filter'] = filter.filter
+            if hasattr(filter, 'filter_to'):
+                new_model[filter.field]['filterTo'] = filter.filter_to
+    if filter_model.date_filters:
+        for filter in filter_model.date_filters:
+            if filter.filter_type != 'date':
+                raise Exception('Bad date filter model')
+            new_model[filter.field] = {
+                'filterType': filter.filter_type,
+                'type': filter.type
             }
-            if hasattr(filter.condition1.number_filter, 'filter'):
-                new_model[filter.field]['condition1']['filter'] = filter.condition1.number_filter.filter
-            if hasattr(filter.condition1.number_filter, 'filter_to'):
-                new_model[filter.field]['condition1']['filterTo'] = filter.condition1.number_filter.filter_to
-            new_model['condition2'] = {
-                'filterType': filter.condition2.number_filter.filter_type,
-                'type': filter.condition2.number_filter.type
+            if hasattr(filter, 'date_from'):
+                new_model[filter.field]['dateFrom'] = filter.date_from
+            if hasattr(filter, 'date_to'):
+                new_model[filter.field]['dateTo'] = filter.date_to
+    if filter_model.combo_filters:
+        for filter in filter_model.combo_filters:
+            new_model[filter.field] = {
+                'filterType': filter.filter_type,
+                'operator': filter.operator
             }
-            if hasattr(filter.condition2.number_filter, 'filter'):
-                new_model[filter.field]['condition2']['filter'] = filter.condition2.number_filter.filter
-            if hasattr(filter.condition2.number_filter, 'filter_to'):
-                new_model[filter.field]['condition2']['filterTo'] = filter.condition2.number_filter.filter_to
-        elif filter.filter_type == 'date':
-            new_model[filter.field]['condition1'] = {
-                'filterType': filter.condition1.date_filter.filter_type,
-                'type': filter.condition1.date_filter.type
-            }
-            if hasattr(filter.condition1.date_filter, 'date_from'):
-                new_model[filter.field]['condition1']['dateFrom'] = filter.condition1.date_filter.date_from
-            if hasattr(filter.condition1.date_filter, 'date_to'):
-                new_model[filter.field]['condition1']['dateTo'] = filter.condition1.date_filter.date_to
-            new_model['condition2'] = {
-                'filterType': filter.condition2.date_filter.filter_type,
-                'type': filter.condition2.date_filter.type
-            }
-            if hasattr(filter.condition2.date_filter, 'date_from'):
-                new_model[filter.field]['condition2']['dateFrom'] = filter.condition2.date_filter.date_from
-            if hasattr(filter.condition2.date_filter, 'date_to'):
-                new_model[filter.field]['condition2']['dateTo'] = filter.condition2.date_filter.date_to
-        else:
-            raise Exception('Bad combo filter model')
+            if filter.filter_type == 'text':
+                new_model[filter.field]['condition1'] = {
+                    'filterType': filter.condition1.text_filter.filter_type,
+                    'type': filter.condition1.text_filter.type
+                }
+                if hasattr(filter.condition1.text_filter, 'filter'):
+                    new_model[filter.field]['condition1']['filter'] = filter.condition1.text_filter.filter
+                new_model['condition2'] = {
+                    'filterType': filter.condition2.text_filter.filter_type,
+                    'type': filter.condition2.text_filter.type
+                }
+                if hasattr(filter.condition2.text_filter, 'filter'):
+                    new_model[filter.field]['condition2']['filter'] = filter.condition2.text_filter.filter
+            elif filter.filter_type == 'number':
+                new_model[filter.field]['condition1'] = {
+                    'filterType': filter.condition1.number_filter.filter_type,
+                    'type': filter.condition1.number_filter.type
+                }
+                if hasattr(filter.condition1.number_filter, 'filter'):
+                    new_model[filter.field]['condition1']['filter'] = filter.condition1.number_filter.filter
+                if hasattr(filter.condition1.number_filter, 'filter_to'):
+                    new_model[filter.field]['condition1']['filterTo'] = filter.condition1.number_filter.filter_to
+                new_model['condition2'] = {
+                    'filterType': filter.condition2.number_filter.filter_type,
+                    'type': filter.condition2.number_filter.type
+                }
+                if hasattr(filter.condition2.number_filter, 'filter'):
+                    new_model[filter.field]['condition2']['filter'] = filter.condition2.number_filter.filter
+                if hasattr(filter.condition2.number_filter, 'filter_to'):
+                    new_model[filter.field]['condition2']['filterTo'] = filter.condition2.number_filter.filter_to
+            elif filter.filter_type == 'date':
+                new_model[filter.field]['condition1'] = {
+                    'filterType': filter.condition1.date_filter.filter_type,
+                    'type': filter.condition1.date_filter.type
+                }
+                if hasattr(filter.condition1.date_filter, 'date_from'):
+                    new_model[filter.field]['condition1']['dateFrom'] = filter.condition1.date_filter.date_from
+                if hasattr(filter.condition1.date_filter, 'date_to'):
+                    new_model[filter.field]['condition1']['dateTo'] = filter.condition1.date_filter.date_to
+                new_model['condition2'] = {
+                    'filterType': filter.condition2.date_filter.filter_type,
+                    'type': filter.condition2.date_filter.type
+                }
+                if hasattr(filter.condition2.date_filter, 'date_from'):
+                    new_model[filter.field]['condition2']['dateFrom'] = filter.condition2.date_filter.date_from
+                if hasattr(filter.condition2.date_filter, 'date_to'):
+                    new_model[filter.field]['condition2']['dateTo'] = filter.condition2.date_filter.date_to
+            else:
+                raise Exception('Bad combo filter model')
 
     return new_model
 
@@ -494,8 +492,9 @@ class ResultsResponse(ObjectType):
 
 
 class Query(ObjectType):
-    row_data = ResultsResponse(
-        model=NotNull(String(required=True)),
+    row_data = Field(
+        ResultsResponse,
+        model=String(required=True),
         start_row=Int(default_value=0),
         end_row=Int(default_value=100),
         row_group_cols=List(ValueColumn),
@@ -508,8 +507,8 @@ class Query(ObjectType):
 
     def resolve_row_data(parent, info, model, start_row, end_row, row_group_cols,
                      value_cols, pivot_cols, group_keys, filter_model, sort_model):
-        return fetch_rows(
-            f'api/{model}',
+        results = fetch_rows_orm(
+            model,
             {
                 'startRow': start_row,
                 'endRow': end_row,
@@ -521,6 +520,8 @@ class Query(ObjectType):
                 'filterModel': transform_filter_model(filter_model)
             }
         )
+        print(results)
+        return results
 
 
-schema = Schema(query=Query)
+schema = Schema(query=Query, auto_camelcase=False)

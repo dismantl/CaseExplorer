@@ -5,7 +5,7 @@ import json
 srcpath = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(srcpath+"/.requirements")
 
-from api import set_db_uri, fetch_rows
+from app.api import set_db_uri, fetch_rows
 
 def handler(event, context):
     # print(event)

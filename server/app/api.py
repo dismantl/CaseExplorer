@@ -3,135 +3,57 @@ import re
 from sqlalchemy import cast, Date, create_engine
 from sqlalchemy.sql import select, func, and_, or_, text
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative.api import _declarative_constructor
 from contextlib import contextmanager
+from flask import current_app
 
-import lib.mjcs.models as models
+from app import models
 
-
-CASE_FIELDS = [
-    'case_number',
-    'court',
-    'case_type',
-    'filing_date_original',
-    'status'
+defendant_redacted_fields = [
+    "name",
+    "DOB",
+    "DOB_str",
+    "address_1",
+    "address_2"
 ]
 
-DSCR_FIELDS = [
-    'case_number',
-    'court_system',
-    'case_status',
-    'tracking_number',
-    'case_type',
-    'district_code',
-    'location_code',
-    'document_type',
-    'issued_date_str',
-    'case_disposition'
+defendant_models = [
+    'dscr_defendants',
+    'dsk8_defendants',
+    'odycrim_defendants'
 ]
 
-DSK8_FIELDS = [
-    'case_number',
-    'court_system',
-    'case_status',
-    'tracking_number',
-    'complaint_number',
-    'district_case_number',
-    'status_date_str',
-    'filing_date_str',
-    'incident_date_str'
-]
-
-CC_FIELDS = [
-    'case_number',
-    'court_system',
-    'case_status',
-    'title',
-    'case_type',
-    'filing_date_str',
-    'case_disposition',
-    'disposition_date_str'
-]
-
-DSCIVIL_FIELDS = [
-    'case_number',
-    'court_system',
-    'case_status',
-    'claim_type',
-    'district_code',
-    'location_code',
-    'filing_date_str'
-]
-
-ODYCRIM_FIELDS = [
-    'case_number',
-    'court_system',
-    'case_status',
-    'location',
-    'case_title',
-    'case_type',
-    'filing_date_str',
-    'tracking_numbers'
-]
-
-ODYTRAF_FIELDS = [
-    'case_number',
-    'court_system',
-    'case_status',
-    'location',
-    'case_title',
-    'case_type',
-    'filing_date_str',
-    'violation_date_str',
-    'violation_time_str',
-    'violation_county'
-]
-
-config = {
-    'endpoints': {
-        '/api/cases': (models.Case, CASE_FIELDS),
-        '/api/cc': (models.CC, CC_FIELDS),
-        '/api/dscivil': (models.DSCIVIL, DSCIVIL_FIELDS),
-        '/api/dscr': (models.DSCR, DSCR_FIELDS),
-        '/api/dsk8': (models.DSK8, DSK8_FIELDS),
-        '/api/odycrim': (models.ODYCRIM, ODYCRIM_FIELDS),
-        '/api/odytraf': (models.ODYTRAF, ODYTRAF_FIELDS)
-    }
-}
-
-
-def set_db_uri(uri):
-    config['DB_URI'] = uri
-
-
-@contextmanager
-def db_session():
-    """Provide a transactional scope around a series of operations."""
-    if 'DB_URI' not in config:
-        raise Exception('Must initialize DB URI first')
-    db_engine = create_engine(config['DB_URI'])
-    db_factory = sessionmaker(bind = db_engine)
-    db = db_factory()
+def get_orm_class_by_name(table_name):
+    mapping = {cls.__table__.name: cls for name, cls in models.__dict__.items() if isinstance(cls, type) and hasattr(cls, '__table__')}
     try:
-        yield db
-        db.commit()
-    except:
-        db.rollback()
-        raise
-    finally:
-        db.close()
+        return mapping[table_name]
+    except KeyError:
+        raise Exception(f'Unknown database table {table_name}')
 
 
-def fetch_rows(endpoint, req):
-    if endpoint not in config['endpoints']:
-        raise Exception('Unknown API endpoint')
-    return fetch_rows_from_model(
-        config['endpoints'][endpoint][0],
-        config['endpoints'][endpoint][1],
-        req
-    )
+def fetch_rows_orm(table_name, req):
+    cls = get_orm_class_by_name(table_name)
+    result = fetch_rows_from_model(cls, req)
+    try:
+        orm_rows = [cls(**row) for row in result['rows']]
+    except TypeError:  # third-level case tables, use different constructors
+        orm_rows = []
+        for row in result['rows']:
+            obj = cls(row['case_number'])
+            _declarative_constructor(obj, **row)
+            orm_rows.append(obj)
+    return {
+        'rows': orm_rows,
+        'last_row': result['last_row']
+    }
 
 
-def fetch_rows_from_model(cls, fields, req):
+def fetch_rows(table_name, req):
+    cls = get_orm_class_by_name(table_name)
+    return fetch_rows_from_model(cls, req)
+
+
+def fetch_rows_from_model(cls, req):
     start_row = req['startRow']
     end_row = req['endRow']
     page_size = end_row - start_row
@@ -144,16 +66,23 @@ def fetch_rows_from_model(cls, fields, req):
     query = build_group_by(query, table, req)
     print(query)
 
-    with db_session() as db:
-        results = db.execute(query).fetchall()
+    results = current_app.config['db_session'].execute(query).fetchall()
 
     results_len = len(results)
     current_last_row = start_row + results_len
     last_row = current_last_row if current_last_row <= end_row else -1
-    rows = [{field:getattr(row,field) for field in fields} for row in results[:page_size]]
+    rows = [dict(row) for row in results[:page_size]]
+
+    # filter defendant_redacted_fields
+    if table.name in defendant_models:
+        for row in rows:
+            for field in defendant_redacted_fields:
+                del row[field]
+            del row['id']
+
     return {
         'rows': rows,
-        'lastRow': last_row
+        'last_row': last_row
     }
 
 

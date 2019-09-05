@@ -1,8 +1,10 @@
 Flask >= 1.0.2
 Flask-SQLAlchemy >= 2.3.2
+Flask-GraphQL >= 2.0.0
 sqlalchemy >= 1.2.6
 psycopg2-binary >= 2.7.4
 python-dotenv >= 0.7.1
 flask-jsontools >= 0.1.5
 boto3 >= 1.9.216
 graphene >= 2.0
+graphene-sqlalchemy >= 2.0
