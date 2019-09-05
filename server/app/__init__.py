@@ -51,7 +51,7 @@ def create_app(config_name='default'):
     @app.cli.command("print-schema")
     def print_schema():
         schema_str = schema_printer.print_schema(schema)
-        with open('graphql.schema', 'w') as schemafile:
+        with open('schema.graphql', 'w') as schemafile:
             schemafile.write(schema_str)
 
     return app
