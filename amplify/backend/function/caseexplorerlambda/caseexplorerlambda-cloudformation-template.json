@@ -87,7 +87,7 @@
 				},
 				"Code": {
 					"S3Bucket": "caseexplorer-graphql-20190904122223-deployment",
-					"S3Key": "amplify-builds/caseexplorerlambda-517a7035347851345a38-build.zip"
+					"S3Key": "amplify-builds/caseexplorerlambda-5048626937466e706a79-build.zip"
 				}
 			}
 		},

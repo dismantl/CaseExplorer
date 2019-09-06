@@ -8,6 +8,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_graphql import GraphQLView
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
+from graphql.utils import schema_printer
 
 from .config import config
 from .models.common import TableBase
@@ -46,6 +47,12 @@ def create_app(config_name='default'):
                                          bind=db_engine))
     TableBase.query = db_session.query_property()
     app.config['db_session'] = db_session
+
+    @app.cli.command("print-schema")
+    def print_schema():
+        schema_str = schema_printer.print_schema(schema)
+        with open('schema.graphql', 'w') as schemafile:
+            schemafile.write(schema_str)
 
     return app
 

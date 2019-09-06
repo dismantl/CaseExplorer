@@ -94,6 +94,7 @@ class CCPlaintiff(SQLAlchemyObjectType):
 class CCDefendant(SQLAlchemyObjectType):
     class Meta:
         model = models.CCDefendant
+        exclude_fields = ('name', )
 
 class CCRelatedPerson(SQLAlchemyObjectType):
     class Meta:
@@ -147,6 +148,7 @@ class DSCIVIL(SQLAlchemyObjectType):
 class DSCIVILComplaint(SQLAlchemyObjectType):
     class Meta:
         model = models.DSCIVILComplaint
+        exclude_fields = ('defendant', )
 
 class DSCIVILHearing(SQLAlchemyObjectType):
     class Meta:
@@ -324,93 +326,93 @@ class FilterModel(InputObjectType):
 
 def transform_filter_model(filter_model):
     new_model = {}
-    if filter_model.text_filters:
-        for filter in filter_model.text_filters:
-            if filter.filter_type != 'text':
+    if 'text_filters' in filter_model:
+        for filter in filter_model['text_filters']:
+            if filter['filter_type'] != 'text':
                 raise Exception('Bad text filter model')
-            new_model[filter.field] = {
-                'filterType': filter.filter_type,
-                'type': filter.type
+            new_model[filter['field']] = {
+                'filterType': filter['filter_type'],
+                'type': filter['type']
             }
-            if hasattr(filter, 'filter'):
-                new_model[filter.field]['filter'] = filter.filter
-    if filter_model.number_filters:
-        for filter in filter_model.number_filters:
-            if filter.filter_type != 'number':
+            if 'filter' in filter:
+                new_model[filter['field']]['filter'] = filter['filter']
+    if 'number_filters' in filter_model:
+        for filter in filter_model['number_filters']:
+            if filter['filter_type'] != 'number':
                 raise Exception('Bad number filter model')
-            new_model[filter.field] = {
-                'filterType': filter.filter_type,
-                'type': filter.type
+            new_model[filter['field']] = {
+                'filterType': filter['filter_type'],
+                'type': filter['type']
             }
-            if hasattr(filter, 'filter'):
-                new_model[filter.field]['filter'] = filter.filter
-            if hasattr(filter, 'filter_to'):
-                new_model[filter.field]['filterTo'] = filter.filter_to
-    if filter_model.date_filters:
-        for filter in filter_model.date_filters:
-            if filter.filter_type != 'date':
+            if 'filter' in filter:
+                new_model[filter['field']]['filter'] = filter['filter']
+            if 'filter_to' in filter:
+                new_model[filter['field']]['filterTo'] = filter['filter_to']
+    if 'date_filters' in filter_model:
+        for filter in filter_model['date_filters']:
+            if filter['filter_type'] != 'date':
                 raise Exception('Bad date filter model')
-            new_model[filter.field] = {
-                'filterType': filter.filter_type,
-                'type': filter.type
+            new_model[filter['field']] = {
+                'filterType': filter['filter_type'],
+                'type': filter['type']
             }
-            if hasattr(filter, 'date_from'):
-                new_model[filter.field]['dateFrom'] = filter.date_from
-            if hasattr(filter, 'date_to'):
-                new_model[filter.field]['dateTo'] = filter.date_to
-    if filter_model.combo_filters:
-        for filter in filter_model.combo_filters:
-            new_model[filter.field] = {
-                'filterType': filter.filter_type,
-                'operator': filter.operator
+            if 'date_from' in filter:
+                new_model[filter['field']]['dateFrom'] = filter['date_from']
+            if 'date_to' in filter:
+                new_model[filter['field']]['dateTo'] = filter['date_to']
+    if 'combo_filters' in filter_model:
+        for filter in filter_model['combo_filters']:
+            new_model[filter['field']] = {
+                'filterType': filter['filter_type'],
+                'operator': filter['operator']
             }
-            if filter.filter_type == 'text':
-                new_model[filter.field]['condition1'] = {
-                    'filterType': filter.condition1.text_filter.filter_type,
-                    'type': filter.condition1.text_filter.type
+            if filter['filter_type'] == 'text':
+                new_model[filter['field']]['condition1'] = {
+                    'filterType': filter['condition1']['text_filter']['filter_type'],
+                    'type': filter['condition1']['text_filter']['type']
                 }
-                if hasattr(filter.condition1.text_filter, 'filter'):
-                    new_model[filter.field]['condition1']['filter'] = filter.condition1.text_filter.filter
+                if 'filter' in filter['condition1']['text_filter']:
+                    new_model[filter['field']]['condition1']['filter'] = filter['condition1']['text_filter']['filter']
                 new_model['condition2'] = {
-                    'filterType': filter.condition2.text_filter.filter_type,
-                    'type': filter.condition2.text_filter.type
+                    'filterType': filter['condition2']['text_filter']['filter_type'],
+                    'type': filter['condition2']['text_filter']['type']
                 }
-                if hasattr(filter.condition2.text_filter, 'filter'):
-                    new_model[filter.field]['condition2']['filter'] = filter.condition2.text_filter.filter
-            elif filter.filter_type == 'number':
-                new_model[filter.field]['condition1'] = {
-                    'filterType': filter.condition1.number_filter.filter_type,
-                    'type': filter.condition1.number_filter.type
+                if 'filter' in filter['condition2']['text_filter']:
+                    new_model[filter['field']]['condition2']['filter'] = filter['condition2']['text_filter']['filter']
+            elif filter['filter_type'] == 'number':
+                new_model[filter['field']]['condition1'] = {
+                    'filterType': filter['condition1']['number_filter']['filter_type'],
+                    'type': filter['condition1']['number_filter']['type']
                 }
-                if hasattr(filter.condition1.number_filter, 'filter'):
-                    new_model[filter.field]['condition1']['filter'] = filter.condition1.number_filter.filter
-                if hasattr(filter.condition1.number_filter, 'filter_to'):
-                    new_model[filter.field]['condition1']['filterTo'] = filter.condition1.number_filter.filter_to
+                if 'filter' in filter['condition1']['number_filter']:
+                    new_model[filter['field']]['condition1']['filter'] = filter['condition1']['number_filter']['filter']
+                if 'filter_to' in filter['condition1']['number_filter']:
+                    new_model[filter['field']]['condition1']['filterTo'] = filter['condition1']['number_filter']['filter_to']
                 new_model['condition2'] = {
-                    'filterType': filter.condition2.number_filter.filter_type,
-                    'type': filter.condition2.number_filter.type
+                    'filterType': filter['condition2']['number_filter']['filter_type'],
+                    'type': filter['condition2']['number_filter']['type']
                 }
-                if hasattr(filter.condition2.number_filter, 'filter'):
-                    new_model[filter.field]['condition2']['filter'] = filter.condition2.number_filter.filter
-                if hasattr(filter.condition2.number_filter, 'filter_to'):
-                    new_model[filter.field]['condition2']['filterTo'] = filter.condition2.number_filter.filter_to
-            elif filter.filter_type == 'date':
-                new_model[filter.field]['condition1'] = {
-                    'filterType': filter.condition1.date_filter.filter_type,
-                    'type': filter.condition1.date_filter.type
+                if 'filter' in filter['condition2']['number_filter']:
+                    new_model[filter['field']]['condition2']['filter'] = filter['condition2']['number_filter']['filter']
+                if 'filter_to' in filter['condition2']['number_filter']:
+                    new_model[filter['field']]['condition2']['filterTo'] = filter['condition2']['number_filter']['filter_to']
+            elif filter['filter_type'] == 'date':
+                new_model[filter['field']]['condition1'] = {
+                    'filterType': filter['condition1']['date_filter']['filter_type'],
+                    'type': filter['condition1']['date_filter']['type']
                 }
-                if hasattr(filter.condition1.date_filter, 'date_from'):
-                    new_model[filter.field]['condition1']['dateFrom'] = filter.condition1.date_filter.date_from
-                if hasattr(filter.condition1.date_filter, 'date_to'):
-                    new_model[filter.field]['condition1']['dateTo'] = filter.condition1.date_filter.date_to
+                if 'date_from' in filter['condition1']['date_filter']:
+                    new_model[filter['field']]['condition1']['dateFrom'] = filter['condition1']['date_filter']['date_from']
+                if 'date_to' in filter['condition1']['date_filter']:
+                    new_model[filter['field']]['condition1']['dateTo'] = filter['condition1']['date_filter']['date_to']
                 new_model['condition2'] = {
-                    'filterType': filter.condition2.date_filter.filter_type,
-                    'type': filter.condition2.date_filter.type
+                    'filterType': filter['condition2']['date_filter']['filter_type'],
+                    'type': filter['condition2']['date_filter']['type']
                 }
-                if hasattr(filter.condition2.date_filter, 'date_from'):
-                    new_model[filter.field]['condition2']['dateFrom'] = filter.condition2.date_filter.date_from
-                if hasattr(filter.condition2.date_filter, 'date_to'):
-                    new_model[filter.field]['condition2']['dateTo'] = filter.condition2.date_filter.date_to
+                if 'date_from' in filter['condition2']['date_filter']:
+                    new_model[filter['field']]['condition2']['dateFrom'] = filter['condition2']['date_filter']['date_from']
+                if 'date_to' in filter['condition2']['date_filter']:
+                    new_model[filter['field']]['condition2']['dateTo'] = filter['condition2']['date_filter']['date_to']
             else:
                 raise Exception('Bad combo filter model')
 

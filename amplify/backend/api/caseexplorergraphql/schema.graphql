@@ -1,3 +1,1123 @@
+schema {
+  query: Query
+}
+
+type CC {
+  _filing_date_str: String
+  _disposition_date_str: String
+  id: ID!
+  court_system: String
+  title: String
+  case_type: String
+  filing_date: String
+  case_status: String
+  case_disposition: String
+  disposition_date: String
+  case_number: String
+  disposition_date_str: String
+  filing_date_str: String
+}
+
+type CCAttorney {
+  _appearance_date_str: String
+  _removal_date_str: String
+  id: ID!
+  plaintiff_id: Int
+  defendant_id: Int
+  related_person_id: Int
+  name: String
+  appearance_date: String
+  removal_date: String
+  practice_name: String
+  address_1: String
+  address_2: String
+  city: String
+  state: String
+  zip_code: String
+  case_number: String
+  removal_date_str: String
+  appearance_date_str: String
+}
+
+type CCCourtSchedule {
+  _notice_date_str: String
+  _event_date_str: String
+  _event_time_str: String
+  _result_date_str: String
+  id: ID!
+  event_type: String
+  notice_date: String
+  event_date: String
+  event_time: String
+  result: String
+  result_date: String
+  case_number: String
+  result_date_str: String
+  event_time_str: String
+  event_date_str: String
+  notice_date_str: String
+}
+
+type CCDefendant {
+  id: ID!
+  party_type: String
+  party_number: Int
+  business_org_name: String
+  case_number: String
+}
+
+type CCDistrictCaseNumber {
+  id: ID!
+  district_case_number: String
+  case_number: String
+}
+
+type CCDocument {
+  _file_date_str: String
+  _entered_date_str: String
+  id: ID!
+  document_number: Int
+  sequence_number: Int
+  file_date: String
+  entered_date: String
+  decision: String
+  party_type: String
+  party_number: Int
+  document_name: String
+  text: String
+  case_number: String
+}
+
+type CCJudgment {
+  _entered_date_str: String
+  id: ID!
+  judgment_type: String
+  entered_date: String
+  amount: Float
+  amount_other: String
+  prejudgment_interest: Float
+  appearance_fee: Float
+  filing_fee: Float
+  other_fee: Float
+  service_fee: Float
+  witness_fee: Float
+  attorney_fee: Float
+  total_indexed_judgment: Float
+  tij_other: String
+  comments: String
+  case_number: String
+  entered_date_str: String
+}
+
+type CCJudgmentAgainst {
+  id: ID!
+  judgment_id: Int
+  name: String
+  case_number: String
+}
+
+type CCJudgmentInFavor {
+  id: ID!
+  judgment_id: Int
+  name: String
+  case_number: String
+}
+
+type CCJudgmentModification {
+  _entered_date_str: String
+  _status_date_str: String
+  id: ID!
+  judgment_id: Int
+  judgment_against: String
+  judgment_for: String
+  entered_date: String
+  amount: Float
+  amount_other: String
+  status_date: String
+  status: String
+  comments: String
+  case_number: String
+  entered_date_str: String
+  status_date_str: String
+}
+
+type CCPartyAddress {
+  id: ID!
+  plaintiff_id: Int
+  defendant_id: Int
+  related_person_id: Int
+  address: String
+  city: String
+  state: String
+  zip_code: String
+  case_number: String
+}
+
+type CCPartyAlias {
+  id: ID!
+  plaintiff_id: Int
+  defendant_id: Int
+  related_person_id: Int
+  name: String
+  case_number: String
+}
+
+type CCPlaintiff {
+  id: ID!
+  party_type: String
+  party_number: Int
+  name: String
+  business_org_name: String
+  case_number: String
+}
+
+type CCRelatedPerson {
+  id: ID!
+  party_type: String
+  party_number: Int
+  name: String
+  business_org_name: String
+  case_number: String
+}
+
+type CCSupportOrder {
+  _order_date_str: String
+  _effective_date_str: String
+  _date_str: String
+  _medical_insurance_report_date_str: String
+  id: ID!
+  order_id: Int
+  version: Int
+  order_date: String
+  obligor: String
+  effective_date: String
+  effective_date_text: String
+  status: String
+  date: String
+  reason: String
+  support_amount: Float
+  support_frequency: String
+  support_to: String
+  arrears_amount: Float
+  arrears_frequency: String
+  arrears_to: String
+  mapr_amount: Float
+  mapr_frequency: String
+  medical_insurance_report_date: String
+  btr_amount: Float
+  btr_frequency: String
+  lien: String
+  provisions: String
+  case_number: String
+  effective_date_str: String
+  date_str: String
+  medical_insurance_report_date_str: String
+  order_date_str: String
+}
+
+type Case {
+  case_number: String!
+  court: String
+  query_court: String
+  case_type: String
+  filing_date: String
+  filing_date_original: String
+  status: String
+  caption: String
+  loc: Int
+  detail_loc: String
+  url: String
+  last_scrape: AWSDateTime
+  last_parse: AWSDateTime
+  scrape_exempt: Boolean
+  parse_exempt: Boolean
+}
+
+input ComboFilterModel {
+  field: String!
+  filter_type: String!
+  operator: String!
+  condition1: FilterCondition
+  condition2: FilterCondition
+}
+
+type DSCIVIL {
+  _filing_date_str: String
+  id: ID!
+  court_system: String
+  claim_type: String
+  district_code: Int
+  location_code: Int
+  filing_date: String
+  case_status: String
+  case_number: String
+  filing_date_str: String
+}
+
+type DSCIVILComplaint {
+  _status_date_str: String
+  _filing_date_str: String
+  _last_activity_date_str: String
+  id: ID!
+  complaint_number: Int
+  plaintiff: String
+  complaint_type: String
+  complaint_status: String
+  status_date: String
+  filing_date: String
+  amount: Float
+  last_activity_date: String
+  case_number: String
+  status_date_str: String
+  filing_date_str: String
+  last_activity_date_str: String
+}
+
+type DSCIVILEvent {
+  _date_str: String
+  id: ID!
+  event_name: String
+  date: String
+  comment: String
+  complaint_number: Int
+  case_number: String
+  date_str: String
+}
+
+type DSCIVILHearing {
+  _date_str: String
+  _time_str: String
+  id: ID!
+  complaint_id: Int
+  date: String
+  time: String
+  room: String
+  location: String
+  duration: String
+  hearing_type: String
+  case_number: String
+  date_str: String
+  time_str: String
+}
+
+type DSCIVILJudgment {
+  _judgment_date_str: String
+  _recorded_lien_date_str: String
+  _judgment_renewed_date_str: String
+  _renewed_lien_date_str: String
+  _satisfaction_date_str: String
+  id: ID!
+  complaint_id: Int
+  judgment_type: String
+  judgment_date: String
+  judgment_amount: Float
+  judgment_interest: Float
+  costs: Float
+  other_amounts: Float
+  attorney_fees: Float
+  post_interest_legal_rate: Boolean
+  post_interest_contractual_rate: Boolean
+  jointly_and_severally: Int
+  in_favor_of_defendant: Boolean
+  possession_value: Float
+  possession_damages_value: Float
+  value_sued_for: Float
+  damages: Float
+  dismissed_with_prejudice: Boolean
+  replevin_detinue: Float
+  recorded_lien_date: String
+  renewed_lien_date: String
+  satisfaction_date: String
+  case_number: String
+  recorded_lien_date_str: String
+  satisfaction_date_str: String
+  judgment_date_str: String
+  renewed_lien_date_str: String
+  judgment_renewed_date_str: String
+}
+
+type DSCIVILRelatedPerson {
+  id: ID!
+  name: String
+  connection: String
+  address_1: String
+  address_2: String
+  city: String
+  state: String
+  zip_code: String
+  agency_code: String
+  agency_sub_code: String
+  officer_id: String
+  attorney_code: Int
+  attorney_firm: String
+  complaint_id: Int
+  case_number: String
+}
+
+type DSCIVILTrial {
+  _date_str: String
+  _time_str: String
+  id: ID!
+  date: String
+  time: String
+  room: String
+  trial_type: String
+  location: String
+  reason: String
+  case_number: String
+  date_str: String
+  time_str: String
+}
+
+type DSCR {
+  _issued_date_str: String
+  id: ID!
+  court_system: String
+  tracking_number: String
+  case_type: String
+  district_code: Int
+  location_code: Int
+  document_type: String
+  issued_date: String
+  case_status: String
+  case_disposition: String
+  case_number: String
+  issued_date_str: String
+}
+
+type DSCRBailEvent {
+  _date_str: String
+  id: ID!
+  event_name: String
+  date: String
+  bail_amount: Float
+  code: String
+  percentage_required: Float
+  type_of_bond: String
+  judge_id: String
+  case_number: String
+  date_str: String
+}
+
+type DSCRCharge {
+  _amended_date_str: String
+  _incident_date_from_str: String
+  _incident_date_to_str: String
+  _disposition_date_str: String
+  _pbj_end_date_str: String
+  _probation_end_date_str: String
+  id: ID!
+  charge_number: Int
+  charge_description: String
+  statute: String
+  statute_description: String
+  amended_date: String
+  cjis_code: String
+  mo_pll: String
+  probable_cause: Boolean
+  incident_date_from: String
+  incident_date_to: String
+  victim_age: Int
+  plea: String
+  disposition: String
+  disposition_date: String
+  fine: Float
+  court_costs: Float
+  cicf: Float
+  suspended_fine: Float
+  suspended_court_costs: Float
+  suspended_cicf: Float
+  pbj_end_date: String
+  probation_end_date: String
+  restitution_amount: Float
+  jail_term_years: Int
+  jail_term_months: Int
+  jail_term_days: Int
+  suspended_term_years: Int
+  suspended_term_months: Int
+  suspended_term_days: Int
+  credit_time_served: String
+  case_number: String
+  disposition_date_str: String
+  amended_date_str: String
+  pbj_end_date_str: String
+  incident_date_to_str: String
+  probation_end_date_str: String
+  incident_date_from_str: String
+}
+
+type DSCRDefendant {
+  id: ID!
+  race: String
+  sex: String
+  height: Int
+  weight: Int
+  city: String
+  state: String
+  zip_code: String
+  case_number: String
+}
+
+type DSCREvent {
+  _date_str: String
+  id: ID!
+  event_name: String
+  date: String
+  comment: String
+  case_number: String
+  date_str: String
+}
+
+type DSCRRelatedPerson {
+  id: ID!
+  name: String
+  connection: String
+  address_1: String
+  address_2: String
+  city: String
+  state: String
+  zip_code: String
+  agency_code: String
+  agency_sub_code: String
+  officer_id: String
+  attorney_code: Int
+  attorney_firm: String
+  case_number: String
+}
+
+type DSCRTrial {
+  _date_str: String
+  _time_str: String
+  id: ID!
+  date: String
+  time: String
+  room: String
+  trial_type: String
+  location: String
+  reason: String
+  case_number: String
+  date_str: String
+  time_str: String
+}
+
+type DSK8 {
+  _status_date_str: String
+  _filing_date_str: String
+  _incident_date_str: String
+  id: ID!
+  court_system: String
+  case_status: String
+  status_date: String
+  tracking_number: String
+  complaint_number: String
+  district_case_number: String
+  filing_date: String
+  incident_date: String
+  case_number: String
+  status_date_str: String
+  filing_date_str: String
+  incident_date_str: String
+}
+
+type DSK8BailAndBond {
+  _set_date_str: String
+  _release_date_str: String
+  _forfeit_date_str: String
+  _forfeit_extended_date_str: String
+  _judgment_date_str: String
+  id: ID!
+  bail_amount: Int
+  bail_number: String
+  set_date: String
+  release_date: String
+  release_reason: String
+  bail_set_location: String
+  bond_type: String
+  ground_rent: Float
+  mortgage: Float
+  property_value: Float
+  property_address: String
+  forfeit_date: String
+  forfeit_extended_date: String
+  days_extended: Int
+  bondsman_company_name: String
+  judgment_date: String
+  case_number: String
+  forfeit_date_str: String
+  judgment_date_str: String
+  release_date_str: String
+  set_date_str: String
+  forfeit_extended_date_str: String
+}
+
+type DSK8Bondsman {
+  id: ID!
+  bail_and_bond_id: Int
+  name: String
+  address_1: String
+  city: String
+  state: String
+  zip_code: String
+  case_number: String
+}
+
+type DSK8Charge {
+  _plea_date_str: String
+  _disposition_date_str: String
+  _verdict_date_str: String
+  _sentence_starts_str: String
+  _sentence_date_str: String
+  id: ID!
+  charge_number: Int
+  cjis_traffic_code: String
+  arrest_citation_number: String
+  description: String
+  plea: String
+  plea_date: String
+  disposition: String
+  disposition_date: String
+  verdict: String
+  verdict_date: String
+  court_costs: Float
+  fine: Float
+  sentence_starts: String
+  sentence_date: String
+  sentence_term: String
+  sentence_years: Int
+  sentence_months: Int
+  sentence_days: Int
+  confinement: String
+  suspended_years: Int
+  suspended_months: Int
+  suspended_days: Int
+  probation_years: Int
+  probation_months: Int
+  probation_days: Int
+  probation_type: String
+  case_number: String
+  sentence_starts_str: String
+  disposition_date_str: String
+  sentence_date_str: String
+  plea_date_str: String
+  verdict_date_str: String
+}
+
+type DSK8Defendant {
+  id: ID!
+  race: String
+  sex: String
+  height: Int
+  weight: Int
+  city: String
+  state: String
+  zip_code: String
+  case_number: String
+}
+
+type DSK8Event {
+  _date_str: String
+  id: ID!
+  event_name: String
+  date: String
+  comment: String
+  case_number: String
+  date_str: String
+}
+
+type DSK8RelatedPerson {
+  id: ID!
+  name: String
+  connection: String
+  address_1: String
+  address_2: String
+  city: String
+  state: String
+  zip_code: String
+  agency_code: String
+  agency_sub_code: String
+  officer_id: String
+  attorney_code: Int
+  attorney_firm: String
+  case_number: String
+}
+
+type DSK8Trial {
+  _date_str: String
+  _time_str: String
+  id: ID!
+  date: String
+  time: String
+  room: String
+  trial_type: String
+  location: String
+  reason: String
+  case_number: String
+  date_str: String
+  time_str: String
+}
+
+input DateFilterModel {
+  field: String!
+  filter_type: String!
+  type: String!
+  date_from: String
+  date_to: String
+}
+
+scalar AWSDateTime
+
+input FilterCondition {
+  text_filter: TextFilterModel
+  number_filter: NumberFilterModel
+  date_filter: DateFilterModel
+}
+
+input FilterModel {
+  text_filters: [TextFilterModel]
+  number_filters: [NumberFilterModel]
+  date_filters: [DateFilterModel]
+  combo_filters: [ComboFilterModel]
+}
+
+input NumberFilterModel {
+  field: String!
+  filter_type: String!
+  type: String!
+  filter: Int
+  filter_to: Int
+}
+
+type ODYCRIM {
+  _filing_date_str: String
+  id: ID!
+  court_system: String
+  location: String
+  case_title: String
+  case_type: String
+  filing_date: String
+  case_status: String
+  tracking_numbers: String
+  case_number: String
+  filing_date_str: String
+}
+
+type ODYCRIMAttorney {
+  id: ID!
+  name: String
+  address_1: String
+  address_2: String
+  address_3: String
+  city: String
+  state: String
+  zip_code: String
+  defendant_id: Int
+  party_id: Int
+  case_number: String
+}
+
+type ODYCRIMBailBond {
+  _bond_status_date_str: String
+  id: ID!
+  bond_type: String
+  bond_amount_posted: String
+  bond_status_date: String
+  bond_status: String
+  case_number: String
+  bond_status_date_str: String
+}
+
+type ODYCRIMBondSetting {
+  _bail_date_str: String
+  id: ID!
+  bail_date: String
+  bail_setting_type: String
+  bail_amount: Float
+  case_number: String
+  bail_date_str: String
+}
+
+type ODYCRIMCharge {
+  _offense_date_from_str: String
+  _offense_date_to_str: String
+  _plea_date_str: String
+  _disposition_date_str: String
+  _jail_start_date_str: String
+  id: ID!
+  charge_number: Int
+  cjis_code: String
+  statute_code: String
+  charge_description: String
+  charge_class: String
+  probable_cause: Boolean
+  offense_date_from: String
+  offense_date_to: String
+  agency_name: String
+  officer_id: String
+  plea: String
+  plea_date: String
+  disposition: String
+  disposition_date: String
+  converted_disposition: String
+  jail_life: Boolean
+  jail_death: Boolean
+  jail_start_date: String
+  jail_years: Int
+  jail_months: Int
+  jail_days: Int
+  jail_hours: Int
+  jail_suspended_term: String
+  jail_suspended_years: Int
+  jail_suspended_months: Int
+  jail_suspended_days: Int
+  jail_suspended_hours: Int
+  jail_suspend_all_but_years: Int
+  jail_suspend_all_but_months: Int
+  jail_suspend_all_but_days: Int
+  jail_suspend_all_but_hours: Int
+  case_number: String
+  disposition_date_str: String
+  plea_date_str: String
+  offense_date_from_str: String
+  offense_date_to_str: String
+  jail_start_date_str: String
+}
+
+type ODYCRIMCourtSchedule {
+  _date_str: String
+  _time_str: String
+  id: ID!
+  event_type: String!
+  date: String
+  time: String
+  location: String
+  room: String
+  result: String
+  case_number: String
+  date_str: String
+  time_str: String
+}
+
+type ODYCRIMDefendant {
+  id: ID!
+  race: String
+  sex: String
+  weight: Int
+  city: String
+  state: String
+  zip_code: String
+  height: String
+  hair_color: String
+  eye_color: String
+  case_number: String
+}
+
+type ODYCRIMDocument {
+  _file_date_str: String
+  id: ID!
+  file_date: String
+  filed_by: String
+  document_name: String!
+  case_number: String
+  file_date_str: String
+}
+
+type ODYCRIMInvolvedParty {
+  id: ID!
+  party_type: String!
+  name: String!
+  agency_name: String
+  address_1: String
+  address_2: String
+  city: String
+  state: String
+  zip_code: String
+  case_number: String
+}
+
+type ODYCRIMProbation {
+  _probation_start_date_str: String
+  id: ID!
+  probation_start_date: String
+  probation_supervised: Boolean
+  probation_supervised_years: Int
+  probation_supervised_months: Int
+  probation_supervised_days: Int
+  probation_supervised_hours: Int
+  probation_unsupervised: Boolean
+  probation_unsupervised_years: Int
+  probation_unsupervised_months: Int
+  probation_unsupervised_days: Int
+  probation_unsupervised_hours: Int
+  case_number: String
+  probation_start_date_str: String
+}
+
+type ODYCRIMReferenceNumber {
+  id: ID!
+  ref_num: String!
+  ref_num_type: String!
+  case_number: String
+}
+
+type ODYCRIMRestitution {
+  _restitution_entered_date_str: String
+  id: ID!
+  restitution_amount: Float
+  restitution_entered_date: String
+  case_number: String
+  restitution_entered_date_str: String
+}
+
+type ODYCRIMService {
+  _issued_date_str: String
+  id: ID!
+  service_type: String!
+  issued_date: String
+  service_status: String
+  case_number: String
+  issued_date_str: String
+}
+
+type ODYCRIMWarrant {
+  _issue_date_str: String
+  _status_date_str: String
+  id: ID!
+  warrant_type: String
+  issue_date: String
+  last_status: String
+  status_date: String
+  case_number: String
+  issue_date_str: String
+  status_date_str: String
+}
+
+type ODYTRAF {
+  _filing_date_str: String
+  _violation_date_str: String
+  _violation_time_str: String
+  id: ID!
+  court_system: String
+  location: String
+  citation_number: String
+  case_title: String
+  case_type: String
+  filing_date: String
+  violation_date: String
+  violation_time: String
+  violation_county: String
+  agency_name: String
+  officer_id: String
+  officer_name: String
+  case_status: String
+  case_number: String
+  violation_time_str: String
+  violation_date_str: String
+  filing_date_str: String
+}
+
+type ODYTRAFAttorney {
+  id: ID!
+  name: String
+  address_1: String
+  address_2: String
+  address_3: String
+  city: String
+  state: String
+  zip_code: String
+  defendant_id: Int
+  party_id: Int
+  case_number: String
+}
+
+type ODYTRAFBailBond {
+  _bond_status_date_str: String
+  id: ID!
+  bond_type: String
+  bond_amount_set: String
+  bond_status_date: String
+  bond_status: String
+  case_number: String
+  bond_status_date_str: String
+}
+
+type ODYTRAFBondSetting {
+  _bail_date_str: String
+  id: ID!
+  bail_date: String
+  bail_setting_type: String
+  bail_amount: Float
+  case_number: String
+  bail_date_str: String
+}
+
+type ODYTRAFCharge {
+  _plea_date_str: String
+  _disposition_date_str: String
+  _probation_start_date_str: String
+  _jail_start_date_str: String
+  id: ID!
+  charge_number: Int
+  charge_description: String
+  statute_code: String
+  speed_limit: Int
+  recorded_speed: Int
+  location_stopped: String
+  probable_cause_indicator: Boolean
+  charge_contributed_to_accident: Boolean
+  charge_personal_injury: Boolean
+  property_damage: Boolean
+  seat_belts: Boolean
+  mandatory_court_appearance: Boolean
+  fine_amount_owed: Float
+  vehicle_tag: String
+  state: String
+  vehicle_description: String
+  convicted_speed: Int
+  disposition_contributed_to_accident: Boolean
+  disposition_personal_injury: Boolean
+  plea: String
+  plea_date: String
+  disposition: String
+  disposition_date: String
+  converted_disposition: String
+  probation_start_date: String
+  probation_supervised_years: Int
+  probation_supervised_months: Int
+  probation_supervised_days: Int
+  probation_supervised_hours: Int
+  probation_unsupervised_years: Int
+  probation_unsupervised_months: Int
+  probation_unsupervised_days: Int
+  probation_unsupervised_hours: Int
+  jail_life_death: String
+  jail_start_date: String
+  jail_years: Int
+  jail_months: Int
+  jail_days: Int
+  jail_hours: Int
+  jail_suspended_years: Int
+  jail_suspended_months: Int
+  jail_suspended_days: Int
+  jail_suspended_hours: Int
+  jail_suspend_all_but_years: Int
+  jail_suspend_all_but_months: Int
+  jail_suspend_all_but_days: Int
+  jail_suspend_all_but_hours: Int
+  case_number: String
+  disposition_date_str: String
+  plea_date_str: String
+  jail_start_date_str: String
+  probation_start_date_str: String
+}
+
+type ODYTRAFCourtSchedule {
+  _date_str: String
+  _time_str: String
+  id: ID!
+  event_type: String!
+  date: String
+  time: String
+  location: String
+  room: String
+  result: String
+  case_number: String
+  date_str: String
+  time_str: String
+}
+
+type ODYTRAFDefendant {
+  id: ID!
+  race: String
+  sex: String
+  weight: Int
+  city: String
+  state: String
+  zip_code: String
+  height: String
+  case_number: String
+}
+
+type ODYTRAFDocument {
+  _file_date_str: String
+  id: ID!
+  file_date: String
+  filed_by: String
+  document_name: String
+  comment: String
+  case_number: String
+  file_date_str: String
+}
+
+type ODYTRAFInvolvedParty {
+  id: ID!
+  party_type: String!
+  name: String!
+  agency_name: String
+  address_1: String
+  address_2: String
+  city: String
+  state: String
+  zip_code: String
+  case_number: String
+}
+
+type ODYTRAFReferenceNumber {
+  id: ID!
+  ref_num: String!
+  ref_num_type: String!
+  case_number: String
+}
+
+type ODYTRAFService {
+  _issued_date_str: String
+  id: ID!
+  service_type: String!
+  requested_by: String
+  issued_date: String
+  service_status: String
+  case_number: String
+  issued_date_str: String
+}
+
+type ODYTRAFWarrant {
+  _issue_date_str: String
+  _status_date_str: String
+  id: ID!
+  warrant_type: String
+  issue_date: String
+  last_status: String
+  status_date: String
+  case_number: String
+  issue_date_str: String
+  status_date_str: String
+}
+
 type Query {
-  echo(msg: String): String
+  row_data(model: String!, start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ResultsResponse
+}
+
+type ResultsResponse {
+  rows: [Row]
+  last_row: Int
+}
+
+union Row = Case | CC | DSCIVIL | DSCR | DSK8 | ODYCRIM | ODYTRAF | DSCRCharge | DSCRDefendant | DSCRRelatedPerson | DSCREvent | DSCRTrial | DSCRBailEvent | DSK8Charge | DSK8BailAndBond | DSK8Bondsman | DSK8Defendant | DSK8RelatedPerson | DSK8Event | DSK8Trial | CCDistrictCaseNumber | CCPlaintiff | CCDefendant | CCRelatedPerson | CCPartyAlias | CCPartyAddress | CCAttorney | CCCourtSchedule | CCDocument | CCJudgment | CCJudgmentModification | CCJudgmentAgainst | CCJudgmentInFavor | CCSupportOrder | DSCIVILComplaint | DSCIVILHearing | DSCIVILJudgment | DSCIVILRelatedPerson | DSCIVILEvent | DSCIVILTrial | ODYCRIMReferenceNumber | ODYCRIMDefendant | ODYCRIMInvolvedParty | ODYCRIMAttorney | ODYCRIMCourtSchedule | ODYCRIMCharge | ODYCRIMProbation | ODYCRIMRestitution | ODYCRIMWarrant | ODYCRIMBailBond | ODYCRIMBondSetting | ODYCRIMDocument | ODYCRIMService | ODYTRAFReferenceNumber | ODYTRAFDefendant | ODYTRAFInvolvedParty | ODYTRAFAttorney | ODYTRAFCourtSchedule | ODYTRAFCharge | ODYTRAFWarrant | ODYTRAFBailBond | ODYTRAFBondSetting | ODYTRAFDocument | ODYTRAFService
+
+input SortColumn {
+  col_id: String!
+  sort: String
+}
+
+input TextFilterModel {
+  field: String!
+  filter_type: String!
+  type: String!
+  filter: String
+}
+
+input ValueColumn {
+  id: String
+  display_name: String
+  field: String!
+  agg_func: String!
 }

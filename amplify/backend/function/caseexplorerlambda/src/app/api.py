@@ -10,17 +10,22 @@ from flask import current_app
 from app import models
 
 defendant_redacted_fields = [
-    "name",
-    "DOB",
-    "DOB_str",
-    "address_1",
-    "address_2"
+    'name',
+    'DOB',
+    'DOB_str',
+    '_DOB_str',
+    'address_1',
+    'address_2',
+    'defendant'
 ]
 
 defendant_models = [
     'dscr_defendants',
     'dsk8_defendants',
-    'odycrim_defendants'
+    'odycrim_defendants',
+    'odytraf_defendants',
+    'cc_defendants',
+    'dscivil_complaints'
 ]
 
 def get_orm_class_by_name(table_name):
@@ -77,8 +82,10 @@ def fetch_rows_from_model(cls, req):
     if table.name in defendant_models:
         for row in rows:
             for field in defendant_redacted_fields:
-                del row[field]
-            del row['id']
+                try:
+                    del row[field]
+                except:
+                    pass
 
     return {
         'rows': rows,

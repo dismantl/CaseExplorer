@@ -24,39 +24,47 @@
 		"S3DeploymentRootKey": {
 			"Type": "String",
 			"Description": "An S3 key relative to the S3DeploymentBucket that points to the root\nof the deployment directory."
+		},
+		"functioncaseexplorerlambdaName": {
+			"Type": "String",
+			"Default": "functioncaseexplorerlambdaName"
+		},
+		"functioncaseexplorerlambdaArn": {
+			"Type": "String",
+			"Default": "functioncaseexplorerlambdaArn"
 		}
 	},
 	"Resources": {
-		"EchoLambdaDataSource": {
+		"CaseExplorerLambdaDataSource": {
 		  "Type": "AWS::AppSync::DataSource",
 		  "Properties": {
 		    "ApiId": {
 		      "Ref": "AppSyncApiId"
 		    },
-		    "Name": "EchoFunction",
+		    "Name": "CaseExplorerLambda",
 		    "Type": "AWS_LAMBDA",
 		    "ServiceRoleArn": {
 		      "Fn::GetAtt": [
-		        "EchoLambdaDataSourceRole",
+		        "CaseExplorerLambdaDataSourceRole",
 		        "Arn"
 		      ]
 		    },
 		    "LambdaConfig": {
 		      "LambdaFunctionArn": {
 		        "Fn::Sub": [
-		          "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:echofunction-${env}",
+		          "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:caseexplorerlambda-${env}",
 		          { "env": { "Ref": "env" } }
 		        ]
 		      }
 		    }
 		  }
 		},
-		"EchoLambdaDataSourceRole": {
+		"CaseExplorerLambdaDataSourceRole": {
 		  "Type": "AWS::IAM::Role",
 		  "Properties": {
 		    "RoleName": {
 		      "Fn::Sub": [
-		        "EchoLambdaDataSourceRole-${env}",
+		        "CaseExplorerLambdaDataSourceRole-${env}",
 		        { "env": { "Ref": "env" } }
 		      ]
 		    },
@@ -86,7 +94,7 @@
 		              "Resource": [
 		                {
 		                  "Fn::Sub": [
-		                    "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:echofunction-${env}",
+		                    "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:caseexplorerlambda-${env}",
 		                    { "env": { "Ref": "env" } }
 		                  ]
 		                }
@@ -98,7 +106,7 @@
 		    ]
 		  }
 		},
-		"QueryEchoResolver": {
+		"QueryCaseExplorerResolver": {
 		  "Type": "AWS::AppSync::Resolver",
 		  "Properties": {
 		    "ApiId": {
@@ -106,15 +114,15 @@
 		    },
 		    "DataSourceName": {
 		      "Fn::GetAtt": [
-		        "EchoLambdaDataSource",
+		        "CaseExplorerLambdaDataSource",
 		        "Name"
 		      ]
 		    },
 		    "TypeName": "Query",
-		    "FieldName": "echo",
+		    "FieldName": "row_data",
 		    "RequestMappingTemplateS3Location": {
 		      "Fn::Sub": [
-		        "s3://${S3DeploymentBucket}/${S3DeploymentRootKey}/resolvers/Query.echo.req.vtl",
+		        "s3://${S3DeploymentBucket}/${S3DeploymentRootKey}/resolvers/Query.row_data.req.vtl",
 		        {
 		          "S3DeploymentBucket": {
 		            "Ref": "S3DeploymentBucket"
@@ -127,7 +135,7 @@
 		    },
 		    "ResponseMappingTemplateS3Location": {
 		      "Fn::Sub": [
-		        "s3://${S3DeploymentBucket}/${S3DeploymentRootKey}/resolvers/Query.echo.res.vtl",
+		        "s3://${S3DeploymentBucket}/${S3DeploymentRootKey}/resolvers/Query.row_data.res.vtl",
 		        {
 		          "S3DeploymentBucket": {
 		            "Ref": "S3DeploymentBucket"

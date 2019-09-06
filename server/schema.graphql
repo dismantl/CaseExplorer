@@ -14,8 +14,8 @@ type CC {
   case_disposition: String
   disposition_date: String
   case_number: String
-  filing_date_str: String
   disposition_date_str: String
+  filing_date_str: String
 }
 
 type CCAttorney {
@@ -52,10 +52,10 @@ type CCCourtSchedule {
   result: String
   result_date: String
   case_number: String
-  notice_date_str: String
   result_date_str: String
-  event_date_str: String
   event_time_str: String
+  event_date_str: String
+  notice_date_str: String
 }
 
 type CCDefendant {
@@ -210,9 +210,9 @@ type CCSupportOrder {
   provisions: String
   case_number: String
   effective_date_str: String
-  order_date_str: String
-  medical_insurance_report_date_str: String
   date_str: String
+  medical_insurance_report_date_str: String
+  order_date_str: String
 }
 
 type Case {
@@ -268,8 +268,8 @@ type DSCIVILComplaint {
   amount: Float
   last_activity_date: String
   case_number: String
-  filing_date_str: String
   status_date_str: String
+  filing_date_str: String
   last_activity_date_str: String
 }
 
@@ -329,10 +329,10 @@ type DSCIVILJudgment {
   renewed_lien_date: String
   satisfaction_date: String
   case_number: String
-  judgment_date_str: String
   recorded_lien_date_str: String
-  renewed_lien_date_str: String
   satisfaction_date_str: String
+  judgment_date_str: String
+  renewed_lien_date_str: String
   judgment_renewed_date_str: String
 }
 
@@ -365,8 +365,8 @@ type DSCIVILTrial {
   location: String
   reason: String
   case_number: String
-  time_str: String
   date_str: String
+  time_str: String
 }
 
 type DSCR {
@@ -438,12 +438,12 @@ type DSCRCharge {
   suspended_term_days: Int
   credit_time_served: String
   case_number: String
-  pbj_end_date_str: String
   disposition_date_str: String
   amended_date_str: String
+  pbj_end_date_str: String
   incident_date_to_str: String
-  incident_date_from_str: String
   probation_end_date_str: String
+  incident_date_from_str: String
 }
 
 type DSCRDefendant {
@@ -496,8 +496,8 @@ type DSCRTrial {
   location: String
   reason: String
   case_number: String
-  time_str: String
   date_str: String
+  time_str: String
 }
 
 type DSK8 {
@@ -514,8 +514,8 @@ type DSK8 {
   filing_date: String
   incident_date: String
   case_number: String
-  filing_date_str: String
   status_date_str: String
+  filing_date_str: String
   incident_date_str: String
 }
 
@@ -543,10 +543,10 @@ type DSK8BailAndBond {
   bondsman_company_name: String
   judgment_date: String
   case_number: String
-  set_date_str: String
-  judgment_date_str: String
   forfeit_date_str: String
+  judgment_date_str: String
   release_date_str: String
+  set_date_str: String
   forfeit_extended_date_str: String
 }
 
@@ -595,11 +595,11 @@ type DSK8Charge {
   probation_days: Int
   probation_type: String
   case_number: String
-  disposition_date_str: String
-  verdict_date_str: String
   sentence_starts_str: String
+  disposition_date_str: String
   sentence_date_str: String
   plea_date_str: String
+  verdict_date_str: String
 }
 
 type DSK8Defendant {
@@ -652,8 +652,8 @@ type DSK8Trial {
   location: String
   reason: String
   case_number: String
-  time_str: String
   date_str: String
+  time_str: String
 }
 
 input DateFilterModel {
@@ -775,10 +775,10 @@ type ODYCRIMCharge {
   jail_suspend_all_but_days: Int
   jail_suspend_all_but_hours: Int
   case_number: String
-  offense_date_from_str: String
-  offense_date_to_str: String
   disposition_date_str: String
   plea_date_str: String
+  offense_date_from_str: String
+  offense_date_to_str: String
   jail_start_date_str: String
 }
 
@@ -887,8 +887,8 @@ type ODYCRIMWarrant {
   last_status: String
   status_date: String
   case_number: String
-  status_date_str: String
   issue_date_str: String
+  status_date_str: String
 }
 
 type ODYTRAF {
@@ -910,9 +910,9 @@ type ODYTRAF {
   officer_name: String
   case_status: String
   case_number: String
-  filing_date_str: String
-  violation_date_str: String
   violation_time_str: String
+  violation_date_str: String
+  filing_date_str: String
 }
 
 type ODYTRAFAttorney {
@@ -1004,10 +1004,10 @@ type ODYTRAFCharge {
   jail_suspend_all_but_days: Int
   jail_suspend_all_but_hours: Int
   case_number: String
-  probation_start_date_str: String
-  jail_start_date_str: String
   disposition_date_str: String
   plea_date_str: String
+  jail_start_date_str: String
+  probation_start_date_str: String
 }
 
 type ODYTRAFCourtSchedule {
@@ -1088,8 +1088,8 @@ type ODYTRAFWarrant {
   last_status: String
   status_date: String
   case_number: String
-  status_date_str: String
   issue_date_str: String
+  status_date_str: String
 }
 
 type Query {

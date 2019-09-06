@@ -18,8 +18,8 @@
     "privacy": {
         "auth": 0,
         "unauth": 0,
-        "authRoleName": "caseexplorer-prod-20190902104322-authRole",
-        "unAuthRoleName": "caseexplorer-prod-20190902104322-unauthRole"
+        "authRoleName": "caseexplorer-graphql-20190904122223-authRole",
+        "unAuthRoleName": "caseexplorer-graphql-20190904122223-unauthRole"
     },
     "dependsOn": [
         {
@@ -30,5 +30,6 @@
                 "Arn"
             ]
         }
-    ]
+    ],
+    "uuid": "b5ecb6ed"
 }

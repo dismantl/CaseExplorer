@@ -1,3 +1,25 @@
 {
-    "AppSyncApiName": "caseexplorergraphql"
+    "AppSyncApiName": "caseexplorergraphql",
+    "functioncaseexplorerlambdaArn": {
+        "Fn::Sub": [
+            "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:caseexplorerlambda-${env}",
+            {
+                "env": {
+                    "Ref": "env"
+                }
+            }
+        ]
+    },
+    "functioncaseexplorerlambdaName": {
+        "Fn::Join": [
+            "",
+            [
+                "caseexplorerlambda",
+                "-",
+                {
+                    "Ref": "env"
+                }
+            ]
+        ]
+    }
 }
