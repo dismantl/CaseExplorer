@@ -10,6 +10,17 @@ from app import app
 from app.api import fetch_rows, get_orm_class_by_name
 from app.schema import transform_filter_model #, Query
 
+def format_rows(results, cls=None):
+    for row in results['rows']:
+        if cls:
+            row['__typename'] = cls.__name__
+        for col, val in row.items():
+            if type(val) == date or type(val) == time or type(val) == datetime:
+                print('date or time or datetime', str(col), str(val))
+                row[col] = val.isoformat()
+            if type(val) == datetime and '+' not in row[col]:
+                    row[col] += 'Z'
+
 def handler(event, context):
     print(event)
     if 'field' in event:  # GraphQL API
@@ -31,22 +42,17 @@ def handler(event, context):
                         'filterModel': transform_filter_model(args['filter_model'])
                     }
                 )
-                for row in results['rows']:
-                    row['__typename'] = cls.__name__
-                    for col, val in row.items():
-                        if type(val) == date or type(val) == time or type(val) == datetime:
-                            print('date or time or datetime', str(col), str(val))
-                            row[col] = val.isoformat()
-                        if type(val) == datetime and '+' not in row[col]:
-                                row[col] += 'Z'
+            format_rows(results, cls)
             print(results)
             return results
     else:  # REST API
         model = event['path'][5:]  # remove "/api/"
-        response = fetch_rows(model, json.loads(json.loads(event['body'])))
-        print(response)
+        with app.app_context():
+            results = fetch_rows(model, json.loads(json.loads(event['body'])))
+        format_rows(results)
+        print(results)
         return {
-            'body': json.dumps(response),
+            'body': json.dumps(results),
             'headers': {
                 "Access-Control-Allow-Origin": "*",
             },
