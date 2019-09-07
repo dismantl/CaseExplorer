@@ -10,6 +10,7 @@ import Cc from './CC';
 import Dscivil from './DSCIVIL';
 import Odycrim from './ODYCRIM';
 import Odytraf from './ODYTRAF';
+import GraphiQLClient from './GraphiQL';
 import config from './config';
 
 Amplify.configure({
@@ -21,7 +22,11 @@ Amplify.configure({
         region: config.apiGateway.REGION
       }
     ]
-  }
+  },
+  aws_appsync_graphqlEndpoint: config.graphql.URL,
+  aws_appsync_region: config.graphql.REGION,
+  aws_appsync_authenticationType: config.graphql.AUTHTYPE,
+  aws_appsync_apiKey: config.graphql.APIKEY
 });
 
 ReactDOM.render(
@@ -49,6 +54,9 @@ ReactDOM.render(
         <li>
           <NavLink to="/odytraf">ODYTRAF</NavLink>
         </li>
+        <li>
+          <NavLink to="/graphql">GraphiQL</NavLink>
+        </li>
       </ul>
     </div>
     <div className="content">
@@ -60,6 +68,7 @@ ReactDOM.render(
       <Route path="/dscivil" component={Dscivil} />
       <Route path="/odycrim" component={Odycrim} />
       <Route path="/odytraf" component={Odytraf} />
+      <Route path="/graphql" component={GraphiQLClient} />
     </div>
   </Router>,
   document.getElementById('root')
