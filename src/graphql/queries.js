@@ -1,164 +1,49 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
-export const rowData = `query RowData(
-  $model: String!
+export const dscr = `query Dscr(
   $start_row: Int
   $end_row: Int
   $row_group_cols: [ValueColumn]
   $value_cols: [ValueColumn]
   $pivot_cols: [ValueColumn]
+  $pivot_mode: Boolean
   $group_keys: [String]
   $sort_model: [SortColumn]
   $filter_model: FilterModel
 ) {
-  row_data(
-    model: $model
+  dscr(
     start_row: $start_row
     end_row: $end_row
     row_group_cols: $row_group_cols
     value_cols: $value_cols
     pivot_cols: $pivot_cols
+    pivot_mode: $pivot_mode
     group_keys: $group_keys
     sort_model: $sort_model
     filter_model: $filter_model
   ) {
     rows {
-      ... on Case {
-        case_number
-        court
-        query_court
-        case_type
-        filing_date
-        filing_date_original
-        status
-        caption
-        loc
-        detail_loc
-        url
-        last_scrape
-        last_parse
-        scrape_exempt
-        parse_exempt
-      }
-      ... on CC {
-        _filing_date_str
-        _disposition_date_str
-        id
-        court_system
-        title
-        case_type
-        filing_date
-        case_status
-        case_disposition
-        disposition_date
-        case_number
-        disposition_date_str
-        filing_date_str
-      }
-      ... on DSCIVIL {
-        _filing_date_str
-        id
-        court_system
-        claim_type
-        district_code
-        location_code
-        filing_date
-        case_status
-        case_number
-        filing_date_str
-      }
-      ... on DSCR {
-        _issued_date_str
-        id
-        court_system
-        tracking_number
-        case_type
-        district_code
-        location_code
-        document_type
-        issued_date
-        case_status
-        case_disposition
-        case_number
-        issued_date_str
-      }
-      ... on DSK8 {
-        _status_date_str
-        _filing_date_str
-        _incident_date_str
-        id
-        court_system
-        case_status
-        status_date
-        tracking_number
-        complaint_number
-        district_case_number
-        filing_date
-        incident_date
-        case_number
-        status_date_str
-        filing_date_str
-        incident_date_str
-      }
-      ... on ODYCRIM {
-        _filing_date_str
-        id
-        court_system
-        location
-        case_title
-        case_type
-        filing_date
-        case_status
-        tracking_numbers
-        case_number
-        filing_date_str
-      }
-      ... on ODYTRAF {
-        _filing_date_str
-        _violation_date_str
-        _violation_time_str
-        id
-        court_system
-        location
-        citation_number
-        case_title
-        case_type
-        filing_date
-        violation_date
-        violation_time
-        violation_county
-        agency_name
-        officer_id
-        officer_name
-        case_status
-        case_number
-        violation_time_str
-        violation_date_str
-        filing_date_str
-      }
-      ... on DSCRCharge {
-        _amended_date_str
-        _incident_date_from_str
-        _incident_date_to_str
-        _disposition_date_str
-        _pbj_end_date_str
-        _probation_end_date_str
+      charges {
         id
         charge_number
         charge_description
         statute
         statute_description
         amended_date
+        amended_date_str
         cjis_code
         mo_pll
         probable_cause
         incident_date_from
+        incident_date_from_str
         incident_date_to
+        incident_date_to_str
         victim_age
         plea
         disposition
         disposition_date
+        disposition_date_str
         fine
         court_costs
         cicf
@@ -166,7 +51,9 @@ export const rowData = `query RowData(
         suspended_court_costs
         suspended_cicf
         pbj_end_date
+        pbj_end_date_str
         probation_end_date
+        probation_end_date_str
         restitution_amount
         jail_term_years
         jail_term_months
@@ -176,14 +63,8 @@ export const rowData = `query RowData(
         suspended_term_days
         credit_time_served
         case_number
-        disposition_date_str
-        amended_date_str
-        pbj_end_date_str
-        incident_date_to_str
-        probation_end_date_str
-        incident_date_from_str
       }
-      ... on DSCRDefendant {
+      defendants {
         id
         race
         sex
@@ -194,7 +75,17 @@ export const rowData = `query RowData(
         zip_code
         case_number
       }
-      ... on DSCRRelatedPerson {
+      defendant_aliases {
+        id
+        alias_name
+        address_1
+        address_2
+        city
+        state
+        zip_code
+        case_number
+      }
+      related_persons {
         id
         name
         connection
@@ -210,471 +101,85 @@ export const rowData = `query RowData(
         attorney_firm
         case_number
       }
-      ... on DSCREvent {
-        _date_str
+      events {
         id
         event_name
         date
+        date_str
         comment
         case_number
-        date_str
       }
-      ... on DSCRTrial {
-        _date_str
-        _time_str
+      trials {
         id
         date
+        date_str
         time
+        time_str
         room
         trial_type
         location
         reason
         case_number
-        date_str
-        time_str
       }
-      ... on DSCRBailEvent {
-        _date_str
+      bail_events {
         id
         event_name
         date
+        date_str
         bail_amount
         code
         percentage_required
         type_of_bond
         judge_id
         case_number
-        date_str
       }
-      ... on DSK8Charge {
-        _plea_date_str
-        _disposition_date_str
-        _verdict_date_str
-        _sentence_starts_str
-        _sentence_date_str
-        id
-        charge_number
-        cjis_traffic_code
-        arrest_citation_number
-        description
-        plea
-        plea_date
-        disposition
-        disposition_date
-        verdict
-        verdict_date
-        court_costs
-        fine
-        sentence_starts
-        sentence_date
-        sentence_term
-        sentence_years
-        sentence_months
-        sentence_days
-        confinement
-        suspended_years
-        suspended_months
-        suspended_days
-        probation_years
-        probation_months
-        probation_days
-        probation_type
-        case_number
-        sentence_starts_str
-        disposition_date_str
-        sentence_date_str
-        plea_date_str
-        verdict_date_str
-      }
-      ... on DSK8BailAndBond {
-        _set_date_str
-        _release_date_str
-        _forfeit_date_str
-        _forfeit_extended_date_str
-        _judgment_date_str
-        id
-        bail_amount
-        bail_number
-        set_date
-        release_date
-        release_reason
-        bail_set_location
-        bond_type
-        ground_rent
-        mortgage
-        property_value
-        property_address
-        forfeit_date
-        forfeit_extended_date
-        days_extended
-        bondsman_company_name
-        judgment_date
-        case_number
-        forfeit_date_str
-        judgment_date_str
-        release_date_str
-        set_date_str
-        forfeit_extended_date_str
-      }
-      ... on DSK8Bondsman {
-        id
-        bail_and_bond_id
-        name
-        address_1
-        city
-        state
-        zip_code
-        case_number
-      }
-      ... on DSK8Defendant {
-        id
-        race
-        sex
-        height
-        weight
-        city
-        state
-        zip_code
-        case_number
-      }
-      ... on DSK8RelatedPerson {
-        id
-        name
-        connection
-        address_1
-        address_2
-        city
-        state
-        zip_code
-        agency_code
-        agency_sub_code
-        officer_id
-        attorney_code
-        attorney_firm
-        case_number
-      }
-      ... on DSK8Event {
-        _date_str
-        id
-        event_name
-        date
-        comment
-        case_number
-        date_str
-      }
-      ... on DSK8Trial {
-        _date_str
-        _time_str
-        id
-        date
-        time
-        room
-        trial_type
-        location
-        reason
-        case_number
-        date_str
-        time_str
-      }
-      ... on CCDistrictCaseNumber {
-        id
-        district_case_number
-        case_number
-      }
-      ... on CCPlaintiff {
-        id
-        party_type
-        party_number
-        name
-        business_org_name
-        case_number
-      }
-      ... on CCDefendant {
-        id
-        party_type
-        party_number
-        business_org_name
-        case_number
-      }
-      ... on CCRelatedPerson {
-        id
-        party_type
-        party_number
-        name
-        business_org_name
-        case_number
-      }
-      ... on CCPartyAlias {
-        id
-        plaintiff_id
-        defendant_id
-        related_person_id
-        name
-        case_number
-      }
-      ... on CCPartyAddress {
-        id
-        plaintiff_id
-        defendant_id
-        related_person_id
-        address
-        city
-        state
-        zip_code
-        case_number
-      }
-      ... on CCAttorney {
-        _appearance_date_str
-        _removal_date_str
-        id
-        plaintiff_id
-        defendant_id
-        related_person_id
-        name
-        appearance_date
-        removal_date
-        practice_name
-        address_1
-        address_2
-        city
-        state
-        zip_code
-        case_number
-        removal_date_str
-        appearance_date_str
-      }
-      ... on CCCourtSchedule {
-        _notice_date_str
-        _event_date_str
-        _event_time_str
-        _result_date_str
-        id
-        event_type
-        notice_date
-        event_date
-        event_time
-        result
-        result_date
-        case_number
-        result_date_str
-        event_time_str
-        event_date_str
-        notice_date_str
-      }
-      ... on CCDocument {
-        _file_date_str
-        _entered_date_str
-        id
-        document_number
-        sequence_number
-        file_date
-        entered_date
-        decision
-        party_type
-        party_number
-        document_name
-        text
-        case_number
-      }
-      ... on CCJudgment {
-        _entered_date_str
-        id
-        judgment_type
-        entered_date
-        amount
-        amount_other
-        prejudgment_interest
-        appearance_fee
-        filing_fee
-        other_fee
-        service_fee
-        witness_fee
-        attorney_fee
-        total_indexed_judgment
-        tij_other
-        comments
-        case_number
-        entered_date_str
-      }
-      ... on CCJudgmentModification {
-        _entered_date_str
-        _status_date_str
-        id
-        judgment_id
-        judgment_against
-        judgment_for
-        entered_date
-        amount
-        amount_other
-        status_date
-        status
-        comments
-        case_number
-        entered_date_str
-        status_date_str
-      }
-      ... on CCJudgmentAgainst {
-        id
-        judgment_id
-        name
-        case_number
-      }
-      ... on CCJudgmentInFavor {
-        id
-        judgment_id
-        name
-        case_number
-      }
-      ... on CCSupportOrder {
-        _order_date_str
-        _effective_date_str
-        _date_str
-        _medical_insurance_report_date_str
-        id
-        order_id
-        version
-        order_date
-        obligor
-        effective_date
-        effective_date_text
-        status
-        date
-        reason
-        support_amount
-        support_frequency
-        support_to
-        arrears_amount
-        arrears_frequency
-        arrears_to
-        mapr_amount
-        mapr_frequency
-        medical_insurance_report_date
-        btr_amount
-        btr_frequency
-        lien
-        provisions
-        case_number
-        effective_date_str
-        date_str
-        medical_insurance_report_date_str
-        order_date_str
-      }
-      ... on DSCIVILComplaint {
-        _status_date_str
-        _filing_date_str
-        _last_activity_date_str
-        id
-        complaint_number
-        plaintiff
-        complaint_type
-        complaint_status
-        status_date
-        filing_date
-        amount
-        last_activity_date
-        case_number
-        status_date_str
-        filing_date_str
-        last_activity_date_str
-      }
-      ... on DSCIVILHearing {
-        _date_str
-        _time_str
-        id
-        complaint_id
-        date
-        time
-        room
-        location
-        duration
-        hearing_type
-        case_number
-        date_str
-        time_str
-      }
-      ... on DSCIVILJudgment {
-        _judgment_date_str
-        _recorded_lien_date_str
-        _judgment_renewed_date_str
-        _renewed_lien_date_str
-        _satisfaction_date_str
-        id
-        complaint_id
-        judgment_type
-        judgment_date
-        judgment_amount
-        judgment_interest
-        costs
-        other_amounts
-        attorney_fees
-        post_interest_legal_rate
-        post_interest_contractual_rate
-        jointly_and_severally
-        in_favor_of_defendant
-        possession_value
-        possession_damages_value
-        value_sued_for
-        damages
-        dismissed_with_prejudice
-        replevin_detinue
-        recorded_lien_date
-        renewed_lien_date
-        satisfaction_date
-        case_number
-        recorded_lien_date_str
-        satisfaction_date_str
-        judgment_date_str
-        renewed_lien_date_str
-        judgment_renewed_date_str
-      }
-      ... on DSCIVILRelatedPerson {
-        id
-        name
-        connection
-        address_1
-        address_2
-        city
-        state
-        zip_code
-        agency_code
-        agency_sub_code
-        officer_id
-        attorney_code
-        attorney_firm
-        complaint_id
-        case_number
-      }
-      ... on DSCIVILEvent {
-        _date_str
-        id
-        event_name
-        date
-        comment
-        complaint_number
-        case_number
-        date_str
-      }
-      ... on DSCIVILTrial {
-        _date_str
-        _time_str
-        id
-        date
-        time
-        room
-        trial_type
-        location
-        reason
-        case_number
-        date_str
-        time_str
-      }
-      ... on ODYCRIMReferenceNumber {
+      id
+      court_system
+      tracking_number
+      case_type
+      district_code
+      location_code
+      document_type
+      issued_date
+      issued_date_str
+      case_status
+      case_disposition
+      case_number
+    }
+    last_row
+  }
+}
+`;
+export const odytraf = `query Odytraf(
+  $start_row: Int
+  $end_row: Int
+  $row_group_cols: [ValueColumn]
+  $value_cols: [ValueColumn]
+  $pivot_cols: [ValueColumn]
+  $pivot_mode: Boolean
+  $group_keys: [String]
+  $sort_model: [SortColumn]
+  $filter_model: FilterModel
+) {
+  odytraf(
+    start_row: $start_row
+    end_row: $end_row
+    row_group_cols: $row_group_cols
+    value_cols: $value_cols
+    pivot_cols: $pivot_cols
+    pivot_mode: $pivot_mode
+    group_keys: $group_keys
+    sort_model: $sort_model
+    filter_model: $filter_model
+  ) {
+    rows {
+      reference_numbers {
         id
         ref_num
         ref_num_type
         case_number
       }
-      ... on ODYCRIMDefendant {
+      defendants {
         id
         race
         sex
@@ -683,11 +188,9 @@ export const rowData = `query RowData(
         state
         zip_code
         height
-        hair_color
-        eye_color
         case_number
       }
-      ... on ODYCRIMInvolvedParty {
+      involved_parties {
         id
         party_type
         name
@@ -699,213 +202,19 @@ export const rowData = `query RowData(
         zip_code
         case_number
       }
-      ... on ODYCRIMAttorney {
-        id
-        name
-        address_1
-        address_2
-        address_3
-        city
-        state
-        zip_code
-        defendant_id
-        party_id
-        case_number
-      }
-      ... on ODYCRIMCourtSchedule {
-        _date_str
-        _time_str
+      court_schedules {
         id
         event_type
         date
+        date_str
         time
+        time_str
         location
         room
         result
         case_number
-        date_str
-        time_str
       }
-      ... on ODYCRIMCharge {
-        _offense_date_from_str
-        _offense_date_to_str
-        _plea_date_str
-        _disposition_date_str
-        _jail_start_date_str
-        id
-        charge_number
-        cjis_code
-        statute_code
-        charge_description
-        charge_class
-        probable_cause
-        offense_date_from
-        offense_date_to
-        agency_name
-        officer_id
-        plea
-        plea_date
-        disposition
-        disposition_date
-        converted_disposition
-        jail_life
-        jail_death
-        jail_start_date
-        jail_years
-        jail_months
-        jail_days
-        jail_hours
-        jail_suspended_term
-        jail_suspended_years
-        jail_suspended_months
-        jail_suspended_days
-        jail_suspended_hours
-        jail_suspend_all_but_years
-        jail_suspend_all_but_months
-        jail_suspend_all_but_days
-        jail_suspend_all_but_hours
-        case_number
-        disposition_date_str
-        plea_date_str
-        offense_date_from_str
-        offense_date_to_str
-        jail_start_date_str
-      }
-      ... on ODYCRIMProbation {
-        _probation_start_date_str
-        id
-        probation_start_date
-        probation_supervised
-        probation_supervised_years
-        probation_supervised_months
-        probation_supervised_days
-        probation_supervised_hours
-        probation_unsupervised
-        probation_unsupervised_years
-        probation_unsupervised_months
-        probation_unsupervised_days
-        probation_unsupervised_hours
-        case_number
-        probation_start_date_str
-      }
-      ... on ODYCRIMRestitution {
-        _restitution_entered_date_str
-        id
-        restitution_amount
-        restitution_entered_date
-        case_number
-        restitution_entered_date_str
-      }
-      ... on ODYCRIMWarrant {
-        _issue_date_str
-        _status_date_str
-        id
-        warrant_type
-        issue_date
-        last_status
-        status_date
-        case_number
-        issue_date_str
-        status_date_str
-      }
-      ... on ODYCRIMBailBond {
-        _bond_status_date_str
-        id
-        bond_type
-        bond_amount_posted
-        bond_status_date
-        bond_status
-        case_number
-        bond_status_date_str
-      }
-      ... on ODYCRIMBondSetting {
-        _bail_date_str
-        id
-        bail_date
-        bail_setting_type
-        bail_amount
-        case_number
-        bail_date_str
-      }
-      ... on ODYCRIMDocument {
-        _file_date_str
-        id
-        file_date
-        filed_by
-        document_name
-        case_number
-        file_date_str
-      }
-      ... on ODYCRIMService {
-        _issued_date_str
-        id
-        service_type
-        issued_date
-        service_status
-        case_number
-        issued_date_str
-      }
-      ... on ODYTRAFReferenceNumber {
-        id
-        ref_num
-        ref_num_type
-        case_number
-      }
-      ... on ODYTRAFDefendant {
-        id
-        race
-        sex
-        weight
-        city
-        state
-        zip_code
-        height
-        case_number
-      }
-      ... on ODYTRAFInvolvedParty {
-        id
-        party_type
-        name
-        agency_name
-        address_1
-        address_2
-        city
-        state
-        zip_code
-        case_number
-      }
-      ... on ODYTRAFAttorney {
-        id
-        name
-        address_1
-        address_2
-        address_3
-        city
-        state
-        zip_code
-        defendant_id
-        party_id
-        case_number
-      }
-      ... on ODYTRAFCourtSchedule {
-        _date_str
-        _time_str
-        id
-        event_type
-        date
-        time
-        location
-        room
-        result
-        case_number
-        date_str
-        time_str
-      }
-      ... on ODYTRAFCharge {
-        _plea_date_str
-        _disposition_date_str
-        _probation_start_date_str
-        _jail_start_date_str
+      charges {
         id
         charge_number
         charge_description
@@ -928,10 +237,13 @@ export const rowData = `query RowData(
         disposition_personal_injury
         plea
         plea_date
+        plea_date_str
         disposition
         disposition_date
+        disposition_date_str
         converted_disposition
         probation_start_date
+        probation_start_date_str
         probation_supervised_years
         probation_supervised_months
         probation_supervised_days
@@ -942,6 +254,7 @@ export const rowData = `query RowData(
         probation_unsupervised_hours
         jail_life_death
         jail_start_date
+        jail_start_date_str
         jail_years
         jail_months
         jail_days
@@ -955,61 +268,759 @@ export const rowData = `query RowData(
         jail_suspend_all_but_days
         jail_suspend_all_but_hours
         case_number
-        disposition_date_str
-        plea_date_str
-        jail_start_date_str
-        probation_start_date_str
       }
-      ... on ODYTRAFWarrant {
-        _issue_date_str
-        _status_date_str
+      warrants {
         id
         warrant_type
         issue_date
+        issue_date_str
         last_status
         status_date
-        case_number
-        issue_date_str
         status_date_str
+        case_number
       }
-      ... on ODYTRAFBailBond {
-        _bond_status_date_str
+      bail_bonds {
         id
         bond_type
         bond_amount_set
         bond_status_date
+        bond_status_date_str
         bond_status
         case_number
-        bond_status_date_str
       }
-      ... on ODYTRAFBondSetting {
-        _bail_date_str
+      bond_settings {
         id
         bail_date
+        bail_date_str
         bail_setting_type
         bail_amount
         case_number
-        bail_date_str
       }
-      ... on ODYTRAFDocument {
-        _file_date_str
+      documents {
         id
         file_date
+        file_date_str
         filed_by
         document_name
         comment
         case_number
-        file_date_str
       }
-      ... on ODYTRAFService {
-        _issued_date_str
+      services {
         id
         service_type
         requested_by
         issued_date
+        issued_date_str
         service_status
         case_number
+      }
+      id
+      court_system
+      location
+      citation_number
+      case_title
+      case_type
+      filing_date
+      filing_date_str
+      violation_date
+      violation_date_str
+      violation_time
+      violation_time_str
+      violation_county
+      agency_name
+      officer_id
+      officer_name
+      case_status
+      case_number
+    }
+    last_row
+  }
+}
+`;
+export const dscivil = `query Dscivil(
+  $start_row: Int
+  $end_row: Int
+  $row_group_cols: [ValueColumn]
+  $value_cols: [ValueColumn]
+  $pivot_cols: [ValueColumn]
+  $pivot_mode: Boolean
+  $group_keys: [String]
+  $sort_model: [SortColumn]
+  $filter_model: FilterModel
+) {
+  dscivil(
+    start_row: $start_row
+    end_row: $end_row
+    row_group_cols: $row_group_cols
+    value_cols: $value_cols
+    pivot_cols: $pivot_cols
+    pivot_mode: $pivot_mode
+    group_keys: $group_keys
+    sort_model: $sort_model
+    filter_model: $filter_model
+  ) {
+    rows {
+      complaints {
+        id
+        complaint_number
+        plaintiff
+        complaint_type
+        complaint_status
+        status_date
+        status_date_str
+        filing_date
+        filing_date_str
+        amount
+        last_activity_date
+        last_activity_date_str
+        case_number
+      }
+      events {
+        id
+        event_name
+        date
+        date_str
+        comment
+        complaint_number
+        case_number
+      }
+      trials {
+        id
+        date
+        date_str
+        time
+        time_str
+        room
+        trial_type
+        location
+        reason
+        case_number
+      }
+      id
+      court_system
+      claim_type
+      district_code
+      location_code
+      filing_date
+      filing_date_str
+      case_status
+      case_number
+    }
+    last_row
+  }
+}
+`;
+export const dsk8 = `query Dsk8(
+  $start_row: Int
+  $end_row: Int
+  $row_group_cols: [ValueColumn]
+  $value_cols: [ValueColumn]
+  $pivot_cols: [ValueColumn]
+  $pivot_mode: Boolean
+  $group_keys: [String]
+  $sort_model: [SortColumn]
+  $filter_model: FilterModel
+) {
+  dsk8(
+    start_row: $start_row
+    end_row: $end_row
+    row_group_cols: $row_group_cols
+    value_cols: $value_cols
+    pivot_cols: $pivot_cols
+    pivot_mode: $pivot_mode
+    group_keys: $group_keys
+    sort_model: $sort_model
+    filter_model: $filter_model
+  ) {
+    rows {
+      charges {
+        id
+        charge_number
+        cjis_traffic_code
+        arrest_citation_number
+        description
+        plea
+        plea_date
+        plea_date_str
+        disposition
+        disposition_date
+        disposition_date_str
+        verdict
+        verdict_date
+        verdict_date_str
+        court_costs
+        fine
+        sentence_starts
+        sentence_starts_str
+        sentence_date
+        sentence_date_str
+        sentence_term
+        sentence_years
+        sentence_months
+        sentence_days
+        confinement
+        suspended_years
+        suspended_months
+        suspended_days
+        probation_years
+        probation_months
+        probation_days
+        probation_type
+        case_number
+      }
+      bail_and_bonds {
+        id
+        bail_amount
+        bail_number
+        set_date
+        set_date_str
+        release_date
+        release_date_str
+        release_reason
+        bail_set_location
+        bond_type
+        ground_rent
+        mortgage
+        property_value
+        property_address
+        forfeit_date
+        forfeit_date_str
+        forfeit_extended_date
+        forfeit_extended_date_str
+        days_extended
+        bondsman_company_name
+        judgment_date
+        judgment_date_str
+        case_number
+      }
+      defendants {
+        id
+        race
+        sex
+        height
+        weight
+        city
+        state
+        zip_code
+        case_number
+      }
+      defendant_aliases {
+        id
+        alias_name
+        address_1
+        address_2
+        city
+        state
+        zip_code
+        case_number
+      }
+      related_persons {
+        id
+        name
+        connection
+        address_1
+        address_2
+        city
+        state
+        zip_code
+        agency_code
+        agency_sub_code
+        officer_id
+        attorney_code
+        attorney_firm
+        case_number
+      }
+      events {
+        id
+        event_name
+        date
+        date_str
+        comment
+        case_number
+      }
+      trials {
+        id
+        date
+        date_str
+        time
+        time_str
+        room
+        trial_type
+        location
+        reason
+        case_number
+      }
+      id
+      court_system
+      case_status
+      status_date
+      status_date_str
+      tracking_number
+      complaint_number
+      district_case_number
+      filing_date
+      filing_date_str
+      incident_date
+      incident_date_str
+      case_number
+    }
+    last_row
+  }
+}
+`;
+export const cc = `query Cc(
+  $start_row: Int
+  $end_row: Int
+  $row_group_cols: [ValueColumn]
+  $value_cols: [ValueColumn]
+  $pivot_cols: [ValueColumn]
+  $pivot_mode: Boolean
+  $group_keys: [String]
+  $sort_model: [SortColumn]
+  $filter_model: FilterModel
+) {
+  cc(
+    start_row: $start_row
+    end_row: $end_row
+    row_group_cols: $row_group_cols
+    value_cols: $value_cols
+    pivot_cols: $pivot_cols
+    pivot_mode: $pivot_mode
+    group_keys: $group_keys
+    sort_model: $sort_model
+    filter_model: $filter_model
+  ) {
+    rows {
+      district_case_numbers {
+        id
+        district_case_number
+        case_number
+      }
+      plaintiffs {
+        id
+        party_type
+        party_number
+        name
+        business_org_name
+        case_number
+      }
+      defendants {
+        id
+        party_type
+        party_number
+        business_org_name
+        case_number
+      }
+      related_persons {
+        id
+        party_type
+        party_number
+        name
+        business_org_name
+        case_number
+      }
+      court_schedules {
+        id
+        event_type
+        notice_date
+        notice_date_str
+        event_date
+        event_date_str
+        event_time
+        event_time_str
+        result
+        result_date
+        result_date_str
+        case_number
+      }
+      documents {
+        id
+        document_number
+        sequence_number
+        file_date
+        file_date_str
+        entered_date
+        entered_date_str
+        decision
+        party_type
+        party_number
+        document_name
+        text
+        case_number
+      }
+      judgments {
+        id
+        judgment_type
+        entered_date
+        entered_date_str
+        amount
+        amount_other
+        prejudgment_interest
+        appearance_fee
+        filing_fee
+        other_fee
+        service_fee
+        witness_fee
+        attorney_fee
+        total_indexed_judgment
+        tij_other
+        comments
+        case_number
+      }
+      support_orders {
+        id
+        order_id
+        version
+        order_date
+        order_date_str
+        obligor
+        effective_date
+        effective_date_str
+        effective_date_text
+        status
+        date
+        date_str
+        reason
+        support_amount
+        support_frequency
+        support_to
+        arrears_amount
+        arrears_frequency
+        arrears_to
+        mapr_amount
+        mapr_frequency
+        medical_insurance_report_date
+        medical_insurance_report_date_str
+        btr_amount
+        btr_frequency
+        lien
+        provisions
+        case_number
+      }
+      id
+      court_system
+      title
+      case_type
+      filing_date
+      filing_date_str
+      case_status
+      case_disposition
+      disposition_date
+      disposition_date_str
+      case_number
+    }
+    last_row
+  }
+}
+`;
+export const odycrim = `query Odycrim(
+  $start_row: Int
+  $end_row: Int
+  $row_group_cols: [ValueColumn]
+  $value_cols: [ValueColumn]
+  $pivot_cols: [ValueColumn]
+  $pivot_mode: Boolean
+  $group_keys: [String]
+  $sort_model: [SortColumn]
+  $filter_model: FilterModel
+) {
+  odycrim(
+    start_row: $start_row
+    end_row: $end_row
+    row_group_cols: $row_group_cols
+    value_cols: $value_cols
+    pivot_cols: $pivot_cols
+    pivot_mode: $pivot_mode
+    group_keys: $group_keys
+    sort_model: $sort_model
+    filter_model: $filter_model
+  ) {
+    rows {
+      reference_numbers {
+        id
+        ref_num
+        ref_num_type
+        case_number
+      }
+      defendants {
+        id
+        race
+        sex
+        weight
+        city
+        state
+        zip_code
+        height
+        hair_color
+        eye_color
+        case_number
+      }
+      involved_parties {
+        id
+        party_type
+        name
+        agency_name
+        address_1
+        address_2
+        city
+        state
+        zip_code
+        case_number
+      }
+      court_schedules {
+        id
+        event_type
+        date
+        date_str
+        time
+        time_str
+        location
+        room
+        result
+        case_number
+      }
+      charges {
+        id
+        charge_number
+        cjis_code
+        statute_code
+        charge_description
+        charge_class
+        probable_cause
+        offense_date_from
+        offense_date_from_str
+        offense_date_to
+        offense_date_to_str
+        agency_name
+        officer_id
+        plea
+        plea_date
+        plea_date_str
+        disposition
+        disposition_date
+        disposition_date_str
+        converted_disposition
+        jail_life
+        jail_death
+        jail_start_date
+        jail_start_date_str
+        jail_years
+        jail_months
+        jail_days
+        jail_hours
+        jail_suspended_term
+        jail_suspended_years
+        jail_suspended_months
+        jail_suspended_days
+        jail_suspended_hours
+        jail_suspend_all_but_years
+        jail_suspend_all_but_months
+        jail_suspend_all_but_days
+        jail_suspend_all_but_hours
+        case_number
+      }
+      probation {
+        id
+        probation_start_date
+        probation_start_date_str
+        probation_supervised
+        probation_supervised_years
+        probation_supervised_months
+        probation_supervised_days
+        probation_supervised_hours
+        probation_unsupervised
+        probation_unsupervised_years
+        probation_unsupervised_months
+        probation_unsupervised_days
+        probation_unsupervised_hours
+        case_number
+      }
+      restitutions {
+        id
+        restitution_amount
+        restitution_entered_date
+        restitution_entered_date_str
+        case_number
+      }
+      warrants {
+        id
+        warrant_type
+        issue_date
+        issue_date_str
+        last_status
+        status_date
+        status_date_str
+        case_number
+      }
+      bail_bonds {
+        id
+        bond_type
+        bond_amount_posted
+        bond_status_date
+        bond_status_date_str
+        bond_status
+        case_number
+      }
+      bond_settings {
+        id
+        bail_date
+        bail_date_str
+        bail_setting_type
+        bail_amount
+        case_number
+      }
+      documents {
+        id
+        file_date
+        file_date_str
+        filed_by
+        document_name
+        case_number
+      }
+      services {
+        id
+        service_type
+        issued_date
         issued_date_str
+        service_status
+        case_number
+      }
+      id
+      court_system
+      location
+      case_title
+      case_type
+      filing_date
+      filing_date_str
+      case_status
+      tracking_numbers
+      case_number
+    }
+    last_row
+  }
+}
+`;
+export const cases = `query Cases(
+  $start_row: Int
+  $end_row: Int
+  $row_group_cols: [ValueColumn]
+  $value_cols: [ValueColumn]
+  $pivot_cols: [ValueColumn]
+  $pivot_mode: Boolean
+  $group_keys: [String]
+  $sort_model: [SortColumn]
+  $filter_model: FilterModel
+) {
+  cases(
+    start_row: $start_row
+    end_row: $end_row
+    row_group_cols: $row_group_cols
+    value_cols: $value_cols
+    pivot_cols: $pivot_cols
+    pivot_mode: $pivot_mode
+    group_keys: $group_keys
+    sort_model: $sort_model
+    filter_model: $filter_model
+  ) {
+    rows {
+      case_number
+      court
+      case_type
+      filing_date
+      filing_date_original
+      status
+      caption
+      loc
+      detail_loc
+      url
+      last_scrape
+      last_parse
+      scrape_exempt
+      parse_exempt
+      dscr {
+        id
+        court_system
+        tracking_number
+        case_type
+        district_code
+        location_code
+        document_type
+        issued_date
+        issued_date_str
+        case_status
+        case_disposition
+        case_number
+      }
+      odytraf {
+        id
+        court_system
+        location
+        citation_number
+        case_title
+        case_type
+        filing_date
+        filing_date_str
+        violation_date
+        violation_date_str
+        violation_time
+        violation_time_str
+        violation_county
+        agency_name
+        officer_id
+        officer_name
+        case_status
+        case_number
+      }
+      dscivil {
+        id
+        court_system
+        claim_type
+        district_code
+        location_code
+        filing_date
+        filing_date_str
+        case_status
+        case_number
+      }
+      dsk8 {
+        id
+        court_system
+        case_status
+        status_date
+        status_date_str
+        tracking_number
+        complaint_number
+        district_case_number
+        filing_date
+        filing_date_str
+        incident_date
+        incident_date_str
+        case_number
+      }
+      cc {
+        id
+        court_system
+        title
+        case_type
+        filing_date
+        filing_date_str
+        case_status
+        case_disposition
+        disposition_date
+        disposition_date_str
+        case_number
+      }
+      odycrim {
+        id
+        court_system
+        location
+        case_title
+        case_type
+        filing_date
+        filing_date_str
+        case_status
+        tracking_numbers
+        case_number
       }
     }
     last_row

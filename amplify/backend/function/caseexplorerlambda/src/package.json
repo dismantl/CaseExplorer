@@ -10,7 +10,7 @@
     "install-py-deps": "pip install --target ./.requirements -r requirements.txt",
     "copy-backend-files": "cp -r {app,.gitignore,lambda.py,package.json,.requirements} ../amplify/backend/function/caseexplorerlambda/src/",
     "copy-psycopg2": "cp -r psycopg2-3.7 ../amplify/backend/function/caseexplorerlambda/src/psycopg2",
-    "print-schema": "flask print-schema && cp schema.graphql ../amplify/backend/api/caseexplorergraphql/ && sed -i '' -e 's/DateTime/AWSDateTime/g' ../amplify/backend/api/caseexplorergraphql/schema.graphql",
+    "print-schema": "flask print-schema && cp schema.graphql ../amplify/backend/api/caseexplorergraphql/ && sed -i '' -E -e 's/(DateTime|Date|Time)$/AWS\\1/g' ../amplify/backend/api/caseexplorergraphql/schema.graphql",
     "build-backend": "npm run clean-src-dir && npm run install-py-deps && npm run copy-backend-files && npm run copy-psycopg2 && npm run print-schema"
   },
   "author": "Dan Staples <dan@disman.tl>",

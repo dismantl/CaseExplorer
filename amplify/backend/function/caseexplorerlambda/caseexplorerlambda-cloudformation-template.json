@@ -69,7 +69,7 @@
 					]
 				},
 				"Runtime": "python3.7",
-				"Timeout": "25",
+				"Timeout": "300",
 				"VpcConfig": {
 					"SecurityGroupIds": [
 						{
@@ -86,8 +86,8 @@
 					]
 				},
 				"Code": {
-					"S3Bucket": "caseexplorer-graphql-20190904122223-deployment",
-					"S3Key": "amplify-builds/caseexplorerlambda-4e374e6b416f4c4b5371-build.zip"
+					"S3Bucket": "caseexplorer-develop-20190917151146-deployment",
+					"S3Key": "amplify-builds/caseexplorerlambda-2b4462786c744b314256-build.zip"
 				}
 			}
 		},

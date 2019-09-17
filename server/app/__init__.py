@@ -1,69 +1,37 @@
-import sys
 import os
-import datetime
-import logging
-from logging.handlers import RotatingFileHandler
-from flask import Flask, render_template
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask_graphql import GraphQLView
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
-from graphql.utils import schema_printer
+from flask_restplus import Api
 
-from .config import config
-from .models.common import TableBase
-from .schema import schema
+from app.config import config
+from app.utils import configure_logging
+from app.graphql import GraphQL
+from app.commands import print_schema, print_swagger_spec
+from app.api import RESTAPI
+from app.service import DataService
 
-def create_app(config_name='default'):
+db = SQLAlchemy()
+graphql_service = GraphQL()
+data_service = DataService()
+rest_api = RESTAPI()
+
+def create_app(config_name):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
-    db = SQLAlchemy(app)
+    configure_logging(app)
 
+    # Module initialization
     db.init_app(app)
+    graphql_service.init_app(app)  # Must be after db initialization
+    rest_api.init_app(app)
+    data_service.init_app(app)
 
-    from .main import main as main_blueprint  # noqa
-    app.register_blueprint(main_blueprint)
-
-    max_log_size = 10 * 1024 * 1024  # start new log file after 10 MB
-    num_logs_to_keep = 5
-    file_handler = RotatingFileHandler('/tmp/caseexplorer.log', 'a',
-                                       max_log_size, num_logs_to_keep)
-
-    file_handler.setFormatter(
-        logging.Formatter(
-            '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
-        )
-    )
-
-    app.logger.setLevel(logging.INFO)
-    file_handler.setLevel(logging.INFO)
-    app.logger.addHandler(file_handler)
-    app.logger.info('CaseExplorer startup')
-
-    db_engine = create_engine(config[config_name].SQLALCHEMY_DATABASE_URI)
-    db_session = scoped_session(sessionmaker(autocommit=False,
-                                         autoflush=False,
-                                         bind=db_engine))
-    TableBase.query = db_session.query_property()
-    app.config['db_session'] = db_session
-
-    @app.cli.command("print-schema")
-    def print_schema():
-        schema_str = schema_printer.print_schema(schema)
-        with open('schema.graphql', 'w') as schemafile:
-            schemafile.write(schema_str)
+    # Commands
+    app.cli.add_command(print_schema)
+    app.cli.add_command(print_swagger_spec)
 
     return app
 
 
-app = create_app()
-
-app.add_url_rule(
-    '/graphql',
-    view_func=GraphQLView.as_view(
-        'graphql',
-        schema=schema,
-        graphiql=True # for having the GraphiQL interface
-    )
-)
+app = create_app(os.getenv('FLASK_ENV') or 'default')

@@ -27,7 +27,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "build-backend": "cd server && npm run build-backend",
-    "start-backend": "cd server && FLASK_ENV=production flask run",
+    "start-backend": "cd server && FLASK_ENV=development flask run",
     "deploy-backend": "cd server && npm run build-backend && amplify push -y",
     "deploy-frontend": "amplify publish -y"
   },
