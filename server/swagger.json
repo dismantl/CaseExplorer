@@ -1788,11 +1788,23 @@
         },
         "DSK8": {
             "properties": {
+                "bail_and_bonds": {
+                    "items": {
+                        "$ref": "#/definitions/DSK8BailAndBond"
+                    },
+                    "type": "array"
+                },
                 "case_number": {
                     "type": "string"
                 },
                 "case_status": {
                     "type": "string"
+                },
+                "charges": {
+                    "items": {
+                        "$ref": "#/definitions/DSK8Charge"
+                    },
+                    "type": "array"
                 },
                 "complaint_number": {
                     "type": "string"
@@ -1800,8 +1812,26 @@
                 "court_system": {
                     "type": "string"
                 },
+                "defendant_aliases": {
+                    "items": {
+                        "$ref": "#/definitions/DSK8DefendantAlias"
+                    },
+                    "type": "array"
+                },
+                "defendants": {
+                    "items": {
+                        "$ref": "#/definitions/DSK8Defendant"
+                    },
+                    "type": "array"
+                },
                 "district_case_number": {
                     "type": "string"
+                },
+                "events": {
+                    "items": {
+                        "$ref": "#/definitions/DSK8Event"
+                    },
+                    "type": "array"
                 },
                 "filing_date": {
                     "format": "date",
@@ -1820,6 +1850,12 @@
                 "incident_date_str": {
                     "type": "string"
                 },
+                "related_persons": {
+                    "items": {
+                        "$ref": "#/definitions/DSK8RelatedPerson"
+                    },
+                    "type": "array"
+                },
                 "status_date": {
                     "format": "date",
                     "type": "string"
@@ -1829,6 +1865,12 @@
                 },
                 "tracking_number": {
                     "type": "string"
+                },
+                "trials": {
+                    "items": {
+                        "$ref": "#/definitions/DSK8Trial"
+                    },
+                    "type": "array"
                 }
             },
             "type": "object"
