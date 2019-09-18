@@ -4028,12 +4028,6 @@
                 "operationId": "get_case_resource_case_number",
                 "parameters": [
                     {
-                        "in": "query",
-                        "name": "case_number",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
                         "description": "An optional fields mask",
                         "format": "mask",
                         "in": "header",
@@ -4101,12 +4095,6 @@
                 "operationId": "get_cc_resource_case_number",
                 "parameters": [
                     {
-                        "in": "query",
-                        "name": "case_number",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
                         "description": "An optional fields mask",
                         "format": "mask",
                         "in": "header",
@@ -4139,12 +4127,6 @@
             "get": {
                 "operationId": "get_cc_resource_case_number_full",
                 "parameters": [
-                    {
-                        "in": "query",
-                        "name": "case_number",
-                        "required": true,
-                        "type": "string"
-                    },
                     {
                         "description": "An optional fields mask",
                         "format": "mask",
@@ -4213,12 +4195,6 @@
                 "operationId": "get_dscivil_resource_case_number",
                 "parameters": [
                     {
-                        "in": "query",
-                        "name": "case_number",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
                         "description": "An optional fields mask",
                         "format": "mask",
                         "in": "header",
@@ -4251,12 +4227,6 @@
             "get": {
                 "operationId": "get_dscivil_resource_case_number_full",
                 "parameters": [
-                    {
-                        "in": "query",
-                        "name": "case_number",
-                        "required": true,
-                        "type": "string"
-                    },
                     {
                         "description": "An optional fields mask",
                         "format": "mask",
@@ -4325,12 +4295,6 @@
                 "operationId": "get_dscr_resource_case_number",
                 "parameters": [
                     {
-                        "in": "query",
-                        "name": "case_number",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
                         "description": "An optional fields mask",
                         "format": "mask",
                         "in": "header",
@@ -4363,12 +4327,6 @@
             "get": {
                 "operationId": "get_dscr_resource_case_number_full",
                 "parameters": [
-                    {
-                        "in": "query",
-                        "name": "case_number",
-                        "required": true,
-                        "type": "string"
-                    },
                     {
                         "description": "An optional fields mask",
                         "format": "mask",
@@ -4437,12 +4395,6 @@
                 "operationId": "get_dsk8_resource_case_number",
                 "parameters": [
                     {
-                        "in": "query",
-                        "name": "case_number",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
                         "description": "An optional fields mask",
                         "format": "mask",
                         "in": "header",
@@ -4475,12 +4427,6 @@
             "get": {
                 "operationId": "get_dsk8_resource_case_number_full",
                 "parameters": [
-                    {
-                        "in": "query",
-                        "name": "case_number",
-                        "required": true,
-                        "type": "string"
-                    },
                     {
                         "description": "An optional fields mask",
                         "format": "mask",
@@ -4552,12 +4498,6 @@
                 "operationId": "get_odycrim_resource_case_number",
                 "parameters": [
                     {
-                        "in": "query",
-                        "name": "case_number",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
                         "description": "An optional fields mask",
                         "format": "mask",
                         "in": "header",
@@ -4590,12 +4530,6 @@
             "get": {
                 "operationId": "get_odycrim_resource_case_number_full",
                 "parameters": [
-                    {
-                        "in": "query",
-                        "name": "case_number",
-                        "required": true,
-                        "type": "string"
-                    },
                     {
                         "description": "An optional fields mask",
                         "format": "mask",
@@ -4664,12 +4598,6 @@
                 "operationId": "get_odytraf_resource_case_number",
                 "parameters": [
                     {
-                        "in": "query",
-                        "name": "case_number",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
                         "description": "An optional fields mask",
                         "format": "mask",
                         "in": "header",
@@ -4702,12 +4630,6 @@
             "get": {
                 "operationId": "get_odytraf_resource_case_number_full",
                 "parameters": [
-                    {
-                        "in": "query",
-                        "name": "case_number",
-                        "required": true,
-                        "type": "string"
-                    },
                     {
                         "description": "An optional fields mask",
                         "format": "mask",
