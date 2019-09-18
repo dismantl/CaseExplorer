@@ -29,7 +29,6 @@ def api_factory(schemas):
     class DSCIVILResourceCaseNumber(Resource):
         '''DSCIVIL by case number'''
 
-        @accepts(dict(name='case_number', type=str), api=api)
         @api.marshal_with(dscivil_schema)
         def get(self, case_number):
             return DSCIVIL.query.filter(DSCIVIL.case_number == case_number).one()
@@ -38,7 +37,6 @@ def api_factory(schemas):
     class DSCIVILResourceCaseNumberFull(Resource):
         '''DSCIVIL full case details by case number'''
 
-        @accepts(dict(name='case_number', type=str), api=api)
         @api.marshal_with(dscivil_schema_full)
         def get(self, case_number):
             return get_eager_query(DSCIVIL).filter(DSCIVIL.case_number == case_number).one()

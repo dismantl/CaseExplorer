@@ -29,7 +29,6 @@ def api_factory(schemas):
     class ODYCRIMResourceCaseNumber(Resource):
         '''ODYCRIM by case number'''
 
-        @accepts(dict(name='case_number', type=str), api=api)
         @api.marshal_with(odycrim_schema)
         def get(self, case_number):
             return ODYCRIM.query.filter(ODYCRIM.case_number == case_number).one()
@@ -38,7 +37,6 @@ def api_factory(schemas):
     class ODYCRIMResourceCaseNumberFull(Resource):
         '''ODYCRIM full case details by case number'''
 
-        @accepts(dict(name='case_number', type=str), api=api)
         @api.marshal_with(odycrim_schema_full)
         def get(self, case_number):
             return get_eager_query(ODYCRIM).filter(ODYCRIM.case_number == case_number).one()

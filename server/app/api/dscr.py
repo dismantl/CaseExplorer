@@ -29,7 +29,6 @@ def api_factory(schemas):
     class DSCRResourceCaseNumber(Resource):
         '''DSCR by case number'''
 
-        @accepts(dict(name='case_number', type=str), api=api)
         @api.marshal_with(dscr_schema)
         def get(self, case_number):
             return DSCR.query.filter(DSCR.case_number == case_number).one()
@@ -38,7 +37,6 @@ def api_factory(schemas):
     class DSCRResourceCaseNumberFull(Resource):
         '''DSCR full case details by case number'''
 
-        @accepts(dict(name='case_number', type=str), api=api)
         @api.marshal_with(dscr_schema_full)
         def get(self, case_number):
             return get_eager_query(DSCR).filter(DSCR.case_number == case_number).one()

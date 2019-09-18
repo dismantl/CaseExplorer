@@ -29,7 +29,6 @@ def api_factory(schemas):
     class DSK8ResourceCaseNumber(Resource):
         '''DSK8 by case number'''
 
-        @accepts(dict(name='case_number', type=str), api=api)
         @api.marshal_with(dsk8_schema)
         def get(self, case_number):
             return DSK8.query.filter(DSK8.case_number == case_number).one()
@@ -38,7 +37,6 @@ def api_factory(schemas):
     class DSK8ResourceCaseNumberFull(Resource):
         '''DSK8 full case details by case number'''
 
-        @accepts(dict(name='case_number', type=str), api=api)
         @api.marshal_with(dsk8_schema_full)
         def get(self, case_number):
             return get_eager_query(DSK8).filter(DSK8.case_number == case_number).one()

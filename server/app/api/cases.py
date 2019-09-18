@@ -27,7 +27,6 @@ def api_factory(schemas):
     class CaseResourceCaseNumber(Resource):
         '''Case by case number'''
 
-        @accepts(dict(name='case_number', type=str), api=api)
         @api.marshal_with(case_schema)
         def get(self, case_number):
             return Case.query.get(case_number)
