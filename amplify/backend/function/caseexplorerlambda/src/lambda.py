@@ -1,3 +1,4 @@
+import re
 import os
 import sys
 import json
@@ -10,7 +11,7 @@ from flask_restplus import marshal
 from app import app, rest_api
 from app.service import DataService
 from app.graphql import transform_filter_model
-from app.utils import get_model_name_by_table_name
+from app.utils import get_model_name_by_table_name, get_eager_query, get_orm_class_by_name
 
 
 def handler(event, context):
@@ -39,9 +40,15 @@ def handler(event, context):
         return results
     else:  # REST API
         with app.app_context():
-            if event['body']:  # POST
-                path = event['path']
-                table_name = path[5:]  # remove /api/
+            path = event['path']
+            matches = re.fullmatch(r'/api/(?P<table_name>\w+)(/(?P<case_number>\w+))?(?P<full>/full)?', path)
+            if not matches:
+                raise Exception(f'Invalid path: {path}')
+            table_name = matches.group('table_name')
+            case_number = matches.group('case_number')
+            full = matches.group('full')
+
+            if event.get('body'):  # POST
                 model_name = get_model_name_by_table_name(table_name)
                 req = json.loads(json.loads(event['body']))
                 results = DataService.fetch_rows_orm(table_name, req)
@@ -53,3 +60,19 @@ def handler(event, context):
                     },
                     'statusCode': 200,
                 }
+            else:  # GET
+                if case_number:
+                    model = get_orm_class_by_name(table_name)
+                    if full:
+                        requested_obj = get_eager_query(model).filter(model.case_number == case_number).one()
+                        result = marshal(requested_obj, rest_api.api_schemas[f'{model.__name__}Full'])
+                    else:
+                        requested_obj = model.query.filter(model.case_number == case_number).one()
+                        result = marshal(requested_obj, rest_api.api_schemas[model.__name__])
+                    return {
+                        'body': json.dumps(result),
+                        'headers': {
+                            "Access-Control-Allow-Origin": "*",
+                        },
+                        'statusCode': 200,
+                    }
