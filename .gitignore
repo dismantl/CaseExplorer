@@ -38,3 +38,4 @@ awsconfiguration.json
 team-provider-info.json
 
 server/.requirements
+amplify/backend/function/caseexplorerlambda/src

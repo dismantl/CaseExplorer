@@ -13,6 +13,6 @@
     "print-schema": "flask print-schema && cp schema.graphql ../amplify/backend/api/caseexplorergraphql/ && sed -i '' -E -e 's/(DateTime|Date|Time)$/AWS\\1/g' ../amplify/backend/api/caseexplorergraphql/schema.graphql",
     "build-backend": "npm run clean-src-dir && npm run install-py-deps && npm run copy-backend-files && npm run copy-psycopg2 && npm run print-schema"
   },
-  "author": "Dan Staples <dan@disman.tl>",
+  "author": "Dan Staples <dan@acabenterprises.net>",
   "license": "GPLv3"
 }
