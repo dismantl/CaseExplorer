@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.declarative import declared_attr, declarative_base
 import re
-from datetime import *
+from datetime import datetime
 
 TableBase = declarative_base()
 
@@ -18,7 +18,7 @@ def date_from_str(date_str):
 class CaseTable:
     @declared_attr
     def case_number(cls):
-        return Column(String, ForeignKey('cases.case_number', ondelete='CASCADE'), index=True, unique=True)
+        return Column(String, ForeignKey('cases.case_number', ondelete='CASCADE'), unique=True)
 
 class Defendant:
     id = Column(Integer, primary_key=True)
