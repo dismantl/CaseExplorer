@@ -39,3 +39,5 @@ team-provider-info.json
 
 server/.requirements
 amplify/backend/function/caseexplorerlambda/src
+schema.graphql
+src/graphql/
