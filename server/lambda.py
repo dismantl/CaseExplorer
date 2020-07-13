@@ -50,7 +50,9 @@ def handler(event, context):
 
             if event.get('body'):  # POST
                 model_name = get_model_name_by_table_name(table_name)
-                req = json.loads(json.loads(event['body']))
+                req = json.loads(event['body'])
+                if type(req) == str:
+                    req = json.loads(req)  # Need to do this for ag-grid frontend for some reason
                 results = DataService.fetch_rows_orm(table_name, req)
                 results['rows'] = [marshal(row, rest_api.api_schemas[model_name]) for row in results['rows']]
                 return {
