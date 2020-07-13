@@ -1,5 +1,5 @@
 from flask import Blueprint
-from flask_restplus import Api
+from flask_restx import Api
 
 class RESTAPI:
     def __init__(self, app=None, root=None):

@@ -7,7 +7,7 @@ from datetime import datetime, date, time
 srcpath = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(srcpath+"/.requirements")
 
-from flask_restplus import marshal
+from flask_restx import marshal
 from app import app, rest_api
 from app.service import DataService
 from app.graphql import transform_filter_model

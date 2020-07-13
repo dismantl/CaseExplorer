@@ -1,6 +1,6 @@
 import datetime
 import decimal
-from flask_restplus import fields
+from flask_restx import fields
 
 from app import models
 from app.utils import get_root_model_list, get_orm_class_by_name

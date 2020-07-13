@@ -15,7 +15,7 @@ def print_schema():
 @click.command()
 @with_appcontext
 def print_swagger_spec():
-    from flask_restplus import Swagger
+    from flask_restx import Swagger
     from app import app, rest_api
     with app.test_request_context(), open('swagger.json', 'w') as specfile:
         spec = Swagger(rest_api.api).as_dict()

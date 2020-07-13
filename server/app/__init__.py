@@ -1,7 +1,7 @@
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask_restplus import Api
+from flask_restx import Api
 
 from app.config import config
 from app.utils import configure_logging

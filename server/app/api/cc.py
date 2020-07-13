@@ -1,6 +1,6 @@
 from flask import request
 from flask_accepts import accepts
-from flask_restplus import Namespace, Resource
+from flask_restx import Namespace, Resource
 
 from app.api.interface import QueryParams
 from app.models import CC
