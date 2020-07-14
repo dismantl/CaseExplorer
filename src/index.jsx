@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter as Router, Route, NavLink } from 'react-router-dom';
 import Amplify from 'aws-amplify';
+import awsmobile from './aws-exports';
 import './index.css';
 import Cases from './Cases';
 import Dscr from './DSCR';
@@ -11,23 +12,8 @@ import Dscivil from './DSCIVIL';
 import Odycrim from './ODYCRIM';
 import Odytraf from './ODYTRAF';
 import GraphiQLClient from './GraphiQL';
-import config from './config';
 
-Amplify.configure({
-  API: {
-    endpoints: [
-      {
-        name: 'caseexplorerapi',
-        endpoint: config.apiGateway.URL,
-        region: config.apiGateway.REGION
-      }
-    ]
-  },
-  aws_appsync_graphqlEndpoint: config.graphql.URL,
-  aws_appsync_region: config.graphql.REGION,
-  aws_appsync_authenticationType: config.graphql.AUTHTYPE,
-  aws_appsync_apiKey: config.graphql.APIKEY
-});
+Amplify.configure(awsmobile);
 
 ReactDOM.render(
   <Router>
