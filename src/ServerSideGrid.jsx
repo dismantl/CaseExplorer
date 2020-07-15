@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { API } from 'aws-amplify';
-import config from './config';
+import environment from './config';
 
 const apiName = 'caseexplorerapi';
 
@@ -27,7 +27,7 @@ export default class ServerSideGrid extends Component {
     var promise;
     console.log(JSON.stringify(params.request, null, 1));
 
-    if (config.environment === 'development') {
+    if (environment === 'development') {
       promise = fetch(this.state.path, {
         method: 'post',
         body: JSON.stringify(params.request),

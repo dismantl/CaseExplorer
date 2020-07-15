@@ -42,3 +42,4 @@ amplify/backend/function/caseexplorerlambda/src
 schema.graphql
 swagger.json
 src/graphql/
+src/config.js
