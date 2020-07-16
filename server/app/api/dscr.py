@@ -7,6 +7,10 @@ from app.models import DSCR, DSCRRelatedPerson
 from app.service import DataService
 from app.utils import get_eager_query
 
+def get_case_numbers_by_officer_sequence_number(sequence_number):
+    related_persons = DSCRRelatedPerson.query.filter(DSCRRelatedPerson.officer_id == sequence_number).all()
+    return list(dict.fromkeys([x.case_number for x in related_persons]))
+
 def api_factory(schemas):
     api = Namespace('DSCR', description='Baltimore City district court criminal cases')
 
@@ -46,10 +50,6 @@ def api_factory(schemas):
         '''Returns a list of case numbers involving the officer with the given Sequence Number'''
 
         def get(self, sequence_number):
-            print(sequence_number)
-            related_persons = DSCRRelatedPerson.query.filter(DSCRRelatedPerson.officer_id == sequence_number).all()
-            case_numbers = list(dict.fromkeys([x.case_number for x in related_persons]))
-            print(case_numbers)
-            return case_numbers
+            return get_case_numbers_by_officer_sequence_number(sequence_number)
 
     return api
