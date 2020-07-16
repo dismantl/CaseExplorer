@@ -86,8 +86,8 @@
 					]
 				},
 				"Code": {
-					"S3Bucket": "caseexplorer-develop-20190917151146-deployment",
-					"S3Key": "amplify-builds/caseexplorerlambda-2b4462786c744b314256-build.zip"
+					"S3Bucket": "amplify-caseexplorer-ojb-173749-deployment",
+					"S3Key": "amplify-builds/caseexplorerlambda-73487263643346594376-build.zip"
 				}
 			}
 		},
