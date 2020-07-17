@@ -4,6 +4,9 @@ from sqlalchemy.orm import selectinload, lazyload
 
 LOAD_STRATEGY = selectinload
 
+class TableNotFound(Exception):
+    pass
+
 def configure_logging(app):
     max_log_size = 10 * 1024 * 1024  # start new log file after 10 MB
     num_logs_to_keep = 5
@@ -40,7 +43,7 @@ def get_orm_class_by_name(table_name):
     try:
         return model_map[table_name]
     except KeyError:
-        raise Exception(f'Unknown database table {table_name}')
+        raise TableNotFound(f'Unknown database table {table_name}')
 
 def get_model_name_by_table_name(table_name):
     from app import models
@@ -48,7 +51,7 @@ def get_model_name_by_table_name(table_name):
     for model in model_list:
         if table_name == model.__tablename__:
             return model.__name__
-    raise Exception(f'Invalid table name {table_name}')
+    raise TableNotFound(f'Invalid table name {table_name}')
 
 def get_eager_query(model):
     query = model.query

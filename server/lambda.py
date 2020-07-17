@@ -7,11 +7,12 @@ from datetime import datetime, date, time
 srcpath = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(srcpath+"/.requirements")
 
+from sqlalchemy.orm.exc import NoResultFound
 from flask_restx import marshal
 from app import app, rest_api
 from app.service import DataService
 from app.graphql import transform_filter_model
-from app.utils import get_model_name_by_table_name, get_eager_query, get_orm_class_by_name
+from app.utils import get_model_name_by_table_name, get_eager_query, get_orm_class_by_name, TableNotFound
 from app.api.dscr import get_case_numbers_by_officer_sequence_number
 
 
@@ -67,7 +68,10 @@ def handler(event, context):
                 full = case_match.group('full')
 
                 if event.get('body'):  # POST
-                    model_name = get_model_name_by_table_name(table_name)
+                    try:
+                        model_name = get_model_name_by_table_name(table_name)
+                    except TableNotFound:
+                        return gen_404(path)
                     req = json.loads(json.loads(event['body']))
                     results = DataService.fetch_rows_orm(table_name, req)
                     results['rows'] = [marshal(row, rest_api.api_schemas[model_name]) for row in results['rows']]
@@ -76,13 +80,19 @@ def handler(event, context):
                     if case_number:
                         try:
                             model = get_orm_class_by_name(table_name)
-                        except:
+                        except TableNotFound:
                             return gen_404(path)
                         if full:
-                            requested_obj = get_eager_query(model).filter(model.case_number == case_number).one()
+                            try:
+                                requested_obj = get_eager_query(model).filter(model.case_number == case_number).one()
+                            except NoResultFound:
+                                return gen_404(path)
                             result = marshal(requested_obj, rest_api.api_schemas[f'{model.__name__}Full'])
                         else:
-                            requested_obj = model.query.filter(model.case_number == case_number).one()
+                            try:
+                                requested_obj = model.query.filter(model.case_number == case_number).one()
+                            except NoResultFound:
+                                return gen_404(path)
                             result = marshal(requested_obj, rest_api.api_schemas[model.__name__])
                         return gen_response(200, json.dumps(result))
             return gen_404(path)
