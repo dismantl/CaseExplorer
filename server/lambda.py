@@ -84,5 +84,5 @@ def handler(event, context):
                         else:
                             requested_obj = model.query.filter(model.case_number == case_number).one()
                             result = marshal(requested_obj, rest_api.api_schemas[model.__name__])
-                        return gen_response(200, json.dumps(results))
+                        return gen_response(200, json.dumps(result))
             return gen_404(path)

@@ -8,7 +8,7 @@ BACKEND_APP_DEPS=$(addprefix $(BACKEND_DIR)/app/,__init__.py commands.py config.
 BACKEND_DEPS=$(addprefix $(BACKEND_DIR)/,requirements.txt lambda.py) $(BACKEND_API_DEPS) $(BACKEND_MODEL_DEPS) $(BACKEND_APP_DEPS)
 
 copy_backend: $(BACKEND_DEPS)
-	rm -r $(LAMBDA_TARGET)
+	rm -r $(LAMBDA_TARGET) || true
 	mkdir -p $(LAMBDA_TARGET)
 	pip install --target $(LAMBDA_TARGET)/.requirements -r $(BACKEND_DIR)/requirements.txt
 	cp -r $(BACKEND_DIR)/{app,lambda.py} $(LAMBDA_TARGET)/
@@ -47,3 +47,6 @@ deploy_frontend:
 	amplify publish -y
 
 deploy: deploy_backend deploy_frontend
+
+generate_api_docs:
+	FLASK_APP=$(BACKEND_DIR)/app flask print-swagger-spec
