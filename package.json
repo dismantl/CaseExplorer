@@ -26,11 +26,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "build-backend": "cd server && npm run build-backend",
-    "start-backend": "cd server && FLASK_ENV=development flask run",
-    "deploy-backend": "cd server && npm run build-backend && cd .. && amplify push -y",
-    "deploy-frontend": "amplify publish -y"
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": "react-app"
