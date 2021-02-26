@@ -7,10 +7,14 @@ BACKEND_MODEL_DEPS=$(addprefix $(BACKEND_DIR)/app/base_models/,__init__.py case.
 BACKEND_APP_DEPS=$(addprefix $(BACKEND_DIR)/app/,__init__.py commands.py config.py graphql.py models.py service.py utils.py)
 BACKEND_DEPS=$(addprefix $(BACKEND_DIR)/,requirements.txt lambda.py) $(BACKEND_API_DEPS) $(BACKEND_MODEL_DEPS) $(BACKEND_APP_DEPS)
 
+install_dependencies: $(BACKEND_DIR)/requirements.txt
+	pip3 install -r $(BACKEND_DIR)/requirements.txt
+	pip3 install psycopg2
+
 copy_backend: $(BACKEND_DEPS)
 	rm -r $(LAMBDA_TARGET) || true
 	mkdir -p $(LAMBDA_TARGET)
-	pip install --target $(LAMBDA_TARGET)/.requirements -r $(BACKEND_DIR)/requirements.txt
+	pip3 install --target $(LAMBDA_TARGET)/.requirements -r $(BACKEND_DIR)/requirements.txt
 	cp -r $(BACKEND_DIR)/{app,lambda.py} $(LAMBDA_TARGET)/
 	cp -r $(BACKEND_DIR)/psycopg2-3.7 $(LAMBDA_TARGET)/psycopg2
 	find $(LAMBDA_TARGET) -name *.pyc -delete
