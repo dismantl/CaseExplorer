@@ -12,38 +12,68 @@ import Dscivil from './DSCIVIL';
 import Odycrim from './ODYCRIM';
 import Odytraf from './ODYTRAF';
 import GraphiQLClient from './GraphiQL';
+import { Nav, INavLinkGroup } from 'office-ui-fabric-react/lib/Nav';
 
 Amplify.configure(awsmobile);
+
+const navLinkGroups: INavLinkGroup[] = [
+  {
+    name: 'Case Data',
+    links: [
+      { name: 'All Cases', url: '/cases' },
+      {
+        name: 'Non-MDEC',
+        expandAriaLabel: 'Expand Basic components section',
+        collapseAriaLabel: 'Collapse Basic components section',
+        links: [
+          { name: 'Circuit Court Civil Cases', url: '/cc' },
+          { name: 'District Court Civil Cases', url: '/dscivil' },
+          { name: 'District Court Criminal Cases', url: '/dscr' },
+          { name: 'Baltimore City Criminal Cases', url: '/dsk8' }
+        ],
+        isExpanded: true
+      },
+      {
+        name: 'MDEC',
+        expandAriaLabel: 'Expand Basic components section',
+        collapseAriaLabel: 'Collapse Basic components section',
+        links: [
+          { name: 'MDEC Criminal Cases', url: '/odycrim' },
+          { name: 'MDEC Traffic Cases', url: '/odytraf' }
+        ],
+        isExpanded: true
+      }
+    ],
+    isExpanded: true
+  },
+  {
+    name: 'API',
+    links: [
+      { name: 'GraphQL', url: '/graphql' },
+      {
+        name: 'REST',
+        url: 'https://portal.mdcaseexplorer.com',
+        target: '_blank'
+      }
+    ],
+    isExpanded: false
+  }
+];
+
+export const NavBar: React.FunctionComponent = () => {
+  return (
+    <Nav onRenderGroupHeader={_onRenderGroupHeader} groups={navLinkGroups} />
+  );
+};
+
+function _onRenderGroupHeader(group: INavLinkGroup): JSX.Element {
+  return <h3>{group.name}</h3>;
+}
 
 ReactDOM.render(
   <Router>
     <div className="navbar">
-      <ul className="horizontal">
-        <li>
-          <NavLink to="/cases">All Cases</NavLink>
-        </li>
-        <li>
-          <NavLink to="/dscr">DSCR</NavLink>
-        </li>
-        <li>
-          <NavLink to="/dsk8">DSK8</NavLink>
-        </li>
-        <li>
-          <NavLink to="/cc">CC</NavLink>
-        </li>
-        <li>
-          <NavLink to="/dscivil">DSCIVIL</NavLink>
-        </li>
-        <li>
-          <NavLink to="/odycrim">ODYCRIM</NavLink>
-        </li>
-        <li>
-          <NavLink to="/odytraf">ODYTRAF</NavLink>
-        </li>
-        <li>
-          <NavLink to="/graphql">GraphiQL</NavLink>
-        </li>
-      </ul>
+      <NavBar />
     </div>
     <div className="content">
       <Route exact path="/" component={Cases} />
