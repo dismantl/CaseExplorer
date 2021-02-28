@@ -22,10 +22,6 @@ copy_backend: $(BACKEND_DEPS)
 	find $(LAMBDA_TARGET) -name *.pyc -delete
 	find $(LAMBDA_TARGET) -name __pycache__ -delete
 
-print_schema: $(BACKEND_DEPS)
-	FLASK_APP=$(BACKEND_DIR)/app flask print-schema $(BACKEND_DIR)/schema.graphql
-	sed -E -e 's/(DateTime|Date|Time)$$/AWS\1/g; /^scalar AWS(DateTime|Date|Time)$$/d' $(BACKEND_DIR)/schema.graphql > $(GRAPHQL_TARGET)/schema.graphql
-
 start_backend:
 	FLASK_ENV=development FLASK_APP=$(BACKEND_DIR)/app flask run
 
@@ -36,7 +32,7 @@ start_frontend:
 	@echo "export default 'development';" > $(FRONTEND_DIR)/config.js
 	npm run start
 
-deploy_backend: copy_backend print_schema
+deploy_backend: copy_backend generate_api_specs
 	amplify push -y
 
 deploy_frontend:
@@ -46,5 +42,7 @@ deploy_frontend:
 
 deploy: deploy_backend deploy_frontend
 
-generate_api_docs:
-	FLASK_APP=$(BACKEND_DIR)/app flask print-swagger-spec
+generate_api_specs: $(BACKEND_DEPS)
+	FLASK_APP=$(BACKEND_DIR)/app flask print-graphql-schema $(BACKEND_DIR)/schema.graphql
+	sed -E -e 's/(DateTime|Date|Time)$$/AWS\1/g; /^scalar AWS(DateTime|Date|Time)$$/d' $(BACKEND_DIR)/schema.graphql > $(GRAPHQL_TARGET)/schema.graphql
+	FLASK_APP=$(BACKEND_DIR)/app flask print-swagger-spec $(BACKEND_DIR)/swagger.json

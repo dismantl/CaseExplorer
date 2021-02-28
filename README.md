@@ -1,68 +1,50 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# Case Explorer
 
-## Available Scripts
+Case Explorer is a web-based frontend for exploring data scraped from the [Maryland Judiciary Case Search](http://casesearch.courts.state.md.us/casesearch/inquiry-index.jsp) by [Case Harvester](https://github.com/dismantl/CaseHarvester). The aim is to make an intuitive, easy-to-use Excel-like interface for browsing and searching through MD case data. Case Explorer's frontend is built with React, while the backend can be run locally with [Flask](https://flask.palletsprojects.com/) or deployed to [AWS Amplify](https://aws.amazon.com/amplify/).
 
-In the project directory, you can run:
+## Setup
 
-### `npm start`
+### Dependencies
 
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Case Explorer requires Node.js 10x, Python3.7+, and GNU Make. It is also recommend to use Virtualenv with Python to set up a local development environment.
 
-The page will reload if you make edits.<br>
-You will also see any lint errors in the console.
+If you are running Debian, you can install dependencies with the following:
 
-### `npm test`
+```
+$ sudo apt-get update && sudo apt-get install -y build-essential libpq-dev nodejs python3 python3-pip virtualenv python3-virtualenv
+```
 
-Launches the test runner in the interactive watch mode.<br>
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Configuration
 
-### `npm run build`
+Create a file at `server/app/.env` with the information for connecting to the production and development case databases. You can connect to Open Justice Baltimore's case databases using the following:
 
-Builds the app for production to the `build` folder.<br>
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```
+SQLALCHEMY_DATABASE_URI_PRODUCTION=postgresql://case_explorer:Wt1Wc3yny9XHhChCktVj@db.openjusticebaltimore.org/mjcs
+SQLALCHEMY_DATABASE_URI_DEVELOPMENT=postgresql://case_explorer:qntsu004A&DCxQyqrV5Q@dev.db.openjusticebaltimore.org/mjcs
+```
 
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
+### Local Development
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+You can use the following commands to run a local version of Case Explorer for development or testing purposes:
 
-### `npm run eject`
+1. Create and/or activate your Python virtual environment
+1. `make install_dependencies`
+1. `make generate_api_specs`
+1. `make start_prod_backend` (or `start_backend` to use the development database)
+1. (in another terminal) `make start_frontend`
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+### Generate API specifications
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+API specs can be generated for both [GraphQL](https://graphql.org/) and [Swagger/OpenAPI](https://swagger.io/) using `make generate_api_specs`.
 
-Instead, it will copy all the configuration files and the transitive dependencies (Webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+## Deployment
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+TODO
 
-## Learn More
+```
+$ npm install -g @aws-amplify/cli
+$ amplify configure
+$ amplify init
+$ make deploy
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/code-splitting
-
-### Analyzing the Bundle Size
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size
-
-### Making a Progressive Web App
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app
-
-### Advanced Configuration
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/advanced-configuration
-
-### Deployment
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
-
-### `npm run build` fails to minify
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify

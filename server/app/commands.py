@@ -5,7 +5,7 @@ from flask.cli import with_appcontext
 @click.command()
 @click.argument('output')
 @with_appcontext
-def print_schema(output):
+def print_graphql_schema(output):
     from graphql.utils import schema_printer
     from app import graphql_service
     schema = graphql_service.get_schema()
@@ -14,11 +14,12 @@ def print_schema(output):
         schemafile.write(schema_str)
 
 @click.command()
+@click.argument('output')
 @with_appcontext
-def print_swagger_spec():
+def print_swagger_spec(output):
     from flask_restx import Swagger
     from app import app, rest_api
-    with app.test_request_context(), open('swagger.json', 'w') as specfile:
+    with app.test_request_context(), open(output, 'w') as specfile:
         spec = Swagger(rest_api.api).as_dict()
         specfile.write(
             json.dumps(

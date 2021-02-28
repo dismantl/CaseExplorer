@@ -6,7 +6,7 @@ from flask_restx import Api
 from app.config import config
 from app.utils import configure_logging
 from app.graphql import GraphQL
-from app.commands import print_schema, print_swagger_spec
+from app.commands import print_graphql_schema, print_swagger_spec
 from app.api import RESTAPI
 from app.service import DataService
 
@@ -28,7 +28,7 @@ def create_app(config_name):
     data_service.init_app(app)
 
     # Commands
-    app.cli.add_command(print_schema)
+    app.cli.add_command(print_graphql_schema)
     app.cli.add_command(print_swagger_spec)
 
     return app
