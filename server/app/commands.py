@@ -3,13 +3,14 @@ import click
 from flask.cli import with_appcontext
 
 @click.command()
+@click.argument('output')
 @with_appcontext
-def print_schema():
+def print_schema(output):
     from graphql.utils import schema_printer
     from app import graphql_service
     schema = graphql_service.get_schema()
     schema_str = schema_printer.print_schema(schema)
-    with open('schema.graphql', 'w') as schemafile:
+    with open(output, 'w') as schemafile:
         schemafile.write(schema_str)
 
 @click.command()

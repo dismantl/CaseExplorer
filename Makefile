@@ -8,30 +8,23 @@ BACKEND_APP_DEPS=$(addprefix $(BACKEND_DIR)/app/,__init__.py commands.py config.
 BACKEND_DEPS=$(addprefix $(BACKEND_DIR)/,requirements.txt lambda.py) $(BACKEND_API_DEPS) $(BACKEND_MODEL_DEPS) $(BACKEND_APP_DEPS)
 
 install_dependencies: $(BACKEND_DIR)/requirements.txt
-	pip3 install -r $(BACKEND_DIR)/requirements.txt
-	pip3 install psycopg2
+	pip install -r $(BACKEND_DIR)/requirements.txt
+	pip install psycopg2
+	npm install
 
 copy_backend: $(BACKEND_DEPS)
 	rm -r $(LAMBDA_TARGET) || true
 	mkdir -p $(LAMBDA_TARGET)
-	pip3 install --target $(LAMBDA_TARGET)/.requirements -r $(BACKEND_DIR)/requirements.txt
-	cp -r $(BACKEND_DIR)/{app,lambda.py} $(LAMBDA_TARGET)/
+	pip install --target $(LAMBDA_TARGET)/.requirements -r $(BACKEND_DIR)/requirements.txt
+	cp -r $(BACKEND_DIR)/app $(LAMBDA_TARGET)/
+	cp -r $(BACKEND_DIR)/lambda.py $(LAMBDA_TARGET)/
 	cp -r $(BACKEND_DIR)/psycopg2-3.7 $(LAMBDA_TARGET)/psycopg2
 	find $(LAMBDA_TARGET) -name *.pyc -delete
 	find $(LAMBDA_TARGET) -name __pycache__ -delete
 
 print_schema: $(BACKEND_DEPS)
-	FLASK_APP=$(BACKEND_DIR)/app flask print-schema
-	cp $(BACKEND_DIR)/schema.graphql $(GRAPHQL_TARGET)/
-	sed -i '' -E -e 's/(DateTime|Date|Time)$$/AWS\1/g; /^scalar AWS(DateTime|Date|Time)$$/d' $(GRAPHQL_TARGET)/schema.graphql
-
-build_backend: copy_backend print_schema
-
-build_frontend:
-	@echo "export default 'production';" > $(FRONTEND_DIR)/config.js
-	npm run build
-
-build: build_backend build_frontend
+	FLASK_APP=$(BACKEND_DIR)/app flask print-schema $(BACKEND_DIR)/schema.graphql
+	sed -E -e 's/(DateTime|Date|Time)$$/AWS\1/g; /^scalar AWS(DateTime|Date|Time)$$/d' $(BACKEND_DIR)/schema.graphql > $(GRAPHQL_TARGET)/schema.graphql
 
 start_backend:
 	FLASK_ENV=development FLASK_APP=$(BACKEND_DIR)/app flask run
@@ -43,11 +36,12 @@ start_frontend:
 	@echo "export default 'development';" > $(FRONTEND_DIR)/config.js
 	npm run start
 
-deploy_backend: build_backend
+deploy_backend: copy_backend print_schema
 	amplify push -y
 
 deploy_frontend:
 	@echo "export default 'production';" > $(FRONTEND_DIR)/config.js
+	npm run build
 	amplify publish -y
 
 deploy: deploy_backend deploy_frontend
