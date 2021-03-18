@@ -1,6 +1,8 @@
 # Case Explorer
 
-Case Explorer is a web-based frontend for exploring data scraped from the [Maryland Judiciary Case Search](http://casesearch.courts.state.md.us/casesearch/inquiry-index.jsp) by [Case Harvester](https://github.com/dismantl/CaseHarvester). The aim is to make an intuitive, easy-to-use Excel-like interface for browsing and searching through MD case data. Case Explorer's frontend is built with React, while the backend can be run locally with [Flask](https://flask.palletsprojects.com/) or deployed to [AWS Amplify](https://aws.amazon.com/amplify/).
+Case Explorer is a web interface and set of APIs for exploring data scraped from the [Maryland Judiciary Case Search](http://casesearch.courts.state.md.us/casesearch/inquiry-index.jsp) by [Case Harvester](https://github.com/dismantl/CaseHarvester). The aim is to make an intuitive, easy-to-use Excel-like interface for browsing and searching through MD case data. Case Explorer's frontend is built with React, while the backend can be run locally with [Flask](https://flask.palletsprojects.com/) or deployed to [AWS Amplify](https://aws.amazon.com/amplify/). REST and GraphQL APIs are available.
+
+![Screenshot](public/screenshot.png)
 
 ## Setup
 
