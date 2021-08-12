@@ -1,6 +1,8 @@
 import logging
 from logging.handlers import RotatingFileHandler
-from sqlalchemy.orm import selectinload, lazyload
+from sqlalchemy.orm import selectinload, lazyload, sessionmaker
+from contextlib import contextmanager
+from flask import current_app
 
 LOAD_STRATEGY = selectinload
 
@@ -38,7 +40,7 @@ def get_root_model_table_names(module):
     return [cls.__tablename__ for cls in root_model_list]
 
 def get_orm_class_by_name(table_name):
-    from app import models
+    from . import models
     model_map = {cls.__table__.name: cls for name, cls in models.__dict__.items() if isinstance(cls, type) and hasattr(cls, '__table__')}
     try:
         return model_map[table_name]
@@ -46,7 +48,7 @@ def get_orm_class_by_name(table_name):
         raise TableNotFound(f'Unknown database table {table_name}')
 
 def get_model_name_by_table_name(table_name):
-    from app import models
+    from . import models
     model_list = get_model_list(models)
     for model in model_list:
         if table_name == model.__tablename__:
@@ -69,3 +71,17 @@ def get_eager_query(model):
         return query
 
     return apply_load_strategy(query, model)
+
+@contextmanager
+def db_session():
+    """Provide a transactional scope around a series of operations."""
+    db_factory = sessionmaker(bind = current_app.config.db_engine)
+    db = db_factory()
+    try:
+        yield db
+        db.commit()
+    except:
+        db.rollback()
+        raise
+    finally:
+        db.close()
