@@ -1,8 +1,9 @@
 import re
 from sqlalchemy import cast, Date, create_engine
 from sqlalchemy.sql import select, func, and_, or_, text
-
-from app.utils import get_orm_class_by_name, get_eager_query
+from sqlalchemy.sql.expression import table
+from .models import *
+from .utils import get_orm_class_by_name, get_eager_query, db_session
 
 
 class DataService:
@@ -34,6 +35,26 @@ class DataService:
             'rows': result['rows'],
             'last_row': result['last_row']
         }
+    
+    @classmethod
+    def fetch_column_metadata(cls):
+        query_results = ColumnMetadata.query.all()
+        results = {}
+        for result in query_results:
+            if result.table not in results:
+                results[result.table] = {}
+            results[result.table][result.column_name] = {
+                'description': result.description,
+                'width_pixels': result.width_pixels,
+                'allowed_values': result.allowed_values
+            }
+        return results
+
+    @classmethod
+    def fetch_total(cls, table_name):
+        with db_session() as db:
+            results = db.execute(f"SELECT reltuples FROM pg_class WHERE oid = '{table_name}'::regclass").scalar()
+        return int(results)
 
 
 def fetch_rows_from_model(cls, req, eager=False):
@@ -59,7 +80,7 @@ def fetch_rows_from_model(cls, req, eager=False):
     rows = results[:page_size]
 
     # filter defendant redacted fields
-    private_fields = getattr(cls, 'private_fields', None)
+    private_fields = [column.name for column in cls.__table__.columns if hasattr(column, 'redacted') and column.redacted == True]
     if private_fields:
         for row in rows:
             for field in private_fields:
