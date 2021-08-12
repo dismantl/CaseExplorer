@@ -4,13 +4,7 @@ import { BrowserRouter as Router, Route, NavLink } from 'react-router-dom';
 import Amplify from 'aws-amplify';
 import awsmobile from './aws-exports';
 import './index.css';
-import Cases from './Cases';
-import Dscr from './DSCR';
-import Dsk8 from './DSK8';
-import Cc from './CC';
-import Dscivil from './DSCIVIL';
-import Odycrim from './ODYCRIM';
-import Odytraf from './ODYTRAF';
+import ServerSideGrid from './ServerSideGrid.jsx';
 import GraphiQLClient from './GraphiQL';
 import { Nav, INavLinkGroup } from 'office-ui-fabric-react/lib/Nav';
 
@@ -22,6 +16,18 @@ const navLinkGroups: INavLinkGroup[] = [
     links: [
       { name: 'All Cases', url: '/cases' },
       {
+        name: 'MDEC',
+        expandAriaLabel: 'Expand Basic components section',
+        collapseAriaLabel: 'Collapse Basic components section',
+        links: [
+          { name: 'MDEC Criminal Cases', url: '/odycrim' },
+          { name: 'MDEC Traffic Cases', url: '/odytraf' },
+          { name: 'MDEC Civil Citations', url: '/odycvcit' },
+          { name: 'MDEC Civil Cases', url: '/odycivil' }
+        ],
+        isExpanded: true
+      },
+      {
         name: 'Non-MDEC',
         expandAriaLabel: 'Expand Basic components section',
         collapseAriaLabel: 'Collapse Basic components section',
@@ -29,17 +35,8 @@ const navLinkGroups: INavLinkGroup[] = [
           { name: 'Circuit Court Civil Cases', url: '/cc' },
           { name: 'District Court Civil Cases', url: '/dscivil' },
           { name: 'District Court Criminal Cases', url: '/dscr' },
-          { name: 'Baltimore City Criminal Cases', url: '/dsk8' }
-        ],
-        isExpanded: true
-      },
-      {
-        name: 'MDEC',
-        expandAriaLabel: 'Expand Basic components section',
-        collapseAriaLabel: 'Collapse Basic components section',
-        links: [
-          { name: 'MDEC Criminal Cases', url: '/odycrim' },
-          { name: 'MDEC Traffic Cases', url: '/odytraf' }
+          { name: 'Baltimore City Criminal Cases', url: '/dsk8' },
+          { name: 'District Court Traffic Cases', url: '/dstraf' }
         ],
         isExpanded: true
       }
@@ -76,14 +73,49 @@ ReactDOM.render(
       <NavBar />
     </div>
     <div className="content">
-      <Route exact path="/" component={Cases} />
-      <Route path="/cases" component={Cases} />
-      <Route path="/dscr" component={Dscr} />
-      <Route path="/dsk8" component={Dsk8} />
-      <Route path="/cc" component={Cc} />
-      <Route path="/dscivil" component={Dscivil} />
-      <Route path="/odycrim" component={Odycrim} />
-      <Route path="/odytraf" component={Odytraf} />
+      <Route
+        exact
+        path="/"
+        component={props => <ServerSideGrid table="cases" />}
+      />
+      <Route
+        path="/cases"
+        component={props => <ServerSideGrid table="cases" />}
+      />
+      <Route
+        path="/dscr"
+        page="dscr"
+        component={props => <ServerSideGrid table="dscr" />}
+      />
+      <Route
+        path="/dsk8"
+        component={props => <ServerSideGrid table="dsk8" />}
+      />
+      <Route
+        path="/dstraf"
+        component={props => <ServerSideGrid table="dstraf" />}
+      />
+      <Route path="/cc" component={props => <ServerSideGrid table="cc" />} />
+      <Route
+        path="/dscivil"
+        component={props => <ServerSideGrid table="dscivil" />}
+      />
+      <Route
+        path="/odycrim"
+        component={props => <ServerSideGrid table="odycrim" />}
+      />
+      <Route
+        path="/odytraf"
+        component={props => <ServerSideGrid table="odytraf" />}
+      />
+      <Route
+        path="/odycvcit"
+        component={props => <ServerSideGrid table="odycvcit" />}
+      />
+      <Route
+        path="/odycivil"
+        component={props => <ServerSideGrid table="odycivil" />}
+      />
       <Route path="/graphql" component={GraphiQLClient} />
     </div>
   </Router>,
