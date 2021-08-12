@@ -2,13 +2,14 @@ import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_restx import Api
+from sqlalchemy import create_engine
 
-from app.config import config
-from app.utils import configure_logging
-from app.graphql import GraphQL
-from app.commands import print_graphql_schema, print_swagger_spec
-from app.api import RESTAPI
-from app.service import DataService
+from . import commands
+from .config import config
+from .utils import configure_logging
+from .graphql import GraphQL
+from .api import RESTAPI
+from .service import DataService
 
 db = SQLAlchemy()
 graphql_service = GraphQL()
@@ -19,6 +20,7 @@ def create_app(config_name):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
+    app.config.db_engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
     configure_logging(app)
 
     # Module initialization
@@ -28,8 +30,11 @@ def create_app(config_name):
     data_service.init_app(app)
 
     # Commands
-    app.cli.add_command(print_graphql_schema)
-    app.cli.add_command(print_swagger_spec)
+    app.cli.add_command(commands.print_graphql_schema)
+    app.cli.add_command(commands.print_swagger_spec)
+    app.cli.add_command(commands.export_column_metadata)
+    app.cli.add_command(commands.import_column_metadata)
+    app.cli.add_command(commands.set_enums)
 
     return app
 
