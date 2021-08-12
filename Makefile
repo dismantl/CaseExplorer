@@ -21,8 +21,6 @@ copy_backend: $(BACKEND_DEPS)
 	cp -r $(BACKEND_DIR)/app $(LAMBDA_TARGET)/
 	cp $(BACKEND_DIR)/app/.env $(LAMBDA_TARGET)/app/env
 	cp $(BACKEND_DIR)/lambda.py $(LAMBDA_TARGET)/
-	rm -r $(LAMBDA_TARGET)/psycopg2
-	rm -r $(LAMBDA_TARGET)/psycopg2-2.9.1.dist-info
 	cp -r $(BACKEND_DIR)/psycopg2-3.7 $(LAMBDA_TARGET)/psycopg2
 	find $(LAMBDA_TARGET) -name *.pyc -delete
 	find $(LAMBDA_TARGET) -name __pycache__ -delete
