@@ -2,13 +2,13 @@ import datetime
 import decimal
 from flask_restx import fields
 
-from app import models
-from app.utils import get_root_model_list, get_orm_class_by_name
+from .. import models
+from ..utils import get_root_model_list, get_orm_class_by_name
 
 def generate_schema_dict(model):
     model_dict = {}
     for column in model.__table__.columns:
-        if hasattr(model, 'private_fields') and column.name in model.private_fields:
+        if hasattr(column, 'redacted') and column.redacted == True:
             continue
         if column.type.python_type == int:
             model_dict[column.name] = fields.Integer

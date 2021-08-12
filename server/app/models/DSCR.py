@@ -1,23 +1,24 @@
-from .common import TableBase, CaseTable, Trial, Event, date_from_str, Defendant, DefendantAlias, RelatedPerson
-from sqlalchemy import Column, Date, Numeric, Integer, String, Boolean, ForeignKey, Time, BigInteger, Index
+from .common import TableBase, MetaColumn as Column, CaseTable, Trial, Event, date_from_str, Defendant, DefendantAlias, RelatedPerson
+from sqlalchemy import Date, Numeric, Integer, String, Boolean, ForeignKey, Index
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.declarative import declared_attr
 
 class DSCR(CaseTable, TableBase):
     __tablename__ = 'dscr'
+    is_root = True
 
     id = Column(Integer, primary_key=True)
-    court_system = Column(String)
+    court_system = Column(String, enum=True)
     tracking_number = Column(String, nullable=True)
-    case_type = Column(String, nullable=True)
+    case_type = Column(String, nullable=True, enum=True)
     district_code = Column(Integer, nullable=True)
     location_code = Column(Integer, nullable=True)
-    document_type = Column(String, nullable=True)
+    document_type = Column(String, nullable=True, enum=True)
     issued_date = Column(Date, nullable=True)
     _issued_date_str = Column('issued_date_str',String, nullable=True)
-    case_status = Column(String, nullable=True)
-    case_disposition = Column(String, nullable=True)
+    case_status = Column(String, nullable=True, enum=True)
+    case_disposition = Column(String, nullable=True, enum=True)
 
     case = relationship('Case', backref=backref('dscr', uselist=False))
 
@@ -34,7 +35,7 @@ class DSCR(CaseTable, TableBase):
 class DSCRCaseTable(CaseTable):
     @declared_attr
     def case_number(self):
-        return Column(String, ForeignKey('dscr.case_number', ondelete='CASCADE'))
+        return Column(String, ForeignKey('dscr.case_number', ondelete='CASCADE'), nullable=False)
 
 class DSCRCharge(DSCRCaseTable, TableBase):
     __tablename__ = 'dscr_charges'
@@ -43,6 +44,7 @@ class DSCRCharge(DSCRCaseTable, TableBase):
 
     id = Column(Integer, primary_key=True)
     charge_number = Column(Integer)
+    expunged = Column(Boolean, nullable=False, server_default='false')
     charge_description = Column(String, nullable=True)
     statute = Column(String, nullable=True)
     statute_description = Column(String, nullable=True)
@@ -56,8 +58,8 @@ class DSCRCharge(DSCRCaseTable, TableBase):
     incident_date_to = Column(Date, nullable=True)
     _incident_date_to_str = Column('incident_date_to_str',String, nullable=True)
     victim_age = Column(Integer, nullable=True)
-    plea = Column(String, nullable=True)
-    disposition = Column(String, nullable=True)
+    plea = Column(String, nullable=True, enum=True)
+    disposition = Column(String, nullable=True, enum=True)
     disposition_date = Column(Date, nullable=True)
     _disposition_date_str = Column('disposition_date_str',String, nullable=True)
     fine = Column(Numeric, nullable=True)
@@ -158,13 +160,13 @@ class DSCRBailEvent(DSCRCaseTable, TableBase):
     dscr = relationship('DSCR', backref='bail_events')
 
     id = Column(Integer, primary_key=True)
-    event_name = Column(String)
+    event_name = Column(String, enum=True)
     date = Column(Date)
     _date_str = Column('date_str',String)
     bail_amount = Column(Numeric)
-    code = Column(String)
+    code = Column(String, enum=True)
     percentage_required = Column(Numeric)
-    type_of_bond = Column(String)
+    type_of_bond = Column(String, enum=True)
     judge_id = Column(String)
 
     @hybrid_property

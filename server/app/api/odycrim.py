@@ -2,13 +2,13 @@ from flask import request
 from flask_accepts import accepts
 from flask_restx import Namespace, Resource
 
-from app.api.interface import QueryParams
-from app.models import ODYCRIM
-from app.service import DataService
-from app.utils import get_eager_query
+from .interface import QueryParams
+from ..models import ODYCRIM
+from ..service import DataService
+from ..utils import get_eager_query, db_session
 
 def api_factory(schemas):
-    api = Namespace('ODYCRIM', description='MD criminal cases')
+    api = Namespace('ODYCRIM', description='MDEC Criminal Cases')
 
     odycrim_schema = schemas['ODYCRIM']
     odycrim_schema_full = schemas['ODYCRIMFull']
@@ -21,7 +21,7 @@ def api_factory(schemas):
         @accepts(schema=QueryParams, api=api)
         @api.marshal_with(odycrim_schema_results, as_list=True)
         def post(self):
-            '''Get a list of MD criminal cases'''
+            '''Get a list of MDEC Criminal Cases'''
 
             return DataService.fetch_rows_orm('odycrim', request.parsed_obj)
 
@@ -40,5 +40,14 @@ def api_factory(schemas):
         @api.marshal_with(odycrim_schema_full)
         def get(self, case_number):
             return get_eager_query(ODYCRIM).filter(ODYCRIM.case_number == case_number).one()
+
+    @api.route('/odycrim/total')
+    class ODYCRIMTotal(Resource):
+        '''Total number of MDEC Criminal Cases (estimate)'''
+
+        def get(self):
+            with db_session() as db:
+                results = db.execute("SELECT reltuples FROM pg_class WHERE oid = 'odycrim'::regclass").scalar()
+            return int(results)
 
     return api

@@ -1,20 +1,22 @@
-from .common import TableBase, CaseTable, Trial, Event, date_from_str, Defendant, DefendantAlias, RelatedPerson
-from sqlalchemy import Column, Date, Numeric, Integer, String, Boolean, ForeignKey, Time, BigInteger, Index
+from .common import TableBase, MetaColumn as Column, CaseTable, date_from_str, Defendant
+from sqlalchemy import Date, Numeric, Integer, String, Boolean, ForeignKey, Time, Index
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.declarative import declared_attr
+from datetime import datetime
 
 class ODYCRIM(CaseTable, TableBase):
     __tablename__ = 'odycrim'
+    is_root = True
 
     id = Column(Integer, primary_key=True)
-    court_system = Column(String)
-    location = Column(String)
+    court_system = Column(String, enum=True)
+    location = Column(String, enum=True)
     case_title = Column(String)
-    case_type = Column(String, nullable=True)
+    case_type = Column(String, nullable=True, enum=True)
     filing_date = Column(Date, nullable=True)
     _filing_date_str = Column('filing_date_str',String, nullable=True)
-    case_status = Column(String, nullable=True)
+    case_status = Column(String, nullable=True, enum=True)
     tracking_numbers = Column(String, nullable=True)
 
     case = relationship('Case', backref=backref('odycrim', uselist=False))
@@ -32,7 +34,7 @@ class ODYCRIM(CaseTable, TableBase):
 class ODYCRIMCaseTable(CaseTable):
     @declared_attr
     def case_number(self):
-        return Column(String, ForeignKey('odycrim.case_number', ondelete='CASCADE'))
+        return Column(String, ForeignKey('odycrim.case_number', ondelete='CASCADE'), nullable=False)
 
 class ODYCRIMReferenceNumber(ODYCRIMCaseTable, TableBase):
     __tablename__ = 'odycrim_reference_numbers'
@@ -41,7 +43,7 @@ class ODYCRIMReferenceNumber(ODYCRIMCaseTable, TableBase):
 
     id = Column(Integer, primary_key=True)
     ref_num = Column(String, nullable=False)
-    ref_num_type = Column(String, nullable=False)
+    ref_num_type = Column(String, nullable=False, enum=True)
 
 class ODYCRIMDefendant(ODYCRIMCaseTable, Defendant, TableBase):
     __tablename__ = 'odycrim_defendants'
@@ -60,8 +62,12 @@ class ODYCRIMInvolvedParty(ODYCRIMCaseTable, TableBase):
     odycrim = relationship('ODYCRIM', backref='involved_parties')
 
     id = Column(Integer, primary_key=True)
-    party_type = Column(String, nullable=False)
+    party_type = Column(String, nullable=False, enum=True)
     name = Column(String, nullable=False)
+    appearance_date = Column(Date)
+    _appearance_date_str = Column('appearance_date_str', String)
+    removal_date = Column(Date)
+    _removal_date_str = Column('removal_date_str', String)
     agency_name = Column(String, nullable=True)
     address_1 = Column(String, nullable=True)
     address_2 = Column(String, nullable=True)
@@ -71,13 +77,29 @@ class ODYCRIMInvolvedParty(ODYCRIMCaseTable, TableBase):
     aliases = relationship('ODYCRIMAlias')
     attorneys = relationship('ODYCRIMAttorney')
 
+    @hybrid_property
+    def appearance_date_str(self):
+        return self._appearance_date_str
+    @appearance_date_str.setter
+    def appearance_date_str(self,val):
+        self.appearance_date = date_from_str(val)
+        self._appearance_date_str = val
+
+    @hybrid_property
+    def removal_date_str(self):
+        return self._removal_date_str
+    @removal_date_str.setter
+    def removal_date_str(self,val):
+        self.removal_date = date_from_str(val)
+        self._removal_date_str = val
+
 class ODYCRIMAlias(ODYCRIMCaseTable, TableBase):
     __tablename__ = 'odycrim_aliases'
     __table_args__ = (Index('ixh_odycrim_aliases_case_number', 'case_number', postgresql_using='hash'),)
 
     id = Column(Integer, primary_key=True)
     alias = Column(String, nullable=False)
-    alias_type = Column(String, nullable=False)
+    alias_type = Column(String, nullable=False, enum=True)
     defendant_id = Column(Integer, ForeignKey('odycrim_defendants.id'),nullable=True)
     party_id = Column(Integer, ForeignKey('odycrim_involved_parties.id'),nullable=True)
 
@@ -87,6 +109,10 @@ class ODYCRIMAttorney(ODYCRIMCaseTable, TableBase):
 
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=True)
+    appearance_date = Column(Date)
+    _appearance_date_str = Column('appearance_date_str', String)
+    removal_date = Column(Date)
+    _removal_date_str = Column('removal_date_str', String)
     address_1 = Column(String, nullable=True)
     address_2 = Column(String, nullable=True)
     address_3 = Column(String, nullable=True)
@@ -96,20 +122,36 @@ class ODYCRIMAttorney(ODYCRIMCaseTable, TableBase):
     defendant_id = Column(Integer, ForeignKey('odycrim_defendants.id'),nullable=True)
     party_id = Column(Integer, ForeignKey('odycrim_involved_parties.id'),nullable=True)
 
+    @hybrid_property
+    def appearance_date_str(self):
+        return self._appearance_date_str
+    @appearance_date_str.setter
+    def appearance_date_str(self,val):
+        self.appearance_date = date_from_str(val)
+        self._appearance_date_str = val
+
+    @hybrid_property
+    def removal_date_str(self):
+        return self._removal_date_str
+    @removal_date_str.setter
+    def removal_date_str(self,val):
+        self.removal_date = date_from_str(val)
+        self._removal_date_str = val
+
 class ODYCRIMCourtSchedule(ODYCRIMCaseTable, TableBase):
     __tablename__ = 'odycrim_court_schedule'
     __table_args__ = (Index('ixh_odycrim_court_schedule_case_number', 'case_number', postgresql_using='hash'),)
     odycrim = relationship('ODYCRIM', backref='court_schedules')
 
     id = Column(Integer, primary_key=True)
-    event_type = Column(String, nullable=False)
+    event_type = Column(String, nullable=False, enum=True)
     date = Column(Date, nullable=True)
     _date_str = Column('date_str', String, nullable=True)
     time = Column(Time, nullable=True)
     _time_str = Column('time_str', String, nullable=True)
-    location = Column(String, nullable=True)
+    location = Column(String, nullable=True, enum=True)
     room = Column(String, nullable=True)
-    result = Column(String,nullable=True)
+    result = Column(String,nullable=True, enum=True)
 
     @hybrid_property
     def date_str(self):
@@ -137,10 +179,11 @@ class ODYCRIMCharge(ODYCRIMCaseTable, TableBase):
 
     id = Column(Integer, primary_key=True)
     charge_number = Column(Integer)
+    expunged = Column(Boolean, nullable=False, server_default='false')
     cjis_code = Column(String)
     statute_code = Column(String, nullable=True)
     charge_description = Column(String, nullable=True)
-    charge_class = Column(String)
+    charge_class = Column(String, enum=True)
     probable_cause = Column(Boolean)
     offense_date_from = Column(Date, nullable=True)
     _offense_date_from_str = Column('offense_date_from_str', String, nullable=True)
@@ -148,10 +191,10 @@ class ODYCRIMCharge(ODYCRIMCaseTable, TableBase):
     _offense_date_to_str = Column('offense_date_to_str', String, nullable=True)
     agency_name = Column(String)
     officer_id = Column(String)
-    plea = Column(String, nullable=True)
+    plea = Column(String, nullable=True, enum=True)
     plea_date = Column(Date, nullable=True)
     _plea_date_str = Column('plea_date_str', String, nullable=True)
-    disposition = Column(String, nullable=True)
+    disposition = Column(String, nullable=True, enum=True)
     disposition_date = Column(Date, nullable=True)
     _disposition_date_str = Column('disposition_date_str', String, nullable=True)
     converted_disposition = Column(String, nullable=True)
@@ -159,6 +202,7 @@ class ODYCRIMCharge(ODYCRIMCaseTable, TableBase):
     jail_death = Column(Boolean, nullable=True)
     jail_start_date = Column(Date, nullable=True)
     _jail_start_date_str = Column('jail_start_date_str', String, nullable=True)
+    jail_cons_conc = Column(String)
     jail_years = Column(Integer, nullable=True)
     jail_months = Column(Integer, nullable=True)
     jail_days = Column(Integer, nullable=True)
@@ -259,16 +303,25 @@ class ODYCRIMRestitution(ODYCRIMCaseTable, TableBase):
         self.restitution_entered_date = date_from_str(val)
         self._restitution_entered_date_str = val
 
+class ODYCRIMSexOffenderRegistration(ODYCRIMCaseTable, TableBase):
+    __tablename__ = 'odycrim_sex_offender_registrations'
+    __table_args__ = (Index('ixh_odycrim_sex_offender_registrations_case_number', 'case_number', postgresql_using='hash'),)
+    odycrim = relationship('ODYCRIM', backref='sex_offender_registrations')
+
+    id = Column(Integer, primary_key=True)
+    type = Column(String, enum=True)
+    notes = Column(String)
+
 class ODYCRIMWarrant(ODYCRIMCaseTable, TableBase):
     __tablename__ = 'odycrim_warrants'
     __table_args__ = (Index('ixh_odycrim_warrants_case_number', 'case_number', postgresql_using='hash'),)
     odycrim = relationship('ODYCRIM', backref='warrants')
 
     id = Column(Integer, primary_key=True)
-    warrant_type = Column(String)
+    warrant_type = Column(String, enum=True)
     issue_date = Column(Date, nullable=True)
     _issue_date_str = Column('issue_date_str', String, nullable=True)
-    last_status = Column(String)
+    last_status = Column(String, enum=True)
     status_date = Column(Date, nullable=True)
     _status_date_str = Column('status_date_str', String, nullable=True)
 
@@ -294,11 +347,11 @@ class ODYCRIMBailBond(ODYCRIMCaseTable, TableBase):
     odycrim = relationship('ODYCRIM', backref='bail_bonds')
 
     id = Column(Integer, primary_key=True)
-    bond_type = Column(String)
+    bond_type = Column(String, enum=True)
     bond_amount_posted = Column(String)
     bond_status_date = Column(Date, nullable=True)
     _bond_status_date_str = Column('bond_status_date_str', String, nullable=True)
-    bond_status = Column(String)
+    bond_status = Column(String, enum=True)
 
     @hybrid_property
     def bond_status_date_str(self):
@@ -316,7 +369,7 @@ class ODYCRIMBondSetting(ODYCRIMCaseTable, TableBase):
     id = Column(Integer, primary_key=True)
     bail_date = Column(Date, nullable=True)
     _bail_date_str = Column('bail_date_str', String, nullable=True)
-    bail_setting_type = Column(String)
+    bail_setting_type = Column(String, enum=True)
     bail_amount = Column(Numeric)
 
     @hybrid_property
@@ -353,10 +406,10 @@ class ODYCRIMService(ODYCRIMCaseTable, TableBase):
     odycrim = relationship('ODYCRIM', backref='services')
 
     id = Column(Integer, primary_key=True)
-    service_type = Column(String, nullable=False)
+    service_type = Column(String, nullable=False, enum=True)
     issued_date = Column(Date,nullable=True)
     _issued_date_str = Column('issued_date_str',String,nullable=True)
-    service_status = Column(String,nullable=True)
+    service_status = Column(String,nullable=True, enum=True)
 
     @hybrid_property
     def issued_date_str(self):

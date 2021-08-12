@@ -2,13 +2,13 @@ from flask import request
 from flask_accepts import accepts
 from flask_restx import Namespace, Resource
 
-from app.api.interface import QueryParams
-from app.models import CC
-from app.service import DataService
-from app.utils import get_eager_query
+from .interface import QueryParams
+from ..models import CC
+from ..service import DataService
+from ..utils import get_eager_query, db_session
 
 def api_factory(schemas):
-    api = Namespace('CC', description='Baltimore City circuit court civil cases')
+    api = Namespace('CC', description='Circuit Court Civil Cases')
 
     cc_schema = schemas['CC']
     cc_schema_full = schemas['CCFull']
@@ -21,7 +21,7 @@ def api_factory(schemas):
         @accepts(schema=QueryParams, api=api)
         @api.marshal_with(cc_results_schema)
         def post(self):
-            '''Get a list of Baltimore City circuit court civil cases'''
+            '''Get a list of Circuit Court Civil Cases'''
 
             return DataService.fetch_rows_orm('cc', request.parsed_obj)
 
@@ -40,5 +40,14 @@ def api_factory(schemas):
         @api.marshal_with(cc_schema_full)
         def get(self, case_number):
             return get_eager_query(CC).filter(CC.case_number == case_number).one()
+
+    @api.route('/cc/total')
+    class CCTotal(Resource):
+        '''Total number of Circuit Court Civil Cases (estimate)'''
+
+        def get(self):
+            with db_session() as db:
+                results = db.execute("SELECT reltuples FROM pg_class WHERE oid = 'cc'::regclass").scalar()
+            return int(results)
 
     return api

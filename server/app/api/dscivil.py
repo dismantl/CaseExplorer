@@ -2,13 +2,13 @@ from flask import request
 from flask_accepts import accepts
 from flask_restx import Namespace, Resource
 
-from app.api.interface import QueryParams
-from app.models import DSCIVIL
-from app.service import DataService
-from app.utils import get_eager_query
+from .interface import QueryParams
+from ..models import DSCIVIL
+from ..service import DataService
+from ..utils import get_eager_query, db_session
 
 def api_factory(schemas):
-    api = Namespace('DSCIVIL', description='Baltimore City district court civil cases')
+    api = Namespace('DSCIVIL', description='District Court Civil Cases')
 
     dscivil_schema = schemas['DSCIVIL']
     dscivil_schema_full = schemas['DSCIVILFull']
@@ -21,7 +21,7 @@ def api_factory(schemas):
         @accepts(schema=QueryParams, api=api)
         @api.marshal_with(dscivil_schema_results)
         def post(self):
-            '''Get a list of Baltimore City district court civil cases'''
+            '''Get a list of District Court Civil Cases'''
 
             return DataService.fetch_rows_orm('dscivil', request.parsed_obj)
 
@@ -40,5 +40,14 @@ def api_factory(schemas):
         @api.marshal_with(dscivil_schema_full)
         def get(self, case_number):
             return get_eager_query(DSCIVIL).filter(DSCIVIL.case_number == case_number).one()
+
+    @api.route('/dscivil/total')
+    class DSCIVILTotal(Resource):
+        '''Total number of District Court Civil Cases (estimate)'''
+
+        def get(self):
+            with db_session() as db:
+                results = db.execute("SELECT reltuples FROM pg_class WHERE oid = 'dscivil'::regclass").scalar()
+            return int(results)
 
     return api

@@ -1,15 +1,16 @@
-from .common import TableBase, CaseTable, date_from_str, Defendant, DefendantAlias, RelatedPerson, Trial, Event
-from sqlalchemy import Column, Date, Numeric, Integer, String, Boolean, ForeignKey, Time, BigInteger, Index
+from .common import TableBase, MetaColumn as Column, MetaColumn as Column, CaseTable, date_from_str, Defendant, DefendantAlias, RelatedPerson, Trial, Event
+from sqlalchemy import Date, Numeric, Integer, String, Boolean, ForeignKey, Index
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.declarative import declared_attr
 
 class DSK8(CaseTable, TableBase):
     __tablename__ = 'dsk8'
+    is_root = True
 
     id = Column(Integer, primary_key=True)
-    court_system = Column(String)
-    case_status = Column(String)
+    court_system = Column(String, enum=True)
+    case_status = Column(String, enum=True)
     status_date = Column(Date, nullable=True)
     _status_date_str = Column('status_date_str',String)
     tracking_number = Column(String, nullable=True)
@@ -51,7 +52,7 @@ class DSK8(CaseTable, TableBase):
 class DSK8CaseTable(CaseTable):
     @declared_attr
     def case_number(self):
-        return Column(String, ForeignKey('dsk8.case_number', ondelete='CASCADE'))
+        return Column(String, ForeignKey('dsk8.case_number', ondelete='CASCADE'), nullable=False)
 
 class DSK8Charge(DSK8CaseTable, TableBase):
     __tablename__ = 'dsk8_charges'
@@ -60,16 +61,17 @@ class DSK8Charge(DSK8CaseTable, TableBase):
 
     id = Column(Integer, primary_key=True)
     charge_number = Column(Integer)
+    expunged = Column(Boolean, nullable=False, server_default='false')
     cjis_traffic_code = Column(String, nullable=True)
     arrest_citation_number = Column(String, nullable=True)
     description = Column(String)
     plea = Column(String, nullable=True)
     plea_date = Column(Date, nullable=True)
     _plea_date_str = Column('plea_date_str', String, nullable=True)
-    disposition = Column(String)
+    disposition = Column(String, enum=True)
     disposition_date = Column(Date, nullable=True)
     _disposition_date_str = Column('disposition_date_str', String)
-    verdict = Column(String, nullable=True)
+    verdict = Column(String, nullable=True, enum=True)
     verdict_date = Column(Date, nullable=True)
     _verdict_date_str = Column('verdict_date_str', String, nullable=True)
     court_costs = Column(Numeric, nullable=True)
@@ -143,9 +145,9 @@ class DSK8BailAndBond(DSK8CaseTable, TableBase):
     _set_date_str = Column('set_date_str', String)
     release_date = Column(Date, nullable=True)
     _release_date_str = Column('release_date_str', String, nullable=True)
-    release_reason = Column(String, nullable=True)
+    release_reason = Column(String, nullable=True, enum=True)
     bail_set_location = Column(String)
-    bond_type = Column(String)
+    bond_type = Column(String, enum=True)
     ground_rent = Column(Numeric, nullable=True)
     mortgage = Column(Numeric, nullable=True)
     property_value = Column(Numeric, nullable=True)

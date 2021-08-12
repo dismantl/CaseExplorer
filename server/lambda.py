@@ -2,10 +2,14 @@ import re
 import os
 import sys
 import json
-from datetime import datetime, date, time
+import logging
 
-srcpath = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(srcpath+"/.requirements")
+# srcpath = os.path.dirname(os.path.abspath(__file__))
+# sys.path.append(srcpath+"/.requirements")
+
+from dotenv import load_dotenv
+env_dir = os.path.join(os.path.dirname(__file__), 'app')
+load_dotenv(dotenv_path=os.path.join(env_dir,'env'))
 
 from sqlalchemy.orm.exc import NoResultFound
 from flask_restx import marshal
@@ -14,6 +18,9 @@ from app.service import DataService
 from app.graphql import transform_filter_model
 from app.utils import get_model_name_by_table_name, get_eager_query, get_orm_class_by_name, TableNotFound
 from app.api.dscr import get_case_numbers_by_officer_sequence_number
+
+
+logger = logging.getLogger(__name__)
 
 
 def gen_response(status_code, body):
@@ -31,7 +38,6 @@ def gen_404(path):
 
 
 def handler(event, context):
-    print(event)
     if 'field' in event:  # GraphQL API
         table_name = event['field']
         args = event['arguments']
@@ -58,10 +64,17 @@ def handler(event, context):
             path = event['path']
             bpd_match = re.fullmatch(r'/api/bpd/(?P<sequence_number>\w\d\d\d)', path)
             case_match = re.fullmatch(r'/api/(?P<table_name>\w+)(/(?P<case_number>\w+))?(?P<full>/full)?', path)
-            if bpd_match:
+            total_match = re.fullmatch(r'/api/(?P<table_name>\w+)/total', path)
+            if path == '/api/metadata':
+                return gen_response(200, json.dumps(DataService.fetch_column_metadata()))
+            elif bpd_match:
                 seq_no = bpd_match.group('sequence_number')
                 case_numbers = get_case_numbers_by_officer_sequence_number(seq_no)
                 return gen_response(200, json.dumps(case_numbers))
+            elif total_match:
+                table_name = case_match.group('table_name')
+                total = DataService.fetch_total(table_name)
+                return gen_response(200, json.dumps({'data': f'{total:,}'}))
             elif case_match:
                 table_name = case_match.group('table_name')
                 case_number = case_match.group('case_number')
@@ -95,4 +108,5 @@ def handler(event, context):
                                 return gen_404(path)
                             result = marshal(requested_obj, rest_api.api_schemas[model.__name__])
                         return gen_response(200, json.dumps(result))
+
             return gen_404(path)
