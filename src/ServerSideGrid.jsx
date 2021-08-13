@@ -6,25 +6,7 @@ import SortableHeaderComponent from './SortableHeaderComponent.jsx';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import 'ag-grid-enterprise';
-
-const apiName = 'caseexplorerapi';
-
-function toTitleCase(str) {
-  return str.replace(/\w\S*/g, function(txt) {
-    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-  });
-}
-
-function checkStatus(response) {
-  if (response.status >= 200 && response.status < 300) {
-    return response;
-  }
-  const error = new Error(`HTTP Error ${response.statusText}`);
-  error.status = response.statusText;
-  error.response = response;
-  console.log(error); // eslint-disable-line no-console
-  throw error;
-}
+import { checkStatus, toTitleCase } from './utils';
 
 export default class ServerSideGrid extends Component {
   onGridReady = params => {
@@ -36,8 +18,6 @@ export default class ServerSideGrid extends Component {
 
   getRows = params => {
     var promise;
-    console.log(JSON.stringify(params.request, null, 1));
-
     if (environment === 'development') {
       promise = fetch(this.state.path, {
         method: 'post',
@@ -47,7 +27,7 @@ export default class ServerSideGrid extends Component {
         .then(checkStatus)
         .then(httpResponse => httpResponse.json());
     } else {
-      promise = API.post(apiName, this.state.path, {
+      promise = API.post(this.apiName, this.state.path, {
         body: JSON.stringify(params.request)
       });
     }
@@ -63,43 +43,53 @@ export default class ServerSideGrid extends Component {
 
   constructor(props) {
     super(props);
+    this.apiName = props.apiName;
     this.state = {
       table: props.table,
       path: '/api/' + props.table,
-      metadata: null
+      metadata: props.metadata
     };
-    this.fetchColumnMetadata();
   }
-
-  fetchColumnMetadata = () => {
-    var promise;
-    if (environment === 'development') {
-      promise = fetch('/api/metadata')
-        .then(checkStatus)
-        .then(httpResponse => httpResponse.json());
-    } else {
-      promise = API.get(apiName, '/api/metadata');
-    }
-    promise.then(response => {
-      this.setState({ metadata: response });
-    });
-  };
 
   render() {
     if (this.state.metadata !== null) {
+      let sortedColumns = [];
+      const table_metadata = this.state.metadata[this.state.table];
+      for (const [column, column_metadata] of Object.entries(table_metadata)) {
+        if (sortedColumns.length === 0)
+          sortedColumns.push({ name: column, metadata: column_metadata });
+        else {
+          let inserted = false;
+          for (let i = 0; i < sortedColumns.length; i++) {
+            if (column_metadata.order < sortedColumns[i].metadata.order) {
+              sortedColumns.splice(i, 0, {
+                name: column,
+                metadata: column_metadata
+              });
+              inserted = true;
+              break;
+            }
+          }
+          if (inserted === false)
+            sortedColumns.push({ name: column, metadata: column_metadata });
+        }
+      }
+
       let gridColumns = [];
-      for (const column in this.state.metadata[this.state.table]) {
-        const metadata = this.state.metadata[this.state.table][column];
+      for (const column of sortedColumns) {
+        const metadata = column.metadata;
         let gridColumn;
-        if (column.endsWith('_str') || column === 'id') continue;
-        let columnLabel = toTitleCase(column.replace('_', ' '));
+        if (column.name.endsWith('_str') || column.name === 'id') continue;
+        let columnLabel;
+        if (metadata.label === '') columnLabel = toTitleCase(column.name);
+        else columnLabel = metadata.label;
         if (
           metadata.allowed_values !== null &&
           metadata.allowed_values.length < 200
         ) {
           gridColumn = (
             <AgGridColumn
-              field={column}
+              field={column.name}
               headerName={columnLabel}
               width={
                 metadata.width_pixels === null ? 200 : metadata.width_pixels
@@ -110,13 +100,13 @@ export default class ServerSideGrid extends Component {
                 suppressMiniFilter: true,
                 newRowsAction: 'keep'
               }}
-              key={this.state.table + '.' + column}
+              key={this.state.table + '.' + column.name}
             />
           );
-        } else if (column.search('date') > 0) {
+        } else if (column.name.search('date') > 0) {
           gridColumn = (
             <AgGridColumn
-              field={column}
+              field={column.name}
               headerName={columnLabel}
               width={
                 metadata.width_pixels === null ? 200 : metadata.width_pixels
@@ -125,18 +115,18 @@ export default class ServerSideGrid extends Component {
               filterParams={{
                 debounceMs: 1000
               }}
-              key={this.state.table + '.' + column}
+              key={this.state.table + '.' + column.name}
             />
           );
         } else {
           gridColumn = (
             <AgGridColumn
-              field={column}
+              field={column.name}
               headerName={columnLabel}
               width={
                 metadata.width_pixels === null ? 200 : metadata.width_pixels
               }
-              key={this.state.table + '.' + column}
+              key={this.state.table + '.' + column.name}
             />
           );
         }
@@ -172,8 +162,18 @@ export default class ServerSideGrid extends Component {
       );
     } else {
       return (
-        <div style={{ height: '100%' }}>
-          <h6>Loading...</h6>
+        <div className="ag-theme-balham" style={{ height: '100%' }}>
+          <div className="ag-stub-cell">
+            <span className="ag-loading-icon" ref="eLoadingIcon">
+              <span
+                className="ag-icon ag-icon-loading"
+                unselectable="on"
+              ></span>
+            </span>
+            <span className="ag-loading-text" ref="eLoadingText">
+              Loading...
+            </span>
+          </div>
         </div>
       );
     }

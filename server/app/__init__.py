@@ -34,7 +34,7 @@ def create_app(config_name):
     app.cli.add_command(commands.print_swagger_spec)
     app.cli.add_command(commands.export_column_metadata)
     app.cli.add_command(commands.import_column_metadata)
-    app.cli.add_command(commands.set_enums)
+    app.cli.add_command(commands.update_metadata)
 
     return app
 

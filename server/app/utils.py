@@ -1,6 +1,7 @@
+from .models import DSCRRelatedPerson
 import logging
 from logging.handlers import RotatingFileHandler
-from sqlalchemy.orm import selectinload, lazyload, sessionmaker
+from sqlalchemy.orm import relation, selectinload, lazyload, sessionmaker
 from contextlib import contextmanager
 from flask import current_app
 
@@ -27,13 +28,23 @@ def configure_logging(app):
     app.logger.info('CaseExplorer startup')
 
 def get_model_list(module):
-    class_list = [cls for name, cls in module.__dict__.items() if isinstance(cls, type) and hasattr(cls, '__table__')]
-    class_list = [x for x in set(class_list)]  # Remove duplicates
-    return class_list
+    model_list = [cls for name, cls in module.__dict__.items() if isinstance(cls, type) and hasattr(cls, '__table__')]
+    model_list = [x for x in set(model_list)]  # Remove duplicates
+    return model_list
 
 def get_root_model_list(module):
     model_list = get_model_list(module)
     return list(filter(lambda model: hasattr(model, 'is_root') and model.is_root, model_list))
+
+def get_case_model_list(module):
+    model_list = [module.Case]
+    for root_model in get_root_model_list(module):
+        model_list.append(root_model)
+        for rel_name, relationship in root_model.__mapper__.relationships.items():
+            model = get_orm_class_by_name(relationship.target.name)
+            if model not in model_list:
+                model_list.append(model)
+    return model_list
 
 def get_root_model_table_names(module):
     root_model_list = get_root_model_list(module)
@@ -85,3 +96,7 @@ def db_session():
         raise
     finally:
         db.close()
+
+def get_case_numbers_by_officer_sequence_number(sequence_number):
+    related_persons = DSCRRelatedPerson.query.filter(DSCRRelatedPerson.officer_id == sequence_number).all()
+    return list(dict.fromkeys([x.case_number for x in related_persons]))

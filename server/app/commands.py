@@ -5,7 +5,7 @@ import logging
 from flask.cli import with_appcontext
 from sqlalchemy import distinct
 from sqlalchemy.dialects.postgresql import insert
-from .utils import db_session, get_model_list
+from .utils import db_session, get_case_model_list
 
 logger = logging.getLogger(__name__)
 
@@ -47,11 +47,11 @@ def export_column_metadata(output):
     from . import models
     with open(output, 'w', newline='') as outfile:
         writer = csv.writer(outfile)
-        writer.writerow(['Table name', 'Column name', 'Description', 'Width in pixels'])
+        writer.writerow(['Table name', 'Column name', 'Label', 'Description', 'Width in pixels'])
         rows = []
         if models.ColumnMetadata.query.count() > 0:
             for row in models.ColumnMetadata.query.all():
-                rows.append([row.table, row.column_name, row.description, row.width_pixels])
+                rows.append([row.table, row.column_name, row.label, row.description, row.width_pixels])
         else:
             for table in models.Case.metadata.sorted_tables:
                 for col in table.columns:
@@ -73,11 +73,13 @@ def import_column_metadata(input):
             for row in reader:
                 table = row[0]
                 column_name = row[1]
-                description = row[2]
-                width_pixels = row[3]
+                label = row[2]
+                description = row[3]
+                width_pixels = row[4]
                 stmt = insert(models.ColumnMetadata).values(
                     table=table,
                     column_name=column_name,
+                    label=label,
                     description=description or None,
                     width_pixels=int(width_pixels) if width_pixels else None
                 )
@@ -86,6 +88,7 @@ def import_column_metadata(input):
                     set_=dict(
                         table=stmt.excluded.table,
                         column_name=stmt.excluded.column_name,
+                        label=stmt.excluded.label,
                         description=stmt.excluded.description,
                         width_pixels=stmt.excluded.width_pixels
                     )
@@ -95,15 +98,26 @@ def import_column_metadata(input):
 
 @click.command()
 @with_appcontext
-def set_enums():
-    '''Query all enum columns for distinct entries, storing results in column_metadata'''
+def update_metadata():
+    '''Query for redacted and enum columns, storing results in column_metadata'''
     from . import models
-    for model in get_model_list(models):
-        for column in model.__table__.columns:
-            if hasattr(column,'enum') and column.enum == True:
-                with db_session() as db:
-                    metadata = db.query(models.ColumnMetadata).filter_by(table=model.__table__.name, column_name=column.name).one_or_none()
-                    if metadata:
-                        results = db.query(distinct(column)).all()
-                        logger.info(f'Setting {len(results)} enum values for {model.__table__.name}.{column.name}')
-                        metadata.allowed_values = [_ for _, in results]
+    with db_session() as db:
+        for model in get_case_model_list(models):
+            order = 1
+            for column in model.__table__.columns:
+                metadatum = db.query(models.ColumnMetadata).filter_by(table=model.__table__.name, column_name=column.name).one_or_none()
+                if not metadatum:
+                    continue
+                if column.enum == True:
+                    results = db.query(distinct(column)).all()
+                    logger.info(f'Setting {len(results)} enum values for {model.__table__.name}.{column.name}')
+                    metadatum.allowed_values = [_ for _, in results]
+                if column.redacted == True:
+                    logger.info(f'Setting redacted=True for {model.__table__.name}.{column.name}')
+                    metadatum.redacted = True
+                else:
+                    if column.name == 'case_number':
+                        metadatum.order = 0
+                    else:
+                        metadatum.order = order
+                        order += 1

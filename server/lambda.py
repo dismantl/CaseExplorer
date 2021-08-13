@@ -16,8 +16,8 @@ from flask_restx import marshal
 from app import app, rest_api
 from app.service import DataService
 from app.graphql import transform_filter_model
-from app.utils import get_model_name_by_table_name, get_eager_query, get_orm_class_by_name, TableNotFound
-from app.api.dscr import get_case_numbers_by_officer_sequence_number
+from app.utils import (get_model_name_by_table_name, get_eager_query, get_orm_class_by_name, TableNotFound,
+    get_case_numbers_by_officer_sequence_number)
 
 
 logger = logging.getLogger(__name__)
@@ -66,7 +66,7 @@ def handler(event, context):
             case_match = re.fullmatch(r'/api/(?P<table_name>\w+)(/(?P<case_number>\w+))?(?P<full>/full)?', path)
             total_match = re.fullmatch(r'/api/(?P<table_name>\w+)/total', path)
             if path == '/api/metadata':
-                return gen_response(200, json.dumps(DataService.fetch_column_metadata()))
+                return gen_response(200, json.dumps(DataService.fetch_metadata()))
             elif bpd_match:
                 seq_no = bpd_match.group('sequence_number')
                 case_numbers = get_case_numbers_by_officer_sequence_number(seq_no)

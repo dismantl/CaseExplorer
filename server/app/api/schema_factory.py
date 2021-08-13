@@ -3,7 +3,7 @@ import decimal
 from flask_restx import fields
 
 from .. import models
-from ..utils import get_root_model_list, get_orm_class_by_name
+from ..utils import get_case_model_list, get_root_model_list, get_orm_class_by_name
 
 def generate_schema_dict(model):
     model_dict = {}
@@ -48,15 +48,16 @@ def generate_full_schema(api, model, path, schema_name=None):
     return schema
 
 def schema_factory(api):
+    all_case_models = get_case_model_list(models)
     root_models = get_root_model_list(models)
 
     schemas = {}
+    for model in all_case_models:
+        schema_dict = generate_schema_dict(model)
+        schemas[model.__name__] = api.model(model.__name__, schema_dict)
     for root_model in root_models:
-        root_schema_dict = generate_schema_dict(root_model)
-        schemas[root_model.__name__] = api.model(root_model.__name__, root_schema_dict)
         root_full_schema = generate_full_schema(api, root_model, (root_model.__tablename__, ), f'{root_model.__name__}Full')
         schemas[f'{root_model.__name__}Full'] = root_full_schema
-    schemas['Case'] = api.model('Case', generate_schema_dict(models.Case))
 
     results_schemas = {}
     for schema_name, schema in schemas.items():

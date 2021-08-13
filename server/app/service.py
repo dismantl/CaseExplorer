@@ -2,8 +2,9 @@ import re
 from sqlalchemy import cast, Date, create_engine
 from sqlalchemy.sql import select, func, and_, or_, text
 from sqlalchemy.sql.expression import table
+from . import models
 from .models import *
-from .utils import get_orm_class_by_name, get_eager_query, db_session
+from .utils import get_orm_class_by_name, get_eager_query, db_session, get_root_model_list
 
 
 class DataService:
@@ -37,18 +38,40 @@ class DataService:
         }
     
     @classmethod
-    def fetch_column_metadata(cls):
+    def fetch_metadata(cls):
         query_results = ColumnMetadata.query.all()
-        results = {}
+        column_metadata = {}
         for result in query_results:
-            if result.table not in results:
-                results[result.table] = {}
-            results[result.table][result.column_name] = {
+            if result.redacted == True:
+                continue
+            if result.table not in column_metadata:
+                column_metadata[result.table] = {}
+            column_metadata[result.table][result.column_name] = {
+                'label': result.label,
                 'description': result.description,
                 'width_pixels': result.width_pixels,
-                'allowed_values': result.allowed_values
+                'allowed_values': result.allowed_values,
+                'order': result.order
             }
-        return results
+
+        table_metadata = {}
+        for root_model in get_root_model_list(models):
+            # model_list.append(root_model)
+            subtables = []
+            for rel_name, relationship in root_model.__mapper__.relationships.items():
+                if relationship.target.name == 'cases':
+                    continue
+                model = get_orm_class_by_name(relationship.target.name)
+                if model.__table__.name not in subtables:
+                    subtables.append(model.__table__.name)
+            table_metadata[root_model.__table__.name] = {
+                'subtables': subtables,
+                'description': root_model.__doc__
+            }
+        return {
+            'columns': column_metadata,
+            'tables': table_metadata
+        }
 
     @classmethod
     def fetch_total(cls, table_name):
@@ -95,7 +118,6 @@ def fetch_rows_from_model(cls, req, eager=False):
     }
 
 
-# TODO support grouping and aggregation via sqlalchemy ORM rather than SQL expression language
 def build_select(table, req):
     row_group_cols = req['rowGroupCols']
     group_keys = req['groupKeys']
@@ -360,7 +382,7 @@ def build_group_by(query, table, req):
 
     if is_grouping(row_group_cols, group_keys):
         field = row_group_cols[len(group_keys)]['field']
-        query = query.group_by(t.c[field])
+        query = query.group_by(table.c[field])
 
     return query
 
