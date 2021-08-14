@@ -8,6 +8,32 @@ import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import 'ag-grid-enterprise';
 import { checkStatus, toTitleCase } from './utils';
 
+const sideBarConfig = {
+  toolPanels: [
+    {
+      id: 'columns',
+      labelDefault: 'Columns',
+      labelKey: 'columns',
+      iconKey: 'columns',
+      toolPanel: 'agColumnsToolPanel',
+      toolPanelParams: {
+        suppressRowGroups: true,
+        suppressValues: true,
+        suppressPivots: true,
+        suppressPivotMode: true
+      }
+    },
+    {
+      id: 'filters',
+      labelDefault: 'Filters',
+      labelKey: 'filters',
+      iconKey: 'filter',
+      toolPanel: 'agFiltersToolPanel'
+    }
+  ],
+  position: 'right'
+};
+
 export default class ServerSideGrid extends Component {
   onGridReady = params => {
     this.api = params.api;
@@ -142,8 +168,10 @@ export default class ServerSideGrid extends Component {
               // no binding, just providing hard coded strings for the properties
               // boolean properties will default to true if provided (ie suppressRowClickSelection => suppressRowClickSelection="true")
               suppressRowClickSelection
+              suppressPivotMode
               rowModelType="serverSide"
               animateRows
+              sideBar={sideBarConfig}
               // setting default column properties
               defaultColDef={{
                 resizable: true,
