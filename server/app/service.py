@@ -91,8 +91,8 @@ def fetch_rows_from_model(cls, req, eager=False):
     # query = build_select(table, req)
     query = build_where(query, table, req)
     query = build_order_by(query, table, req)
-    query = build_limit(query, table, req)
     query = build_group_by(query, table, req)
+    query = build_limit(query, table, req)
     print(query)
 
     results = query.all()
