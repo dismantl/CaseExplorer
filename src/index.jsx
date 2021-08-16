@@ -118,6 +118,13 @@ const fetchMetadata = callback => {
 };
 
 initializeIcons();
+ReactDOM.render(
+  <div className="loader-container">
+    <div className="loader"></div>
+  </div>,
+  document.getElementById('root')
+);
+
 fetchMetadata(metadata => {
   genNavStructure(metadata);
   let routes = [
