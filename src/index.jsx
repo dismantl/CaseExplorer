@@ -19,10 +19,12 @@ Amplify.configure(awsmobile);
 let navLinkGroups: INavLinkGroup[] = [
   {
     name: 'Case Data',
+    key: 'Case Data',
     links: [
       { name: 'All Cases', url: '/cases' },
       {
         name: 'MDEC',
+        key: 'MDEC',
         expandAriaLabel: 'Expand section',
         collapseAriaLabel: 'Collapse section',
         isExpanded: true,
@@ -30,6 +32,7 @@ let navLinkGroups: INavLinkGroup[] = [
       },
       {
         name: 'Non-MDEC',
+        key: 'Non-MDEC',
         expandAriaLabel: 'Expand section',
         collapseAriaLabel: 'Collapse section',
         links: [],
@@ -40,10 +43,12 @@ let navLinkGroups: INavLinkGroup[] = [
   },
   {
     name: 'API',
+    key: 'API',
     links: [
-      { name: 'GraphQL', url: '/graphql' },
+      { name: 'GraphQL', url: '/graphql', key: 'GraphQL' },
       {
         name: 'REST',
+        key: 'REST',
         url: 'https://portal.mdcaseexplorer.com',
         target: '_blank'
       }
@@ -57,7 +62,11 @@ const genNavItem = (metadata, table) => {
   let links = [{ name: 'Overview', url: '/' + table }];
   for (const subtable of table_metadata.subtables) {
     const label = toTitleCase(subtable.replace(/^[^_]+_/, ''));
-    links.push({ name: label, url: '/' + subtable });
+    links.push({
+      name: label,
+      url: '/' + subtable,
+      key: table + '.' + subtable
+    });
   }
   return {
     name: table_metadata.description,
