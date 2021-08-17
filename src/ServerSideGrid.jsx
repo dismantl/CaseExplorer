@@ -7,6 +7,7 @@ import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import 'ag-grid-enterprise';
 import { checkStatus, toTitleCase } from './utils';
+import ExportToolPanel from './ExportToolPanel.jsx';
 
 const sideBarConfig = {
   toolPanels: [
@@ -29,6 +30,13 @@ const sideBarConfig = {
       labelKey: 'filters',
       iconKey: 'filter',
       toolPanel: 'agFiltersToolPanel'
+    },
+    {
+      id: 'export',
+      labelDefault: 'Export',
+      labelKey: 'export',
+      iconKey: 'save',
+      toolPanel: 'exportToolPanel'
     }
   ],
   position: 'right'
@@ -172,6 +180,15 @@ export default class ServerSideGrid extends Component {
               rowModelType="serverSide"
               animateRows
               sideBar={sideBarConfig}
+              frameworkComponents={{
+                exportToolPanel: props => (
+                  <ExportToolPanel
+                    callback={() => {
+                      this.api.exportDataAsCsv();
+                    }}
+                  />
+                )
+              }}
               // setting default column properties
               defaultColDef={{
                 resizable: true,

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Component, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter as Router, Route, NavLink } from 'react-router-dom';
 import Amplify from 'aws-amplify';
@@ -6,102 +6,16 @@ import awsmobile from './aws-exports';
 import './index.css';
 import ServerSideGrid from './ServerSideGrid.jsx';
 import GraphiQLClient from './GraphiQL';
-import { Nav, INavLinkGroup } from 'office-ui-fabric-react/lib/Nav';
 import { initializeIcons } from '@fluentui/react/lib/Icons';
 import environment from './config';
 import { checkStatus, toTitleCase } from './utils';
 import { API } from 'aws-amplify';
+import Header from './Header.jsx';
+import NavBar, { genNavStructure } from './Nav.jsx';
 
 const apiName = 'caseexplorerapi';
 
 Amplify.configure(awsmobile);
-
-let navLinkGroups: INavLinkGroup[] = [
-  {
-    name: 'Case Data',
-    links: [
-      { name: 'All Cases', url: '/cases' },
-      {
-        name: 'MDEC',
-        expandAriaLabel: 'Expand section',
-        collapseAriaLabel: 'Collapse section',
-        isExpanded: true,
-        links: []
-      },
-      {
-        name: 'Non-MDEC',
-        expandAriaLabel: 'Expand section',
-        collapseAriaLabel: 'Collapse section',
-        links: [],
-        isExpanded: true
-      }
-    ],
-    isExpanded: true
-  },
-  {
-    name: 'API',
-    links: [
-      { name: 'GraphQL', url: '/graphql' },
-      {
-        name: 'REST',
-        url: 'https://portal.mdcaseexplorer.com',
-        target: '_blank'
-      }
-    ],
-    isExpanded: false
-  }
-];
-
-const genNavItem = (metadata, table) => {
-  const table_metadata = metadata[table];
-  let links = [{ name: 'Overview', url: '/' + table }];
-  for (const subtable of table_metadata.subtables) {
-    const label = toTitleCase(subtable.replace(/^[^_]+_/, ''));
-    links.push({ name: label, url: '/' + subtable });
-  }
-  return {
-    name: table_metadata.description,
-    expandAriaLabel: 'Expand section',
-    collapseAriaLabel: 'Collapse section',
-    links: links
-  };
-};
-
-const genNavStructure = metadata => {
-  // MDEC
-  navLinkGroups[0].links[1].links = [
-    genNavItem(metadata.tables, 'odycrim'),
-    genNavItem(metadata.tables, 'odytraf'),
-    genNavItem(metadata.tables, 'odycivil'),
-    genNavItem(metadata.tables, 'odycvcit')
-  ];
-  // non-MDEC
-  navLinkGroups[0].links[2].links = [
-    genNavItem(metadata.tables, 'dscr'),
-    genNavItem(metadata.tables, 'dsk8'),
-    genNavItem(metadata.tables, 'dstraf'),
-    genNavItem(metadata.tables, 'dscivil'),
-    genNavItem(metadata.tables, 'cc')
-  ];
-};
-
-export const NavBar: React.FunctionComponent = () => {
-  return (
-    <Nav
-      onRenderGroupHeader={_onRenderGroupHeader}
-      groups={navLinkGroups}
-      styles={props => ({
-        chevronIcon: {
-          transform: props.isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)'
-        }
-      })}
-    />
-  );
-};
-
-function _onRenderGroupHeader(group: INavLinkGroup): JSX.Element {
-  return <h3>{group.name}</h3>;
-}
 
 const fetchMetadata = callback => {
   var promise;
@@ -117,16 +31,7 @@ const fetchMetadata = callback => {
   });
 };
 
-initializeIcons();
-ReactDOM.render(
-  <div className="loader-container">
-    <div className="loader"></div>
-  </div>,
-  document.getElementById('root')
-);
-
-fetchMetadata(metadata => {
-  genNavStructure(metadata);
+const genRoutes = metadata => {
   let routes = [
     <Route
       exact
@@ -151,6 +56,7 @@ fetchMetadata(metadata => {
       )}
     />
   ];
+
   for (const [root_table, table_metadata] of Object.entries(metadata.tables)) {
     routes.push(
       <Route
@@ -181,8 +87,48 @@ fetchMetadata(metadata => {
       );
     }
   }
+
+  return routes;
+};
+
+const getTitle = metadata => {
+  const table = window.location.href.substring(
+    window.location.href.lastIndexOf('/') + 1
+  );
+  let title = '';
+  if (table === '' || table === 'cases') {
+    title = 'All Cases';
+  } else if (metadata.tables[table] != null) {
+    title = metadata.tables[table].description;
+  } else {
+    for (const [root_table, root_table_obj] of Object.entries(
+      metadata.tables
+    )) {
+      if (root_table_obj.subtables.includes(table)) {
+        console.log(root_table_obj.description);
+        title += root_table_obj.description + ': ';
+      }
+    }
+    title += toTitleCase(table.substring(table.indexOf('_') + 1));
+  }
+  return title;
+};
+
+initializeIcons();
+ReactDOM.render(
+  <div className="loader-container">
+    <div className="loader"></div>
+  </div>,
+  document.getElementById('root')
+);
+fetchMetadata(metadata => {
+  genNavStructure(metadata);
+  const routes = genRoutes(metadata);
+  const title = getTitle(metadata);
+
   ReactDOM.render(
     <Router>
+      <Header title={title} />
       <div className="navbar">
         <NavBar />
       </div>

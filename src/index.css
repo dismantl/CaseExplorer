@@ -18,6 +18,10 @@ code {
   float: left;
 }
 
+.navbar nav {
+  padding: 0 10px;
+}
+
 .loader-container {
   position: fixed;
   left: 0px;
@@ -60,4 +64,25 @@ code {
   100% {
     transform: rotate(360deg);
   }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.logo img {
+  height: 25px;
+  margin: 10px 0 0 10px;
+}
+
+.main-menu {
+  flex-grow: 1;
+}
+
+.title {
+  position: relative;
+  top: 15px;
+  margin: 0;
+  font-weight: normal;
 }
