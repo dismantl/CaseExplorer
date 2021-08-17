@@ -1,5 +1,5 @@
 import React, { Component, useState } from 'react';
-import AboutModal from './about.jsx';
+import AboutModal from './AboutModal.jsx';
 import { Image } from '@fluentui/react/lib/Image';
 import logo from './case_x_final.png';
 import { CommandBar } from '@fluentui/react/lib/CommandBar';
