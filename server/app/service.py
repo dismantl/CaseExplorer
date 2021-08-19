@@ -1,10 +1,12 @@
 import re
-from sqlalchemy import cast, Date, create_engine
+from sqlalchemy import cast, Date
 from sqlalchemy.sql import select, func, and_, or_, text
 from sqlalchemy.sql.expression import table
+from flask import current_app
 from . import models
 from .models import *
 from .utils import get_orm_class_by_name, get_eager_query, db_session, get_root_model_list
+from .officer import Officer
 
 
 class DataService:
@@ -17,6 +19,23 @@ class DataService:
 
     def init_app(self, app):
         pass
+
+
+    @classmethod
+    def fetch_cases_by_cop(cls, seq_number, req):
+        print(seq_number)
+        result = fetch_rows_by_cop(seq_number, req)
+        return {
+            'rows': result['rows'],
+            'last_row': result['last_row']
+        }
+
+
+    @classmethod
+    def fetch_seq_number_by_id(cls, id):
+        with db_session(current_app.config.bpdwatch_db_engine) as bpdwatch_db:
+            officer = bpdwatch_db.query(Officer).get(id)
+            return officer.unique_internal_identifier
 
 
     @classmethod
@@ -78,6 +97,58 @@ class DataService:
         with db_session() as db:
             results = db.execute(f"SELECT reltuples FROM pg_class WHERE oid = '{table_name}'::regclass").scalar()
         return int(results)
+
+
+def fetch_rows_by_cop(seq_number, req):
+    start_row = int(req['startRow'])
+    end_row = int(req['endRow'])
+    page_size = end_row - start_row
+    
+    with db_session(current_app.config.bpdwatch_db_engine) as bpdwatch_db:
+        officer = bpdwatch_db.query(Officer).filter(Officer.unique_internal_identifier == seq_number).one()
+        last_name = officer.last_name.upper()
+        first_name = officer.first_name.upper()
+        middle_initial = officer.middle_initial.upper()
+        suffix = officer.suffix.upper()
+    if suffix:
+        or_clause = or_(
+            DSCRRelatedPerson.officer_id == seq_number,
+            DSCRRelatedPerson.name == f'{last_name}, {first_name} {suffix}',
+            DSCRRelatedPerson.name == f'{last_name}, {first_name[0]} {suffix}',
+            DSCRRelatedPerson.name == f'{last_name}, {first_name} {middle_initial[0]} {suffix}',
+            DSCRRelatedPerson.name == f'{last_name}, {first_name} {middle_initial[0]}. {suffix}',
+        )
+    else:
+        or_clause = or_(
+            DSCRRelatedPerson.officer_id == seq_number,
+            DSCRRelatedPerson.name == f'{last_name}, {first_name}',
+            DSCRRelatedPerson.name == f'{last_name}, {first_name[0]}',
+            DSCRRelatedPerson.name == f'{last_name}, {first_name} {middle_initial[0]}',
+            DSCRRelatedPerson.name == f'{last_name}, {first_name} {middle_initial[0]}.',
+        )
+
+    query = DSCR.query.join(DSCRRelatedPerson)\
+        .filter(DSCR.court_system == 'DISTRICT COURT FOR BALTIMORE CITY - CRIMINAL SYSTEM')\
+        .filter(DSCRRelatedPerson.connection.like('%POLICE%'))\
+        .filter(or_clause)
+
+    query = build_where(query, table, req)
+    query = build_order_by(query, table, req)
+    query = build_group_by(query, table, req)
+    query = build_limit(query, table, req)
+    print(query)
+
+    results = query.all()
+
+    results_len = len(results)
+    current_last_row = start_row + results_len
+    last_row = current_last_row if current_last_row <= end_row else -1
+    rows = results[:page_size]
+
+    return {
+        'rows': rows,
+        'last_row': last_row
+    }
 
 
 def fetch_rows_from_model(cls, req, eager=False):

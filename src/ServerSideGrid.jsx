@@ -7,10 +7,18 @@ import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import 'ag-grid-enterprise';
 import { checkStatus, toTitleCase } from './utils';
-import ExportToolPanel from './ExportToolPanel.jsx';
+import ExportToolPanel from './ExportToolPanel';
 import { TooltipHost, ITooltipHostStyles } from '@fluentui/react/lib/Tooltip';
 import { useId } from '@fluentui/react-hooks';
 import { useState } from 'react';
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link,
+  useRouteMatch,
+  useParams
+} from 'react-router-dom';
 
 const sideBarConfig = {
   toolPanels: [
@@ -45,14 +53,12 @@ const sideBarConfig = {
   position: 'right'
 };
 
-// export default class ServerSideGrid extends Component {
 const ServerSideGrid = props => {
-  const apiName = props.apiName;
-  const table = props.table;
-  const path = '/api/' + props.table;
-  const metadata = props.metadata;
-  let api, columnApi;
-  const tooltipId = useId('tooltip');
+  let { seq } = useParams();
+  let api, path;
+  const { apiName, table, metadata, byCop } = props;
+  if (byCop) path = `/api/bpd/seq/${seq}`;
+  else path = `/api/${table}`;
 
   const getRows = params => {
     var promise;
@@ -81,7 +87,6 @@ const ServerSideGrid = props => {
 
   const onGridReady = params => {
     api = params.api;
-    columnApi = params.columnApi;
     api.setServerSideDatasource({ getRows: getRows });
   };
 

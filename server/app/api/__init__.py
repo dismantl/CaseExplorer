@@ -1,8 +1,9 @@
 from .. import models
 from ..service import DataService
-from ..utils import get_case_model_list
+from ..utils import get_case_model_list, db_session
+from ..officer import Officer
 from .api_factory import api_factory
-from flask import Blueprint
+from flask import Blueprint, current_app
 from flask_restx import Api
 import json
 
@@ -20,6 +21,16 @@ class RESTAPI:
         @bp.route(f'/{root}/metadata')
         def metadata():
             return json.dumps(DataService.fetch_metadata())
+        
+        @bp.route(f'/{root}/bpd/id/<int:id>')
+        def seq_number_by_id(id):
+            return json.dumps(DataService.fetch_seq_number_by_id(id))
+        
+        @bp.route(f'/{root}/bpd/label/<string:seq_number>')
+        def label_by_seq_number(seq_number):
+            with db_session(current_app.config.bpdwatch_db_engine) as bpdwatch_db:
+                officer = bpdwatch_db.query(Officer).filter(Officer.unique_internal_identifier == seq_number).one()
+                return json.dumps(f'{officer.job_title()} {officer.full_name()} ({seq_number})')
 
         api = Api(bp, title='CaseExplorer REST API', version='0.1.0')
         self.api = api
