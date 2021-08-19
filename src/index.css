@@ -22,6 +22,10 @@ code {
   padding: 0 10px;
 }
 
+.navbar .ms-Nav-groupContent {
+  margin-bottom: 20px;
+}
+
 .loader-container {
   position: fixed;
   left: 0px;

@@ -1,0 +1,93 @@
+import React, { Component, useState } from 'react';
+import ReactDOM from 'react-dom';
+import { NavLink } from 'react-router-dom';
+import { Nav, INavLinkGroup } from 'office-ui-fabric-react/lib/Nav';
+import { checkStatus, toTitleCase } from './utils';
+import { TextField, MaskedTextField } from '@fluentui/react/lib/TextField';
+import { IconButton } from '@fluentui/react/lib/Button';
+import {
+  Stack,
+  IStackStyles,
+  IStackTokens,
+  IStackItemStyles
+} from '@fluentui/react/lib/Stack';
+import environment from './config';
+import { API } from 'aws-amplify';
+import { Redirect } from 'react-router';
+
+const CopFinder: React.FunctionComponent = props => {
+  let value;
+  if (window.location.pathname.startsWith('/bpd')) {
+    value = window.location.href.substring(
+      window.location.href.lastIndexOf('/') + 1
+    );
+  } else {
+    value = '';
+  }
+  const [copVal, setCopVal] = useState(value);
+
+  const handleSubmit = event => {
+    event.preventDefault();
+    var promise, path;
+    if (copVal.includes('bpdwatch.com')) {
+      const id = copVal.substring(copVal.lastIndexOf('/') + 1);
+      path = `/api/bpd/id/${id}`;
+      if (environment === 'development') {
+        promise = fetch(path)
+          .then(checkStatus)
+          .then(httpResponse => httpResponse.json());
+      } else {
+        promise = API.get(props.apiName, path);
+      }
+      promise
+        .then(response => {
+          window.location.href = `/bpd/${response}`;
+        })
+        .catch(error => {
+          console.error(error);
+          return;
+          // TODO report error to user
+        });
+    } else {
+      window.location.href = `/bpd/${copVal}`;
+    }
+  };
+
+  return (
+    <form id="copFinder" onSubmit={handleSubmit}>
+      <Stack horizontal>
+        <Stack.Item grow={1}>
+          <TextField
+            ariaLabel="Search By BPD Officer"
+            onChange={(event, val) => {
+              setCopVal(val);
+            }}
+            onRenderDescription={props => {
+              return (
+                <span
+                  className="ms-TextField-description"
+                  style={{
+                    whiteSpace: 'nowrap',
+                    color: '#605e5c',
+                    fontSize: '10px'
+                  }}
+                >
+                  Enter sequence number or{' '}
+                  <a href="https://bpdwatch.com">BPD Watch</a> profile URL
+                </span>
+              );
+            }}
+            defaultValue={value}
+          />
+        </Stack.Item>
+        <IconButton
+          iconProps={{ iconName: 'search' }}
+          title="Search"
+          ariaLabel="Search"
+          onClick={handleSubmit}
+        />
+      </Stack>
+    </form>
+  );
+};
+export default CopFinder;

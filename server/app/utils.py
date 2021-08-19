@@ -84,9 +84,10 @@ def get_eager_query(model):
     return apply_load_strategy(query, model)
 
 @contextmanager
-def db_session():
+def db_session(engine=None):
     """Provide a transactional scope around a series of operations."""
-    db_factory = sessionmaker(bind = current_app.config.db_engine)
+    engine = engine or current_app.config.db_engine
+    db_factory = sessionmaker(bind = engine)
     db = db_factory()
     try:
         yield db

@@ -2,6 +2,15 @@ import React, { Component, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Nav, INavLinkGroup } from 'office-ui-fabric-react/lib/Nav';
 import { checkStatus, toTitleCase } from './utils';
+import { TextField, MaskedTextField } from '@fluentui/react/lib/TextField';
+import { IconButton } from '@fluentui/react/lib/Button';
+import {
+  Stack,
+  IStackStyles,
+  IStackTokens,
+  IStackItemStyles
+} from '@fluentui/react/lib/Stack';
+import CopFinder from './CopFinder';
 
 let navLinkGroups: INavLinkGroup[] = [
   {
@@ -27,6 +36,10 @@ let navLinkGroups: INavLinkGroup[] = [
       }
     ],
     isExpanded: true
+  },
+  {
+    name: 'Search By BPD Officer',
+    key: 'Search By BPD Officer'
   },
   {
     name: 'API',
@@ -81,7 +94,17 @@ export const genNavStructure = metadata => {
   ];
 };
 
-const NavBar: React.FunctionComponent = () => {
+const NavBar: React.FunctionComponent = props => {
+  function _onRenderGroupHeader(group: INavLinkGroup): JSX.Element {
+    if (group.name !== 'Search By BPD Officer') return <h3>{group.name}</h3>;
+    return (
+      <>
+        <h3>{group.name}</h3>
+        <CopFinder apiName={props.apiName} />
+      </>
+    );
+  }
+
   return (
     <Nav
       onRenderGroupHeader={_onRenderGroupHeader}
@@ -94,9 +117,4 @@ const NavBar: React.FunctionComponent = () => {
     />
   );
 };
-
-function _onRenderGroupHeader(group: INavLinkGroup): JSX.Element {
-  return <h3>{group.name}</h3>;
-}
-
 export default NavBar;
