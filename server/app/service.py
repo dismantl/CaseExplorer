@@ -3,6 +3,7 @@ from sqlalchemy import cast, Date
 from sqlalchemy.sql import select, func, and_, or_, text
 from sqlalchemy.sql.expression import table
 from flask import current_app
+import json
 from . import models
 from .models import *
 from .utils import get_orm_class_by_name, get_eager_query, db_session, get_root_model_list
@@ -36,6 +37,13 @@ class DataService:
         with db_session(current_app.config.bpdwatch_db_engine) as bpdwatch_db:
             officer = bpdwatch_db.query(Officer).get(id)
             return officer.unique_internal_identifier
+
+
+    @classmethod
+    def fetch_label_by_cop(cls, seq_number):
+        with db_session(current_app.config.bpdwatch_db_engine) as bpdwatch_db:
+            officer = bpdwatch_db.query(Officer).filter(Officer.unique_internal_identifier == seq_number).one()
+            return json.dumps(f'{officer.job_title()} {officer.full_name()} ({seq_number})')
 
 
     @classmethod

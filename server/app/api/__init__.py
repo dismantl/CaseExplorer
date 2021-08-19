@@ -28,9 +28,7 @@ class RESTAPI:
         
         @bp.route(f'/{root}/bpd/label/<string:seq_number>')
         def label_by_seq_number(seq_number):
-            with db_session(current_app.config.bpdwatch_db_engine) as bpdwatch_db:
-                officer = bpdwatch_db.query(Officer).filter(Officer.unique_internal_identifier == seq_number).one()
-                return json.dumps(f'{officer.job_title()} {officer.full_name()} ({seq_number})')
+            return json.dumps(DataService.fetch_label_by_cop(seq_number))
 
         api = Api(bp, title='CaseExplorer REST API', version='0.1.0')
         self.api = api

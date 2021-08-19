@@ -25,6 +25,8 @@ SQLALCHEMY_DATABASE_URI_PRODUCTION=postgresql://case_explorer:Wt1Wc3yny9XHhChCkt
 SQLALCHEMY_DATABASE_URI_DEVELOPMENT=postgresql://case_explorer:qntsu004A&DCxQyqrV5Q@dev.db.openjusticebaltimore.org/mjcs
 ```
 
+To use the Search By BPD Officer feature, you'll also need to set `BPDWATCH_DATABASE_URI` to provide information for the BPD Watch database.
+
 ### Local Development
 
 You can use the following commands to run a local version of Case Explorer for development or testing purposes:
