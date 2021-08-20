@@ -45,6 +45,18 @@ def api_factory(schemas, model, description=None):
             def get(self, case_number):
                 return get_eager_query(model).filter(model.case_number == case_number).one()
 
+    if table_name == 'dscr':
+        @api.route('/bpd/seq/<string:seq_number>')
+        class CasesByCop(Resource):
+            '''DSCR cases by BPD officer sequence number'''
+
+            @accepts(schema=QueryParams, api=api)
+            @api.marshal_with(schema_results)
+            def post(self, seq_number):
+                '''Get a list of DSCR cases by BPD officer sequence number'''
+
+                return DataService.fetch_cases_by_cop(seq_number, request.parsed_obj)
+
     @api.route(f'/{table_name}/total')
     class APITotal(Resource):
         f'''Total number of {description} (estimate)'''

@@ -62,15 +62,25 @@ def handler(event, context):
     else:  # REST API
         with app.app_context():
             path = event['path']
-            bpd_match = re.fullmatch(r'/api/bpd/(?P<sequence_number>\w\d\d\d)', path)
+            bpd_match = re.fullmatch(r'/api/bpd/seq/(?P<sequence_number>\w\d\d\d)', path)
+            bpd_id_match = re.fullmatch(r'/api/bpd/id/(?P<id>\d+)', path)
+            bpd_label_match = re.fullmatch(r'/api/bpd/label/(?P<sequence_number>\w\d\d\d)', path)
             case_match = re.fullmatch(r'/api/(?P<table_name>\w+)(/(?P<case_number>\w+))?(?P<full>/full)?', path)
             total_match = re.fullmatch(r'/api/(?P<table_name>\w+)/total', path)
             if path == '/api/metadata':
                 return gen_response(200, json.dumps(DataService.fetch_metadata()))
             elif bpd_match:
                 seq_no = bpd_match.group('sequence_number')
-                case_numbers = get_case_numbers_by_officer_sequence_number(seq_no)
-                return gen_response(200, json.dumps(case_numbers))
+                req = json.loads(json.loads(event['body']))
+                results = DataService.fetch_cases_by_cop(seq_no, req)
+                results['rows'] = [marshal(row, rest_api.api_schemas['DSCR']) for row in results['rows']]
+                return gen_response(200, json.dumps(results))
+            elif bpd_id_match:
+                id = bpd_id_match.group('id')
+                return gen_response(200, json.dumps(DataService.fetch_seq_number_by_id(id)))
+            elif bpd_label_match:
+                seq_no = bpd_label_match.group('sequence_number')
+                return gen_response(200, json.dumps(DataService.fetch_label_by_cop(seq_no)))
             elif total_match:
                 table_name = case_match.group('table_name')
                 total = DataService.fetch_total(table_name)

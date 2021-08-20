@@ -4,6 +4,8 @@
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: https://www.opensource.org/licenses/mit-license.php
+import itertools
+
 from . import attributes
 from . import interfaces
 from . import loading
@@ -873,6 +875,19 @@ class ORMSelectCompileState(ORMCompileState, SelectState):
                     yield elem
 
     @classmethod
+    def get_columns_clause_froms(cls, statement):
+        return cls._normalize_froms(
+            itertools.chain.from_iterable(
+                element._from_objects
+                if "parententity" not in element._annotations
+                else [
+                    element._annotations["parententity"].__clause_element__()
+                ]
+                for element in statement._raw_columns
+            )
+        )
+
+    @classmethod
     @util.preload_module("sqlalchemy.orm.query")
     def from_statement(cls, statement, from_statement):
         query = util.preloaded.orm_query
@@ -1135,11 +1150,11 @@ class ORMSelectCompileState(ORMCompileState, SelectState):
     ):
 
         Select = future.Select
-        statement = Select.__new__(Select)
-        statement._raw_columns = raw_columns
-        statement._from_obj = from_obj
-
-        statement._label_style = label_style
+        statement = Select._create_raw_select(
+            _raw_columns=raw_columns,
+            _from_obj=from_obj,
+            _label_style=label_style,
+        )
 
         if where_criteria:
             statement._where_criteria = where_criteria

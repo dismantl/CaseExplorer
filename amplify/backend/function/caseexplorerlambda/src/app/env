@@ -1,2 +1,3 @@
 SQLALCHEMY_DATABASE_URI_PRODUCTION=postgresql://mjcs_user:J7Zxfi3erJCCGWIaA1kCdfvZfTRO3v95@db.openjusticebaltimore.org/mjcs
 SQLALCHEMY_DATABASE_URI_DEVELOPMENT=postgresql://mjcs_user:drf9lTuXBAVZsN8xZ346Obt1wBOEOZ@dev.db.openjusticebaltimore.org/mjcs
+BPDWATCH_DATABASE_URI=postgresql://bpdwatch_ro:ovkhynv3j5bd@db.openjusticebaltimore.org/bpdwatch

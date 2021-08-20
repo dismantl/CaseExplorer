@@ -250,15 +250,15 @@ type Case {
   parse_exempt: Boolean
   active: Boolean
   allow_unparsed_data: Boolean
-  dscr: DSCR
   odytraf: ODYTRAF
-  dscivil: DSCIVIL
-  odycivil: ODYCIVIL
+  odycvcit: ODYCVCIT
+  dscr: DSCR
+  cc: CC
   dsk8: DSK8
   dstraf: DSTRAF
-  odycvcit: ODYCVCIT
-  cc: CC
+  dscivil: DSCIVIL
   odycrim: ODYCRIM
+  odycivil: ODYCIVIL
 }
 
 type CaseResultsResponse {
@@ -1916,15 +1916,15 @@ type ODYTRAFWarrant {
 }
 
 type Query {
-  dscr(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSCRResultsResponse
   odytraf(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYTRAFResultsResponse
-  dscivil(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSCIVILResultsResponse
-  odycivil(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCIVILResultsResponse
+  odycvcit(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCVCITResultsResponse
+  dscr(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSCRResultsResponse
+  cc(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): CCResultsResponse
   dsk8(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSK8ResultsResponse
   dstraf(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSTRAFResultsResponse
-  odycvcit(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCVCITResultsResponse
-  cc(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): CCResultsResponse
+  dscivil(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSCIVILResultsResponse
   odycrim(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCRIMResultsResponse
+  odycivil(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCIVILResultsResponse
   cases(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): CaseResultsResponse
 }
 

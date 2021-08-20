@@ -146,6 +146,12 @@ class SuiteRequirements(Requirements):
         return exclusions.open()
 
     @property
+    def implicitly_named_constraints(self):
+        """target database must apply names to unnamed constraints."""
+
+        return exclusions.open()
+
+    @property
     def subqueries(self):
         """Target database must support subqueries."""
 
@@ -1320,6 +1326,18 @@ class SuiteRequirements(Requirements):
         return exclusions.closed()
 
     @property
+    def greenlet(self):
+        def go(config):
+            try:
+                import greenlet  # noqa F401
+            except ImportError:
+                return False
+            else:
+                return True
+
+        return exclusions.only_if(go)
+
+    @property
     def computed_columns(self):
         "Supports computed columns"
         return exclusions.closed()
@@ -1424,3 +1442,8 @@ class SuiteRequirements(Requirements):
         sequence. This should be false only for oracle.
         """
         return exclusions.open()
+
+    @property
+    def builtin_generics(self):
+        "If list[int] is a valid syntax. basically py3.9+"
+        return exclusions.only_if(lambda: util.py39)

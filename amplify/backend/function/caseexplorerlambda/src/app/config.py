@@ -14,8 +14,9 @@ class BaseConfig(object):
     # Form Settings
     WTF_CSRF_ENABLED = True
     SECRET_KEY = os.environ.get('SECRET_KEY', 'changemeplzorelsehax')
-
     SEED = 666
+
+    BPDWATCH_DATABASE_URI = os.environ.get('BPDWATCH_DATABASE_URI')
 
     @staticmethod
     def init_app(app):

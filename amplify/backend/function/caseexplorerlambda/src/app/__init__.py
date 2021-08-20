@@ -21,6 +21,7 @@ def create_app(config_name):
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
     app.config.db_engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+    app.config.bpdwatch_db_engine = create_engine(app.config['BPDWATCH_DATABASE_URI'])
     configure_logging(app)
 
     # Module initialization
