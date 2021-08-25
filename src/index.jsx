@@ -1,11 +1,6 @@
-import React, { Component, useState } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom';
-import {
-  BrowserRouter as Router,
-  Route,
-  Switch,
-  NavLink
-} from 'react-router-dom';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import Amplify from 'aws-amplify';
 import awsmobile from './aws-exports';
 import './index.css';
@@ -17,8 +12,10 @@ import { checkStatus, toTitleCase } from './utils';
 import { API } from 'aws-amplify';
 import Header from './Header';
 import NavBar, { genNavStructure } from './Nav';
+import apiName from './ApiName';
 
-const apiName = 'caseexplorerapi';
+// export const apiName = 'caseexplorerapi';
+export const version = '0.1';
 
 Amplify.configure(awsmobile);
 
@@ -41,47 +38,26 @@ const genRoutes = metadata => {
   for (const [root_table, table_metadata] of Object.entries(metadata.tables)) {
     routes.push(
       <Route path={'/' + root_table} key={'/' + root_table}>
-        <ServerSideGrid
-          apiName={apiName}
-          metadata={metadata.columns}
-          table={root_table}
-        />
+        <ServerSideGrid metadata={metadata.columns} table={root_table} />
       </Route>
     );
     for (const table of table_metadata.subtables) {
       routes.push(
         <Route path={'/' + table} key={'/' + table}>
-          <ServerSideGrid
-            apiName={apiName}
-            metadata={metadata.columns}
-            table={table}
-          />
+          <ServerSideGrid metadata={metadata.columns} table={table} />
         </Route>
       );
     }
   }
   routes = routes.concat([
     <Route path="/bpd/:seq" key="/bpd/:seq">
-      <ServerSideGrid
-        byCop
-        apiName={apiName}
-        metadata={metadata.columns}
-        table="dscr"
-      />
+      <ServerSideGrid byCop metadata={metadata.columns} table="dscr" />
     </Route>,
     <Route path="/cases" key="/cases">
-      <ServerSideGrid
-        apiName={apiName}
-        metadata={metadata.columns}
-        table="cases"
-      />
+      <ServerSideGrid metadata={metadata.columns} table="cases" />
     </Route>,
     <Route path="/" key="/">
-      <ServerSideGrid
-        apiName={apiName}
-        metadata={metadata.columns}
-        table="cases"
-      />
+      <ServerSideGrid metadata={metadata.columns} table="cases" />
     </Route>
   ]);
 
@@ -102,7 +78,6 @@ const getTitle = metadata => {
       metadata.tables
     )) {
       if (root_table_obj.subtables.includes(table)) {
-        console.log(root_table_obj.description);
         title += root_table_obj.description + ': ';
       }
     }
@@ -114,13 +89,15 @@ const getTitle = metadata => {
 const renderMain = (title, routes) => {
   ReactDOM.render(
     <Router>
-      <Header title={title} />
+      <Header title={title} version={version} />
       <div className="navbar">
-        <NavBar apiName={apiName} />
+        <NavBar />
       </div>
       <div className="content">
-        <Switch>{routes}</Switch>
-        <Route path="/graphql" component={GraphiQLClient} />
+        <Switch>
+          <Route path="/graphql" component={GraphiQLClient} />
+          {routes}
+        </Switch>
       </div>
     </Router>,
     document.getElementById('root')

@@ -1,4 +1,4 @@
-import React, { Component, useState } from 'react';
+import React, { useState } from 'react';
 import AboutModal from './AboutModal.jsx';
 import { Image } from '@fluentui/react/lib/Image';
 import logo from './case_x_final.png';
@@ -26,42 +26,41 @@ const Header = props => {
           <Image className="logo header-item" src={logo} />
         </a>
         <h3 className="title">{props.title}</h3>
-        <div className="header-right">
-          <CommandBar
-            className="main-menu header-item"
-            items={[
-              {
-                key: 'about',
-                text: 'About',
-                ariaLabel: 'Info',
-                iconProps: { iconName: 'Info' },
-                onClick: toggleModal
-              },
-              {
-                key: 'donate',
-                text: 'Donate',
-                ariaLabel: 'Donate',
-                iconProps: { iconName: 'Money' },
-                onClick: () =>
-                  window.open(
-                    'https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=K2NTTKHJ58FRA',
-                    '_blank'
-                  )
-              },
-              {
-                key: 'code',
-                text: 'Code',
-                ariaLabel: 'Code',
-                iconProps: { iconName: 'Github' },
-                onClick: () =>
-                  window.open(
-                    'https://github.com/dismantl/CaseExplorer',
-                    '_blank'
-                  )
-              }
-            ]}
-          />
-        </div>
+        <CommandBar
+          className="main-menu header-item"
+          items={[
+            {
+              key: 'about',
+              text: 'About',
+              ariaLabel: 'Info',
+              iconProps: { iconName: 'Info' },
+              onClick: toggleModal
+            },
+            {
+              key: 'donate',
+              text: 'Donate',
+              ariaLabel: 'Donate',
+              iconProps: { iconName: 'Money' },
+              onClick: () =>
+                window.open(
+                  'https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=K2NTTKHJ58FRA',
+                  '_blank'
+                )
+            },
+            {
+              key: 'code',
+              text: 'Code',
+              ariaLabel: 'Code',
+              iconProps: { iconName: 'Github' },
+              onClick: () =>
+                window.open(
+                  'https://github.com/dismantl/CaseExplorer',
+                  '_blank'
+                )
+            }
+          ]}
+        />
+        <span className="version">v{props.version}</span>
       </div>
     </div>
   );

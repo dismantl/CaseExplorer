@@ -26,6 +26,15 @@ def api_factory(schemas, model, description=None):
             f'''Get a list of {description}'''
 
             return DataService.fetch_rows_orm(table_name, request.parsed_obj)
+        
+    @api.route(f'/{table_name}/filtered/total')
+    class APIResourceFiltered(Resource):
+        f'''Total number of {table_name.upper()} cases based on search criteria'''
+        @accepts(schema=QueryParams, api=api)
+        def post(self):
+            f'''Get total number of {table_name.upper()} cases based on search criteria'''
+
+            return DataService.fetch_filtered_total(table_name, request.parsed_obj)
 
     @api.route(f'/{table_name}/<string:case_number>')
     class APIResourceCaseNumber(Resource):

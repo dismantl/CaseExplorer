@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import { API } from 'aws-amplify';
 import environment from './config';
 import { AgGridColumn, AgGridReact } from 'ag-grid-react';
@@ -8,17 +8,10 @@ import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import 'ag-grid-enterprise';
 import { checkStatus, toTitleCase } from './utils';
 import ExportToolPanel from './ExportToolPanel';
-import { TooltipHost, ITooltipHostStyles } from '@fluentui/react/lib/Tooltip';
-import { useId } from '@fluentui/react-hooks';
-import { useState } from 'react';
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Link,
-  useRouteMatch,
-  useParams
-} from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import CustomStatusBar from './StatusBar';
+import apiName from './ApiName';
+import { numberWithCommas } from './utils';
 
 const sideBarConfig = {
   toolPanels: [
@@ -55,10 +48,50 @@ const sideBarConfig = {
 
 const ServerSideGrid = props => {
   let { seq } = useParams();
-  let api, path;
-  const { apiName, table, metadata, byCop } = props;
+  let api,
+    path,
+    countPromise = null,
+    initialized = false;
+  const { table, metadata, byCop } = props;
   if (byCop) path = `/api/bpd/seq/${seq}`;
   else path = `/api/${table}`;
+
+  let controller = new AbortController();
+  const getCount = params => {
+    if (countPromise !== null) controller.abort();
+    controller = new AbortController();
+    const statusBarComponent = api.getStatusPanel('customStatusBarKey');
+    let componentInstance = statusBarComponent;
+    componentInstance.reactElement.props.reactContainer.children[0].children[0].children[0].innerText =
+      'Total Rows';
+    componentInstance.reactElement.props.reactContainer.children[0].children[0].children[1].innerHTML =
+      '<span class="ag-loading-icon" ref="eLoadingIcon"><span class="ag-icon ag-icon-loading" unselectable="on" role="presentation"></span></span>';
+    const path = `/api/${table}/filtered/total`;
+    if (environment === 'development') {
+      countPromise = fetch(path, {
+        method: 'post',
+        body: JSON.stringify(params.request),
+        headers: { 'Content-Type': 'application/json; charset=utf-8' },
+        signal: controller.signal
+      }).then(checkStatus);
+    } else {
+      countPromise = API.post(apiName, path, {
+        body: params.request,
+        signal: controller.signal
+      });
+    }
+    countPromise
+      .then(response => response.json())
+      .then(response => {
+        componentInstance.reactElement.props.reactContainer.children[0].children[0].children[1].innerText = numberWithCommas(
+          response
+        );
+      })
+      .catch(error => {
+        console.error(error);
+        // params.fail();
+      });
+  };
 
   const getRows = params => {
     var promise;
@@ -77,17 +110,19 @@ const ServerSideGrid = props => {
     }
     promise
       .then(response => {
-        params.successCallback(response.rows, response.lastRow);
+        params.success({ rowData: response.rows, rowCount: response.lastRow });
+        if (!initialized) initialized = true;
+        else getCount(params);
       })
       .catch(error => {
         console.error(error);
-        params.failCallback();
+        params.fail();
       });
   };
 
   const onGridReady = params => {
     api = params.api;
-    api.setServerSideDatasource({ getRows: getRows });
+    params.api.setServerSideDatasource({ getRows: getRows });
   };
 
   if (metadata !== null) {
@@ -177,19 +212,36 @@ const ServerSideGrid = props => {
             onGridReady={onGridReady}
             // no binding, just providing hard coded strings for the properties
             // boolean properties will default to true if provided (ie suppressRowClickSelection => suppressRowClickSelection="true")
-            suppressRowClickSelection
+            // suppressRowClickSelection
+            rowSelection="multiple"
+            enableRangeSelection
             suppressPivotMode
             rowModelType="serverSide"
             animateRows
             sideBar={sideBarConfig}
+            statusBar={{
+              statusPanels: [
+                {
+                  statusPanel: 'customStatusBar',
+                  key: 'customStatusBarKey',
+                  align: 'center',
+                  statusPanelParams: { table: table }
+                }
+              ]
+            }}
+            serverSideStoreType="partial"
             frameworkComponents={{
               exportToolPanel: props => (
                 <ExportToolPanel
-                  callback={() => {
+                  csvCallback={() => {
                     api.exportDataAsCsv();
                   }}
+                  excelCallback={() => {
+                    api.exportDataAsExcel();
+                  }}
                 />
-              )
+              ),
+              customStatusBar: CustomStatusBar
             }}
             // setting default column properties
             defaultColDef={{

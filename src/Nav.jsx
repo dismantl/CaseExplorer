@@ -1,16 +1,8 @@
-import React, { Component, useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import React from 'react';
 import { Nav, INavLinkGroup } from 'office-ui-fabric-react/lib/Nav';
-import { checkStatus, toTitleCase } from './utils';
-import { TextField, MaskedTextField } from '@fluentui/react/lib/TextField';
-import { IconButton } from '@fluentui/react/lib/Button';
-import {
-  Stack,
-  IStackStyles,
-  IStackTokens,
-  IStackItemStyles
-} from '@fluentui/react/lib/Stack';
+import { toTitleCase } from './utils';
 import CopFinder from './CopFinder';
+import apiName from './ApiName';
 
 let navLinkGroups: INavLinkGroup[] = [
   {
@@ -100,7 +92,7 @@ const NavBar: React.FunctionComponent = props => {
     return (
       <>
         <h3>{group.name}</h3>
-        <CopFinder apiName={props.apiName} />
+        <CopFinder apiName={apiName} />
       </>
     );
   }
