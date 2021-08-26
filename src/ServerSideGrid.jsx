@@ -81,7 +81,10 @@ const ServerSideGrid = props => {
       });
     }
     countPromise
-      .then(response => response.json())
+      .then(response => {
+        if (typeof response.json === 'function') return response.json();
+        else return response;
+      })
       .then(response => {
         componentInstance.reactElement.props.reactContainer.children[0].children[0].children[1].innerText = numberWithCommas(
           response
