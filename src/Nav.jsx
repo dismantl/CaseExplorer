@@ -1,16 +1,16 @@
-import React, { Component, useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import React from 'react';
 import { Nav, INavLinkGroup } from 'office-ui-fabric-react/lib/Nav';
-import { checkStatus, toTitleCase } from './utils';
-import { TextField, MaskedTextField } from '@fluentui/react/lib/TextField';
-import { IconButton } from '@fluentui/react/lib/Button';
-import {
-  Stack,
-  IStackStyles,
-  IStackTokens,
-  IStackItemStyles
-} from '@fluentui/react/lib/Stack';
+import { toTitleCase } from './utils';
 import CopFinder from './CopFinder';
+import apiName from './ApiName';
+import { mergeStyleSets, Text } from '@fluentui/react';
+import { FontIcon } from '@fluentui/react/lib/Icon';
+import {
+  TooltipHost,
+  TooltipDelay,
+  DirectionalHint,
+  ITooltipProps
+} from '@fluentui/react';
 
 let navLinkGroups: INavLinkGroup[] = [
   {
@@ -100,14 +100,38 @@ const NavBar: React.FunctionComponent = props => {
     return (
       <>
         <h3>{group.name}</h3>
-        <CopFinder apiName={props.apiName} />
+        <CopFinder apiName={apiName} />
       </>
     );
+  }
+
+  function _onRenderLink(link) {
+    if (link.name === 'MDEC') {
+      return (
+        <>
+          <span className={styles.mdec}>MDEC</span>
+          <TooltipHost
+            tooltipProps={tooltipProps}
+            delay={TooltipDelay.zero}
+            directionalHint={DirectionalHint.rightCenter}
+            className={styles.tooltip}
+          >
+            <FontIcon
+              aria-label="MDEC"
+              iconName="Info"
+              className={styles.icon}
+            />
+          </TooltipHost>
+        </>
+      );
+    }
+    return link.name;
   }
 
   return (
     <Nav
       onRenderGroupHeader={_onRenderGroupHeader}
+      onRenderLink={_onRenderLink}
       groups={navLinkGroups}
       styles={props => ({
         chevronIcon: {
@@ -118,3 +142,31 @@ const NavBar: React.FunctionComponent = props => {
   );
 };
 export default NavBar;
+
+const styles = mergeStyleSets({
+  tooltip: {
+    lineHeight: '1.4',
+    padding: '20px'
+  },
+  mdec: {
+    margin: '0 4px'
+  },
+  icon: {
+    margin: '0 4px',
+    fontSize: '16px',
+    position: 'relative',
+    top: '2px'
+  }
+});
+
+const tooltipProps: ITooltipProps = {
+  onRenderContent: () => (
+    <Text block variant="medium">
+      <a target="_blank" href="https://mdcourts.gov/mdec/about">
+        Maryland Electronic Courts (MDEC)
+      </a>{' '}
+      is a single Judiciary-wide integrated case management system that will be
+      used by all the courts in the state court system.
+    </Text>
+  )
+};

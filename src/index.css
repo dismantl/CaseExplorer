@@ -80,13 +80,45 @@ code {
   margin: 10px 0 0 10px;
 }
 
-.main-menu {
-  flex-grow: 1;
-}
-
 .title {
+  flex-grow: 1;
+  text-align: center;
   position: relative;
   top: 15px;
   margin: 0;
   font-weight: normal;
+}
+
+.version {
+  color: #666;
+  align-self: center;
+  margin-right: 10px;
+  font-size: 0.8em;
+  position: relative;
+  top: 2px;
+}
+
+.main-menu .ms-CommandBar {
+  padding-right: 7px;
+}
+
+.content .graphiql-container {
+  width: auto;
+}
+
+.content .ag-root-wrapper.ag-layout-normal {
+  height: 96%;
+}
+
+.content .ag-theme-balham .ag-status-bar {
+  font-weight: normal;
+  color: #000;
+}
+
+.content .ag-theme-balham .ag-status-bar .ag-status-name-value-value {
+  font-weight: 600;
+}
+
+#total-row-count {
+  height: 16px;
 }

@@ -1,19 +1,10 @@
-import React, { Component, useState } from 'react';
-import ReactDOM from 'react-dom';
-import { NavLink } from 'react-router-dom';
-import { Nav, INavLinkGroup } from 'office-ui-fabric-react/lib/Nav';
-import { checkStatus, toTitleCase } from './utils';
-import { TextField, MaskedTextField } from '@fluentui/react/lib/TextField';
+import React, { useState } from 'react';
+import { checkStatus } from './utils';
+import { TextField } from '@fluentui/react/lib/TextField';
 import { IconButton } from '@fluentui/react/lib/Button';
-import {
-  Stack,
-  IStackStyles,
-  IStackTokens,
-  IStackItemStyles
-} from '@fluentui/react/lib/Stack';
+import { Stack } from '@fluentui/react/lib/Stack';
 import environment from './config';
 import { API } from 'aws-amplify';
-import { Redirect } from 'react-router';
 
 const CopFinder: React.FunctionComponent = props => {
   let value;

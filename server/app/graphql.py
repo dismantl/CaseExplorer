@@ -199,7 +199,6 @@ def resolver_factory(model):
                 'filterModel': transform_filter_model(filter_model)
             }
         )
-        print(results)
         return results
 
     return resolve_row_data

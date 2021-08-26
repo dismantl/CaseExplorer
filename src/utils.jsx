@@ -19,3 +19,7 @@ export const toTitleCase = str => {
     .replace('Cjis', 'CJIS')
     .replace('Dob', 'DOB');
 };
+
+export function numberWithCommas(x) {
+  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}

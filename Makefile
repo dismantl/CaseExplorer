@@ -4,7 +4,7 @@ LAMBDA_TARGET=amplify/backend/function/caseexplorerlambda/src
 GRAPHQL_TARGET=amplify/backend/api/caseexplorergraphql
 BACKEND_API_DEPS=$(addprefix $(BACKEND_DIR)/app/api/,__init__.py api_factory.py interface.py schema_factory.py)
 BACKEND_MODEL_DEPS=$(addprefix $(BACKEND_DIR)/app/models/,__init__.py case.py CC.py common.py DSCIVIL.py DSCR.py DSK8.py DSTRAF.py ODYCRIM.py ODYTRAF.py ODYCVCIT.py ODYCIVIL.py)
-BACKEND_APP_DEPS=$(addprefix $(BACKEND_DIR)/app/,__init__.py commands.py config.py graphql.py service.py utils.py)
+BACKEND_APP_DEPS=$(addprefix $(BACKEND_DIR)/app/,__init__.py commands.py config.py graphql.py officer.py service.py utils.py)
 BACKEND_DEPS=$(addprefix $(BACKEND_DIR)/,requirements.txt lambda.py) $(BACKEND_API_DEPS) $(BACKEND_MODEL_DEPS) $(BACKEND_APP_DEPS)
 
 .PHONY: install_dependencies
