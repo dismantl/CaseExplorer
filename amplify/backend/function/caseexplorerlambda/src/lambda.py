@@ -67,6 +67,7 @@ def handler(event, context):
             bpd_label_match = re.fullmatch(r'/api/bpd/label/(?P<sequence_number>\w\d\d\d)', path)
             case_match = re.fullmatch(r'/api/(?P<table_name>\w+)(/(?P<case_number>\w+))?(?P<full>/full)?', path)
             total_match = re.fullmatch(r'/api/(?P<table_name>\w+)/total', path)
+            total_filtered_match = re.fullmatch(r'/api/(?P<table_name>\w+)/filtered/total', path)
             if path == '/api/metadata':
                 return gen_response(200, json.dumps(DataService.fetch_metadata()))
             elif bpd_match:
@@ -81,10 +82,15 @@ def handler(event, context):
             elif bpd_label_match:
                 seq_no = bpd_label_match.group('sequence_number')
                 return gen_response(200, json.dumps(DataService.fetch_label_by_cop(seq_no)))
+            elif total_filtered_match:
+                table_name = total_filtered_match.group('table_name')
+                req = json.loads(event['body'])
+                total = DataService.fetch_filtered_total(table_name, req)
+                return gen_response(200, total)
             elif total_match:
                 table_name = case_match.group('table_name')
                 total = DataService.fetch_total(table_name)
-                return gen_response(200, json.dumps({'data': f'{total:,}'}))
+                return gen_response(200, total)
             elif case_match:
                 table_name = case_match.group('table_name')
                 case_number = case_match.group('case_number')

@@ -24,7 +24,6 @@ class DataService:
 
     @classmethod
     def fetch_cases_by_cop(cls, seq_number, req):
-        print(seq_number)
         result = fetch_rows_by_cop(seq_number, req)
         return {
             'rows': result['rows'],
@@ -43,7 +42,7 @@ class DataService:
     def fetch_label_by_cop(cls, seq_number):
         with db_session(current_app.config.bpdwatch_db_engine) as bpdwatch_db:
             officer = bpdwatch_db.query(Officer).filter(Officer.unique_internal_identifier == seq_number).one()
-            return json.dumps(f'{officer.job_title()} {officer.full_name()} ({seq_number})')
+            return f'{officer.job_title()} {officer.full_name()} ({seq_number})'
 
 
     @classmethod
@@ -105,6 +104,12 @@ class DataService:
         with db_session() as db:
             results = db.execute(f"SELECT reltuples FROM pg_class WHERE oid = '{table_name}'::regclass").scalar()
         return int(results)
+    
+    @classmethod
+    def fetch_filtered_total(cls, table_name, req):
+        orm_cls = get_orm_class_by_name(table_name)
+        result = fetch_rows_from_model(orm_cls, req, total_only=True)
+        return result
 
 
 def fetch_rows_by_cop(seq_number, req):
@@ -144,7 +149,6 @@ def fetch_rows_by_cop(seq_number, req):
     query = build_order_by(query, table, req)
     query = build_group_by(query, table, req)
     query = build_limit(query, table, req)
-    print(query)
 
     results = query.all()
 
@@ -159,7 +163,7 @@ def fetch_rows_by_cop(seq_number, req):
     }
 
 
-def fetch_rows_from_model(cls, req, eager=False):
+def fetch_rows_from_model(cls, req, eager=False, total_only=False):
     start_row = int(req['startRow'])
     end_row = int(req['endRow'])
     page_size = end_row - start_row
@@ -171,11 +175,12 @@ def fetch_rows_from_model(cls, req, eager=False):
     query = build_where(query, table, req)
     query = build_order_by(query, table, req)
     query = build_group_by(query, table, req)
+
+    if total_only:
+        return query.count()
+    
     query = build_limit(query, table, req)
-    print(query)
-
     results = query.all()
-
     results_len = len(results)
     current_last_row = start_row + results_len
     last_row = current_last_row if current_last_row <= end_row else -1
