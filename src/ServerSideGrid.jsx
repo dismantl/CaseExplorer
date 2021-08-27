@@ -11,7 +11,6 @@ import ExportToolPanel from './ExportToolPanel';
 import { useParams } from 'react-router-dom';
 import CustomStatusBar from './StatusBar';
 import apiName from './ApiName';
-import { numberWithCommas } from './utils';
 
 const sideBarConfig = {
   toolPanels: [
@@ -50,51 +49,10 @@ const ServerSideGrid = props => {
   let { seq } = useParams();
   let api,
     path,
-    countPromise = null,
     initialized = false;
   const { table, metadata, byCop } = props;
   if (byCop) path = `/api/bpd/seq/${seq}`;
   else path = `/api/${table}`;
-
-  let controller = new AbortController();
-  const getCount = params => {
-    if (countPromise !== null) controller.abort();
-    controller = new AbortController();
-    const statusBarComponent = api.getStatusPanel('customStatusBarKey');
-    let componentInstance = statusBarComponent;
-    componentInstance.reactElement.props.reactContainer.children[0].children[0].children[0].innerText =
-      'Total Rows';
-    componentInstance.reactElement.props.reactContainer.children[0].children[0].children[1].innerHTML =
-      '<span class="ag-loading-icon" ref="eLoadingIcon"><span class="ag-icon ag-icon-loading" unselectable="on" role="presentation"></span></span>';
-    const path = `/api/${table}/filtered/total`;
-    if (environment === 'development') {
-      countPromise = fetch(path, {
-        method: 'post',
-        body: JSON.stringify(params.request),
-        headers: { 'Content-Type': 'application/json; charset=utf-8' },
-        signal: controller.signal
-      }).then(checkStatus);
-    } else {
-      countPromise = API.post(apiName, path, {
-        body: params.request,
-        signal: controller.signal
-      });
-    }
-    countPromise
-      .then(response => {
-        if (typeof response.json === 'function') return response.json();
-        else return response;
-      })
-      .then(response => {
-        componentInstance.reactElement.props.reactContainer.children[0].children[0].children[1].innerText = numberWithCommas(
-          response
-        );
-      })
-      .catch(error => {
-        console.error(error);
-        // params.fail();
-      });
-  };
 
   const getRows = params => {
     var promise;
@@ -115,7 +73,13 @@ const ServerSideGrid = props => {
       .then(response => {
         params.success({ rowData: response.rows, rowCount: response.lastRow });
         if (!initialized) initialized = true;
-        else getCount(params);
+        else {
+          const statusBarComponent = api.getStatusPanel('customStatusBarKey');
+          let componentInstance = statusBarComponent;
+          if (statusBarComponent)
+            componentInstance = statusBarComponent.getFrameworkComponentInstance();
+          componentInstance.updateTotal(params);
+        }
       })
       .catch(error => {
         console.error(error);

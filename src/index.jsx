@@ -8,7 +8,7 @@ import ServerSideGrid from './ServerSideGrid';
 import GraphiQLClient from './GraphiQL';
 import { initializeIcons } from '@fluentui/react/lib/Icons';
 import environment from './config';
-import { checkStatus, toTitleCase } from './utils';
+import { checkStatus, toTitleCase, getURLLastPart } from './utils';
 import { API } from 'aws-amplify';
 import Header from './Header';
 import NavBar, { genNavStructure } from './Nav';
@@ -65,9 +65,7 @@ const genRoutes = metadata => {
 };
 
 const getTitle = metadata => {
-  const table = window.location.href.substring(
-    window.location.href.lastIndexOf('/') + 1
-  );
+  const table = getURLLastPart();
   let title = '';
   if (table === '' || table === 'cases') {
     title = 'All Cases';
@@ -118,9 +116,7 @@ fetchMetadata(metadata => {
     const title = getTitle(metadata);
     renderMain(title, routes);
   } else {
-    const seq_number = window.location.href.substring(
-      window.location.href.lastIndexOf('/') + 1
-    );
+    const seq_number = getURLLastPart();
     const path = `/api/bpd/label/${seq_number}`;
     let promise;
     if (environment === 'development') {
