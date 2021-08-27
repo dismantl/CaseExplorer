@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import AboutModal from './AboutModal.jsx';
 import { Image } from '@fluentui/react/lib/Image';
-import logo from './case_x_final.png';
+import logo from './case_explorer.png';
 import { CommandBar } from '@fluentui/react/lib/CommandBar';
 import { FaGithub } from 'react-icons/fa';
 import { registerIcons } from '@fluentui/react/lib/Styling';
