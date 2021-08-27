@@ -20,6 +20,12 @@ export const toTitleCase = str => {
     .replace('Dob', 'DOB');
 };
 
-export function numberWithCommas(x) {
+export const numberWithCommas = x => {
   return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-}
+};
+
+export const getURLLastPart = () => {
+  return window.location.href.substring(
+    window.location.href.lastIndexOf('/') + 1
+  );
+};

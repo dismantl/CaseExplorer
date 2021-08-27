@@ -1,6 +1,6 @@
 import React from 'react';
 import { Nav, INavLinkGroup } from 'office-ui-fabric-react/lib/Nav';
-import { toTitleCase } from './utils';
+import { toTitleCase, getURLLastPart } from './utils';
 import CopFinder from './CopFinder';
 import apiName from './ApiName';
 import { mergeStyleSets, Text } from '@fluentui/react';
@@ -59,6 +59,8 @@ let navLinkGroups: INavLinkGroup[] = [
 
 const genNavItem = (metadata, table) => {
   const table_metadata = metadata[table];
+  let currentTable = getURLLastPart();
+  currentTable = currentTable.substring(0, currentTable.indexOf('_'));
   let links = [{ name: 'Overview', url: '/' + table, key: table }];
   for (const subtable of table_metadata.subtables) {
     const label = toTitleCase(subtable.replace(/^[^_]+_/, ''));
@@ -72,7 +74,8 @@ const genNavItem = (metadata, table) => {
     name: table_metadata.description,
     expandAriaLabel: 'Expand section',
     collapseAriaLabel: 'Collapse section',
-    links: links
+    links: links,
+    isExpanded: table === currentTable ? true : false
   };
 };
 

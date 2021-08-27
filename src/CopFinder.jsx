@@ -5,13 +5,12 @@ import { IconButton } from '@fluentui/react/lib/Button';
 import { Stack } from '@fluentui/react/lib/Stack';
 import environment from './config';
 import { API } from 'aws-amplify';
+import { getURLLastPart } from './utils';
 
 const CopFinder: React.FunctionComponent = props => {
   let value;
   if (window.location.pathname.startsWith('/bpd')) {
-    value = window.location.href.substring(
-      window.location.href.lastIndexOf('/') + 1
-    );
+    value = getURLLastPart();
   } else {
     value = '';
   }
