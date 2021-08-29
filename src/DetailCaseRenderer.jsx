@@ -8,6 +8,7 @@ import { API } from 'aws-amplify';
 
 export default class DetailCellRenderer extends Component {
   constructor(props) {
+    console.log(props.rowIndex);
     super(props);
     this.state = {
       masterRowData: props.data,
@@ -25,6 +26,12 @@ export default class DetailCellRenderer extends Component {
   }
 
   componentDidMount() {
+    // Collapse other expanded rows
+    this.state.masterGridApi.forEachNode(node => {
+      if (node.rowIndex !== this.state.rowIndex - 1 && node.expanded === true)
+        node.expanded = false;
+    });
+
     const case_number = this.state.masterRowData.case_number;
     console.log(`Mounted ${case_number}`);
     const t =
@@ -119,7 +126,6 @@ export default class DetailCellRenderer extends Component {
         columnApi: params.columnApi
       };
 
-      console.log('adding detail grid info with id: ', detailGridId);
       this.state.masterGridApi.addDetailGridInfo(detailGridId, gridInfo);
       const detailGrid = document.querySelector(
         `.${detailGridId}.case-detail-grid`
@@ -138,31 +144,13 @@ export default class DetailCellRenderer extends Component {
       // resize expanded row to fit all the detail grids and content
       const expandedRowHeight = detailGrid.closest('.case-details')
         .offsetHeight;
-      // TODO translateY needs to take into account if any other rows are expanded
-      const extraHeight = expandedRowHeight - rowHeight;
-      console.log(`Total extra height before adding: ${this.getExtraHeight()}`);
-      this.addExtraHeight(extraHeight);
-      console.log(`Adding ${extraHeight}`);
-      this.setState({ extraHeight: extraHeight });
-      const totalExtraHeight = this.getExtraHeight();
-      console.log(`Total extra height after adding: ${totalExtraHeight}`);
       detailGrid
         .closest('.ag-row')
         .setAttribute(
           'style',
           `min-height:${expandedRowHeight}px; transform: translateY(${this.state
-            .rowIndex *
-            rowHeight +
-            totalExtraHeight}px)`
+            .rowIndex * rowHeight}px)`
         );
-      // detailGrid.closest('.ag-row').setAttribute('style',`min-height:${expandedRowHeight}px; transform: translateY(${this.state.rowIndex*rowHeight}px)`);
     };
-  }
-
-  componentWillUnmount() {
-    console.log(`Total extra height before removal: ${this.getExtraHeight()}`);
-    console.log(`Removing ${this.state.extraHeight}`);
-    this.removeExtraHeight(this.state.extraHeight);
-    console.log(`Total extra height after removal: ${this.getExtraHeight()}`);
   }
 }

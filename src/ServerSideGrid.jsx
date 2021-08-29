@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { API } from 'aws-amplify';
 import environment from './config';
 import { AgGridReact, AgGridColumn } from 'ag-grid-react';
@@ -48,7 +48,6 @@ const sideBarConfig = {
 
 const ServerSideGrid = props => {
   let { seq } = useParams();
-  const [extraHeight, setExtraHeight] = useState(0);
   let api,
     path,
     initialized = false;
@@ -166,16 +165,7 @@ const ServerSideGrid = props => {
             detailCellRenderer="detailCellRenderer"
             detailCellRendererParams={{
               metadata: metadata,
-              table: table,
-              addExtraHeight: height => {
-                setExtraHeight(extraHeight + height);
-              },
-              removeExtraHeight: height => {
-                setExtraHeight(
-                  extraHeight - height > 0 ? extraHeight - height : 0
-                );
-              },
-              getExtraHeight: () => extraHeight
+              table: table
             }}
             rowSelection="multiple"
             enableRangeSelection
