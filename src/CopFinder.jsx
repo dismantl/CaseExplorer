@@ -18,7 +18,7 @@ const CopFinder: React.FunctionComponent = props => {
 
   const handleSubmit = event => {
     event.preventDefault();
-    var promise, path;
+    let promise, path;
     if (copVal.includes('bpdwatch.com')) {
       const id = copVal.substring(copVal.lastIndexOf('/') + 1);
       path = `/api/bpd/id/${id}`;

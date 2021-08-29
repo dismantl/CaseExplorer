@@ -20,7 +20,7 @@ export const version = '0.1';
 Amplify.configure(awsmobile);
 
 const fetchMetadata = callback => {
-  var promise;
+  let promise;
   if (environment === 'development') {
     promise = fetch('/api/metadata')
       .then(checkStatus)

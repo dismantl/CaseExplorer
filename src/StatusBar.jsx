@@ -17,7 +17,7 @@ export default class CustomStatusBar extends React.Component {
   }
 
   componentDidMount() {
-    var promise;
+    let promise;
     if (environment === 'development') {
       promise = fetch(`/api/${this.state.table}/total`)
         .then(checkStatus)

@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { API } from 'aws-amplify';
 import environment from './config';
-import { AgGridColumn, AgGridReact } from 'ag-grid-react';
+import { AgGridReact, AgGridColumn } from 'ag-grid-react';
 import SortableHeaderComponent from './SortableHeaderComponent.jsx';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import 'ag-grid-enterprise';
-import { checkStatus, toTitleCase } from './utils';
+import { checkStatus, toTitleCase, genSortedColumns } from './utils';
 import ExportToolPanel from './ExportToolPanel';
 import { useParams } from 'react-router-dom';
 import CustomStatusBar from './StatusBar';
 import apiName from './ApiName';
+import DetailCellRenderer from './DetailCaseRenderer';
 
 const sideBarConfig = {
   toolPanels: [
@@ -47,6 +48,7 @@ const sideBarConfig = {
 
 const ServerSideGrid = props => {
   let { seq } = useParams();
+  const [extraHeight, setExtraHeight] = useState(0);
   let api,
     path,
     initialized = false;
@@ -55,7 +57,7 @@ const ServerSideGrid = props => {
   else path = `/api/${table}`;
 
   const getRows = params => {
-    var promise;
+    let promise;
     if (environment === 'development') {
       promise = fetch(path, {
         method: 'post',
@@ -93,28 +95,7 @@ const ServerSideGrid = props => {
   };
 
   if (metadata !== null) {
-    let sortedColumns = [];
-    const table_metadata = metadata[table];
-    for (const [column, column_metadata] of Object.entries(table_metadata)) {
-      if (sortedColumns.length === 0)
-        sortedColumns.push({ name: column, metadata: column_metadata });
-      else {
-        let inserted = false;
-        for (let i = 0; i < sortedColumns.length; i++) {
-          if (column_metadata.order < sortedColumns[i].metadata.order) {
-            sortedColumns.splice(i, 0, {
-              name: column,
-              metadata: column_metadata
-            });
-            inserted = true;
-            break;
-          }
-        }
-        if (inserted === false)
-          sortedColumns.push({ name: column, metadata: column_metadata });
-      }
-    }
-
+    const sortedColumns = genSortedColumns(metadata, table);
     let gridColumns = [];
     for (const column of sortedColumns) {
       const metadata = column.metadata;
@@ -165,6 +146,9 @@ const ServerSideGrid = props => {
             headerTooltip={tooltipText}
             width={metadata.width_pixels === null ? 200 : metadata.width_pixels}
             key={table + '.' + column.name}
+            cellRenderer={
+              column.name === 'case_number' ? 'agGroupCellRenderer' : ''
+            }
           />
         );
       }
@@ -175,11 +159,24 @@ const ServerSideGrid = props => {
       <div>
         <div style={{ height: '100vh' }} className="ag-theme-balham">
           <AgGridReact
-            // listening for events
             onGridReady={onGridReady}
-            // no binding, just providing hard coded strings for the properties
-            // boolean properties will default to true if provided (ie suppressRowClickSelection => suppressRowClickSelection="true")
-            // suppressRowClickSelection
+            masterDetail
+            // embedFullWidthRows  // causes detail cell renderer to render 3x (bug AG-4156)
+            detailRowAutoHeight
+            detailCellRenderer="detailCellRenderer"
+            detailCellRendererParams={{
+              metadata: metadata,
+              table: table,
+              addExtraHeight: height => {
+                setExtraHeight(extraHeight + height);
+              },
+              removeExtraHeight: height => {
+                setExtraHeight(
+                  extraHeight - height > 0 ? extraHeight - height : 0
+                );
+              },
+              getExtraHeight: () => extraHeight
+            }}
             rowSelection="multiple"
             enableRangeSelection
             suppressPivotMode
@@ -208,7 +205,8 @@ const ServerSideGrid = props => {
                   }}
                 />
               ),
-              customStatusBar: CustomStatusBar
+              customStatusBar: CustomStatusBar,
+              detailCellRenderer: DetailCellRenderer
             }}
             // setting default column properties
             defaultColDef={{

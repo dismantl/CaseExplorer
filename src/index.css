@@ -122,3 +122,8 @@ code {
 #total-row-count {
   height: 16px;
 }
+
+.case-details {
+  margin-left: 30px;
+  padding-bottom: 40px;
+}

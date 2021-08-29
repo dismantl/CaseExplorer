@@ -29,3 +29,28 @@ export const getURLLastPart = () => {
     window.location.href.lastIndexOf('/') + 1
   );
 };
+
+export const genSortedColumns = (metadata, table) => {
+  let sortedColumns = [];
+  const table_metadata = metadata[table];
+  for (const [column, column_metadata] of Object.entries(table_metadata)) {
+    if (sortedColumns.length === 0)
+      sortedColumns.push({ name: column, metadata: column_metadata });
+    else {
+      let inserted = false;
+      for (let i = 0; i < sortedColumns.length; i++) {
+        if (column_metadata.order < sortedColumns[i].metadata.order) {
+          sortedColumns.splice(i, 0, {
+            name: column,
+            metadata: column_metadata
+          });
+          inserted = true;
+          break;
+        }
+      }
+      if (inserted === false)
+        sortedColumns.push({ name: column, metadata: column_metadata });
+    }
+  }
+  return sortedColumns;
+};
