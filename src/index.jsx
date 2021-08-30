@@ -38,26 +38,26 @@ const genRoutes = metadata => {
   for (const [root_table, table_metadata] of Object.entries(metadata.tables)) {
     routes.push(
       <Route path={'/' + root_table} key={'/' + root_table}>
-        <ServerSideGrid metadata={metadata.columns} table={root_table} />
+        <ServerSideGrid metadata={metadata} table={root_table} />
       </Route>
     );
     for (const table of table_metadata.subtables) {
       routes.push(
         <Route path={'/' + table} key={'/' + table}>
-          <ServerSideGrid metadata={metadata.columns} table={table} />
+          <ServerSideGrid metadata={metadata} table={table} />
         </Route>
       );
     }
   }
   routes = routes.concat([
     <Route path="/bpd/:seq" key="/bpd/:seq">
-      <ServerSideGrid byCop metadata={metadata.columns} table="dscr" />
+      <ServerSideGrid byCop metadata={metadata} table="dscr" />
     </Route>,
     <Route path="/cases" key="/cases">
-      <ServerSideGrid metadata={metadata.columns} table="cases" />
+      <ServerSideGrid metadata={metadata} table="cases" />
     </Route>,
     <Route path="/" key="/">
-      <ServerSideGrid metadata={metadata.columns} table="cases" />
+      <ServerSideGrid metadata={metadata} table="cases" />
     </Route>
   ]);
 

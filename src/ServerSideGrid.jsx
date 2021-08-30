@@ -94,29 +94,31 @@ const ServerSideGrid = props => {
   };
 
   if (metadata !== null) {
-    const sortedColumns = genSortedColumns(metadata, table);
+    const sortedColumns = genSortedColumns(metadata.columns, table);
     let gridColumns = [];
     for (const column of sortedColumns) {
-      const metadata = column.metadata;
+      const colMetadata = column.metadata;
       let gridColumn;
       if (column.name.endsWith('_str') || column.name === 'id') continue;
       let columnLabel;
-      if (metadata.label === '') columnLabel = toTitleCase(column.name);
-      else columnLabel = metadata.label;
-      const tooltipText = metadata.description;
+      if (colMetadata.label === '') columnLabel = toTitleCase(column.name);
+      else columnLabel = colMetadata.label;
+      const tooltipText = colMetadata.description;
       if (
-        metadata.allowed_values !== null &&
-        metadata.allowed_values.length < 200
+        colMetadata.allowed_values !== null &&
+        colMetadata.allowed_values.length < 200
       ) {
         gridColumn = (
           <AgGridColumn
             field={column.name}
             headerName={columnLabel}
             headerTooltip={tooltipText}
-            width={metadata.width_pixels === null ? 200 : metadata.width_pixels}
+            width={
+              colMetadata.width_pixels === null ? 200 : colMetadata.width_pixels
+            }
             filter="agSetColumnFilter"
             filterParams={{
-              values: metadata.allowed_values,
+              values: colMetadata.allowed_values,
               suppressMiniFilter: true,
               newRowsAction: 'keep'
             }}
@@ -129,7 +131,9 @@ const ServerSideGrid = props => {
             field={column.name}
             headerName={columnLabel}
             headerTooltip={tooltipText}
-            width={metadata.width_pixels === null ? 200 : metadata.width_pixels}
+            width={
+              colMetadata.width_pixels === null ? 200 : colMetadata.width_pixels
+            }
             filter="agDateColumnFilter"
             filterParams={{
               debounceMs: 1000
@@ -143,7 +147,9 @@ const ServerSideGrid = props => {
             field={column.name}
             headerName={columnLabel}
             headerTooltip={tooltipText}
-            width={metadata.width_pixels === null ? 200 : metadata.width_pixels}
+            width={
+              colMetadata.width_pixels === null ? 200 : colMetadata.width_pixels
+            }
             key={table + '.' + column.name}
             cellRenderer={
               column.name === 'case_number' ? 'agGroupCellRenderer' : ''

@@ -127,3 +127,7 @@ code {
   margin-left: 30px;
   padding-bottom: 40px;
 }
+
+.ag-theme-balham .ag-full-width-container > .ag-row {
+  background-color: #ecf0f1;
+}
