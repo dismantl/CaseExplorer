@@ -60,7 +60,8 @@ let navLinkGroups: INavLinkGroup[] = [
 const genNavItem = (metadata, table) => {
   const table_metadata = metadata[table];
   let currentTable = getURLLastPart();
-  currentTable = currentTable.substring(0, currentTable.indexOf('_'));
+  if (currentTable.indexOf('_') !== -1)
+    currentTable = currentTable.substring(0, currentTable.indexOf('_'));
   let links = [{ name: 'Overview', url: '/' + table, key: table }];
   for (const subtable of table_metadata.subtables) {
     const label = toTitleCase(subtable.replace(/^[^_]+_/, ''));
