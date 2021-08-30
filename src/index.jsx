@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import Amplify from 'aws-amplify';
@@ -13,8 +13,8 @@ import { API } from 'aws-amplify';
 import Header from './Header';
 import NavBar, { genNavStructure } from './Nav';
 import apiName from './ApiName';
+import { useEffect } from 'react';
 
-// export const apiName = 'caseexplorerapi';
 export const version = '0.1';
 
 Amplify.configure(awsmobile);
@@ -31,37 +31,6 @@ const fetchMetadata = callback => {
   promise.then(metadata => {
     callback(metadata);
   });
-};
-
-const genRoutes = metadata => {
-  let routes = [];
-  for (const [root_table, table_metadata] of Object.entries(metadata.tables)) {
-    routes.push(
-      <Route path={'/' + root_table} key={'/' + root_table}>
-        <ServerSideGrid metadata={metadata} table={root_table} />
-      </Route>
-    );
-    for (const table of table_metadata.subtables) {
-      routes.push(
-        <Route path={'/' + table} key={'/' + table}>
-          <ServerSideGrid metadata={metadata} table={table} />
-        </Route>
-      );
-    }
-  }
-  routes = routes.concat([
-    <Route path="/bpd/:seq" key="/bpd/:seq">
-      <ServerSideGrid byCop metadata={metadata} table="dscr" />
-    </Route>,
-    <Route path="/cases" key="/cases">
-      <ServerSideGrid metadata={metadata} table="cases" />
-    </Route>,
-    <Route path="/" key="/">
-      <ServerSideGrid metadata={metadata} table="cases" />
-    </Route>
-  ]);
-
-  return routes;
 };
 
 const getTitle = metadata => {
@@ -84,56 +53,99 @@ const getTitle = metadata => {
   return title;
 };
 
-const renderMain = (title, routes) => {
-  ReactDOM.render(
-    <Router>
-      <Header title={title} version={version} />
-      <div className="navbar">
-        <NavBar />
+const genRoutes = metadata => {
+  let routes = [];
+  if (metadata) {
+    for (const [root_table, table_metadata] of Object.entries(
+      metadata.tables
+    )) {
+      routes.push(
+        <Route path={'/' + root_table} key={'/' + root_table}>
+          <ServerSideGrid metadata={metadata} table={root_table} />
+        </Route>
+      );
+      for (const table of table_metadata.subtables) {
+        routes.push(
+          <Route path={'/' + table} key={'/' + table}>
+            <ServerSideGrid metadata={metadata} table={table} />
+          </Route>
+        );
+      }
+    }
+    routes = routes.concat([
+      <Route path="/bpd/:seq" key="/bpd/:seq">
+        <ServerSideGrid byCop metadata={metadata} table="dscr" />
+      </Route>,
+      <Route path="/cases" key="/cases">
+        <ServerSideGrid metadata={metadata} table="cases" />
+      </Route>,
+      <Route path="/" key="/">
+        <ServerSideGrid metadata={metadata} table="cases" />
+      </Route>
+    ]);
+  }
+  return routes;
+};
+
+const App = props => {
+  const [metadata, setMetadata] = useState(null);
+  const [title, setTitle] = useState('Case Explorer');
+
+  useEffect(() => {
+    fetchMetadata(res => {
+      setMetadata(res);
+      genNavStructure(res);
+      if (!window.location.pathname.startsWith('/bpd')) {
+        setTitle(getTitle(res));
+      } else {
+        const seq_number = getURLLastPart();
+        const path = `/api/bpd/label/${seq_number}`;
+        let promise;
+        if (environment === 'development') {
+          promise = fetch(path)
+            .then(checkStatus)
+            .then(httpResponse => httpResponse.json());
+        } else {
+          promise = API.get(apiName, path);
+        }
+        promise
+          .then(response => {
+            setTitle(response);
+          })
+          .catch(error => {
+            console.error(error);
+            return;
+            // TODO report error to user
+          });
+      }
+    });
+  }, []);
+
+  if (!metadata) {
+    return (
+      <div className="loader-container">
+        <div className="loader"></div>
       </div>
-      <div className="content">
-        <Switch>
-          <Route path="/graphql" component={GraphiQLClient} />
-          {routes}
-        </Switch>
-      </div>
-    </Router>,
-    document.getElementById('root')
-  );
+    );
+  } else {
+    return (
+      <>
+        <Router>
+          <Header title={title} version={version} />
+          <div className="navbar">
+            <NavBar />
+          </div>
+          <div className="content">
+            <Switch>
+              <Route path="/graphql" component={GraphiQLClient} />
+              {genRoutes(metadata)}
+            </Switch>
+          </div>
+        </Router>
+      </>
+    );
+  }
 };
 
 initializeIcons();
-ReactDOM.render(
-  <div className="loader-container">
-    <div className="loader"></div>
-  </div>,
-  document.getElementById('root')
-);
-fetchMetadata(metadata => {
-  const routes = genRoutes(metadata);
-  genNavStructure(metadata);
-  if (!window.location.pathname.startsWith('/bpd')) {
-    const title = getTitle(metadata);
-    renderMain(title, routes);
-  } else {
-    const seq_number = getURLLastPart();
-    const path = `/api/bpd/label/${seq_number}`;
-    let promise;
-    if (environment === 'development') {
-      promise = fetch(path)
-        .then(checkStatus)
-        .then(httpResponse => httpResponse.json());
-    } else {
-      promise = API.get(apiName, path);
-    }
-    promise
-      .then(response => {
-        renderMain(response, routes);
-      })
-      .catch(error => {
-        console.error(error);
-        return;
-        // TODO report error to user
-      });
-  }
-});
+ReactDOM.render(<App />, document.getElementById('root'));

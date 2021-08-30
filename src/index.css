@@ -14,7 +14,6 @@ code {
 
 .navbar {
   width: 275px;
-  /* height: 100%; */
   float: left;
 }
 
@@ -130,4 +129,10 @@ code {
 
 .ag-theme-balham .ag-full-width-container > .ag-row {
   background-color: #ecf0f1;
+}
+
+.coachmark-target {
+  position: relative;
+  left: 290px;
+  top: 32px;
 }

@@ -106,11 +106,3 @@ export default class SortableHeaderComponent extends React.Component {
     this.props.showColumnMenu(this.refs.menuButton);
   }
 }
-
-// the grid will always pass in one props called 'params',
-// which is the grid passing you the params for the cellRenderer.
-// this piece is optional. the grid will always pass the 'params'
-// props, so little need for adding this validation meta-data.
-SortableHeaderComponent.propTypes = {
-  params: PropTypes.object
-};

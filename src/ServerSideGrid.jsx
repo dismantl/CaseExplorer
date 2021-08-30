@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useMemo } from 'react';
 import { API } from 'aws-amplify';
 import environment from './config';
 import { AgGridReact, AgGridColumn } from 'ag-grid-react';
@@ -12,6 +12,12 @@ import { useParams } from 'react-router-dom';
 import CustomStatusBar from './StatusBar';
 import apiName from './ApiName';
 import DetailCellRenderer from './DetailCaseRenderer';
+import {
+  Coachmark,
+  DirectionalHint,
+  TeachingBubbleContent
+} from '@fluentui/react';
+import { useBoolean } from '@fluentui/react-hooks';
 
 const sideBarConfig = {
   toolPanels: [
@@ -52,6 +58,37 @@ const ServerSideGrid = props => {
     path,
     initialized = false;
   const { table, metadata, byCop } = props;
+
+  let coachmarkDefault = false;
+  if (!localStorage['caseExplorerVisited']) {
+    localStorage['caseExplorerVisited'] = true;
+    coachmarkDefault = true;
+  }
+  const [isCoachmarkVisible, { toggle: toggleCoachmark }] = useBoolean(
+    coachmarkDefault
+  );
+  const coachmarkTarget = useRef(null);
+
+  const showMeButtonProps = useMemo(
+    () => ({
+      children: 'Show me',
+      onClick: event => {
+        toggleCoachmark();
+        let row = api.getDisplayedRowAtIndex(api.getFirstDisplayedRow());
+        row.setExpanded(true);
+      }
+    }),
+    [api, toggleCoachmark]
+  );
+
+  const gotItButtonProps = useMemo(
+    () => ({
+      children: 'Got it',
+      onClick: toggleCoachmark
+    }),
+    [toggleCoachmark]
+  );
+
   if (byCop) path = `/api/bpd/seq/${seq}`;
   else path = `/api/${table}`;
 
@@ -93,7 +130,7 @@ const ServerSideGrid = props => {
     params.api.setServerSideDatasource({ getRows: getRows });
   };
 
-  if (metadata !== null) {
+  if (metadata) {
     const sortedColumns = genSortedColumns(metadata.columns, table);
     let gridColumns = [];
     for (const column of sortedColumns) {
@@ -161,8 +198,38 @@ const ServerSideGrid = props => {
     }
 
     return (
-      <div>
+      <>
         <div style={{ height: '100vh' }} className="ag-theme-balham">
+          <div className="coachmark-target" ref={coachmarkTarget}></div>
+          {isCoachmarkVisible && (
+            <Coachmark
+              target={coachmarkTarget.current}
+              positioningContainerProps={{
+                directionalHint: DirectionalHint.leftTopEdge,
+                doNotLayer: false
+              }}
+              ariaAlertText="New feature"
+              ariaDescribedBy="coachmark-desc1"
+              ariaLabelledBy="coachmark-label1"
+              ariaDescribedByText="Press enter or alt + C to open the coachmark notification"
+              ariaLabelledByText="Coachmark notification"
+            >
+              <TeachingBubbleContent
+                headline="See full case details"
+                hasCloseButton
+                closeButtonAriaLabel="Close"
+                primaryButtonProps={showMeButtonProps}
+                secondaryButtonProps={gotItButtonProps}
+                onDismiss={toggleCoachmark}
+                ariaDescribedBy="example-description1"
+                ariaLabelledBy="example-label1"
+              >
+                Want to see all of a case's information in one place? Now you
+                can expand rows by clicking on the arrow to the left of each
+                case number, showing all of the case details.
+              </TeachingBubbleContent>
+            </Coachmark>
+          )}
           <AgGridReact
             onGridReady={onGridReady}
             masterDetail
@@ -218,7 +285,7 @@ const ServerSideGrid = props => {
             {gridColumns}
           </AgGridReact>
         </div>
-      </div>
+      </>
     );
   } else {
     return (

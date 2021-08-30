@@ -25,12 +25,7 @@ export default class DetailCellRenderer extends Component {
   }
 
   componentDidMount() {
-    // // Collapse other expanded rows
-    // this.state.masterGridApi.forEachNode(node => {
-    //   if (node.rowIndex !== this.state.rowIndex - 1 && node.expanded === true)
-    //     node.expanded = false;
-    // });
-
+    // scroll page to show newly expanded row
     this.state.masterGridApi.ensureIndexVisible(this.state.rowIndex, 'top');
 
     const case_number = this.state.masterRowData.case_number;
@@ -55,7 +50,6 @@ export default class DetailCellRenderer extends Component {
       })
       .catch(error => {
         console.error(error);
-        // params.fail();
       });
   }
 
