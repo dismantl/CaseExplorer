@@ -14,7 +14,6 @@ code {
 
 .navbar {
   width: 275px;
-  /* height: 100%; */
   float: left;
 }
 
@@ -121,4 +120,19 @@ code {
 
 #total-row-count {
   height: 16px;
+}
+
+.case-details {
+  margin-left: 30px;
+  padding-bottom: 40px;
+}
+
+.ag-theme-balham .ag-full-width-container > .ag-row {
+  background-color: #ecf0f1;
+}
+
+.coachmark-target {
+  position: relative;
+  left: 290px;
+  top: 32px;
 }

@@ -1,16 +1,23 @@
-import React, { useState } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { API } from 'aws-amplify';
 import environment from './config';
-import { AgGridColumn, AgGridReact } from 'ag-grid-react';
+import { AgGridReact, AgGridColumn } from 'ag-grid-react';
 import SortableHeaderComponent from './SortableHeaderComponent.jsx';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import 'ag-grid-enterprise';
-import { checkStatus, toTitleCase } from './utils';
+import { checkStatus, toTitleCase, genSortedColumns } from './utils';
 import ExportToolPanel from './ExportToolPanel';
 import { useParams } from 'react-router-dom';
 import CustomStatusBar from './StatusBar';
 import apiName from './ApiName';
+import DetailCellRenderer from './DetailCaseRenderer';
+import {
+  Coachmark,
+  DirectionalHint,
+  TeachingBubbleContent
+} from '@fluentui/react';
+import { useBoolean } from '@fluentui/react-hooks';
 
 const sideBarConfig = {
   toolPanels: [
@@ -51,11 +58,42 @@ const ServerSideGrid = props => {
     path,
     initialized = false;
   const { table, metadata, byCop } = props;
+
+  let coachmarkDefault = false;
+  if (!localStorage['caseExplorerVisited']) {
+    localStorage['caseExplorerVisited'] = true;
+    coachmarkDefault = true;
+  }
+  const [isCoachmarkVisible, { toggle: toggleCoachmark }] = useBoolean(
+    coachmarkDefault
+  );
+  const coachmarkTarget = useRef(null);
+
+  const showMeButtonProps = useMemo(
+    () => ({
+      children: 'Show me',
+      onClick: event => {
+        toggleCoachmark();
+        let row = api.getDisplayedRowAtIndex(api.getFirstDisplayedRow());
+        row.setExpanded(true);
+      }
+    }),
+    [api, toggleCoachmark]
+  );
+
+  const gotItButtonProps = useMemo(
+    () => ({
+      children: 'Got it',
+      onClick: toggleCoachmark
+    }),
+    [toggleCoachmark]
+  );
+
   if (byCop) path = `/api/bpd/seq/${seq}`;
   else path = `/api/${table}`;
 
   const getRows = params => {
-    var promise;
+    let promise;
     if (environment === 'development') {
       promise = fetch(path, {
         method: 'post',
@@ -92,51 +130,32 @@ const ServerSideGrid = props => {
     params.api.setServerSideDatasource({ getRows: getRows });
   };
 
-  if (metadata !== null) {
-    let sortedColumns = [];
-    const table_metadata = metadata[table];
-    for (const [column, column_metadata] of Object.entries(table_metadata)) {
-      if (sortedColumns.length === 0)
-        sortedColumns.push({ name: column, metadata: column_metadata });
-      else {
-        let inserted = false;
-        for (let i = 0; i < sortedColumns.length; i++) {
-          if (column_metadata.order < sortedColumns[i].metadata.order) {
-            sortedColumns.splice(i, 0, {
-              name: column,
-              metadata: column_metadata
-            });
-            inserted = true;
-            break;
-          }
-        }
-        if (inserted === false)
-          sortedColumns.push({ name: column, metadata: column_metadata });
-      }
-    }
-
+  if (metadata) {
+    const sortedColumns = genSortedColumns(metadata.columns, table);
     let gridColumns = [];
     for (const column of sortedColumns) {
-      const metadata = column.metadata;
+      const colMetadata = column.metadata;
       let gridColumn;
       if (column.name.endsWith('_str') || column.name === 'id') continue;
       let columnLabel;
-      if (metadata.label === '') columnLabel = toTitleCase(column.name);
-      else columnLabel = metadata.label;
-      const tooltipText = metadata.description;
+      if (colMetadata.label === '') columnLabel = toTitleCase(column.name);
+      else columnLabel = colMetadata.label;
+      const tooltipText = colMetadata.description;
       if (
-        metadata.allowed_values !== null &&
-        metadata.allowed_values.length < 200
+        colMetadata.allowed_values !== null &&
+        colMetadata.allowed_values.length < 200
       ) {
         gridColumn = (
           <AgGridColumn
             field={column.name}
             headerName={columnLabel}
             headerTooltip={tooltipText}
-            width={metadata.width_pixels === null ? 200 : metadata.width_pixels}
+            width={
+              colMetadata.width_pixels === null ? 200 : colMetadata.width_pixels
+            }
             filter="agSetColumnFilter"
             filterParams={{
-              values: metadata.allowed_values,
+              values: colMetadata.allowed_values,
               suppressMiniFilter: true,
               newRowsAction: 'keep'
             }}
@@ -149,7 +168,9 @@ const ServerSideGrid = props => {
             field={column.name}
             headerName={columnLabel}
             headerTooltip={tooltipText}
-            width={metadata.width_pixels === null ? 200 : metadata.width_pixels}
+            width={
+              colMetadata.width_pixels === null ? 200 : colMetadata.width_pixels
+            }
             filter="agDateColumnFilter"
             filterParams={{
               debounceMs: 1000
@@ -163,8 +184,13 @@ const ServerSideGrid = props => {
             field={column.name}
             headerName={columnLabel}
             headerTooltip={tooltipText}
-            width={metadata.width_pixels === null ? 200 : metadata.width_pixels}
+            width={
+              colMetadata.width_pixels === null ? 200 : colMetadata.width_pixels
+            }
             key={table + '.' + column.name}
+            cellRenderer={
+              column.name === 'case_number' ? 'agGroupCellRenderer' : ''
+            }
           />
         );
       }
@@ -172,14 +198,48 @@ const ServerSideGrid = props => {
     }
 
     return (
-      <div>
+      <>
         <div style={{ height: '100vh' }} className="ag-theme-balham">
+          <div className="coachmark-target" ref={coachmarkTarget}></div>
+          {isCoachmarkVisible && (
+            <Coachmark
+              target={coachmarkTarget.current}
+              positioningContainerProps={{
+                directionalHint: DirectionalHint.leftTopEdge,
+                doNotLayer: false
+              }}
+              ariaAlertText="New feature"
+              ariaDescribedBy="coachmark-desc1"
+              ariaLabelledBy="coachmark-label1"
+              ariaDescribedByText="Press enter or alt + C to open the coachmark notification"
+              ariaLabelledByText="Coachmark notification"
+            >
+              <TeachingBubbleContent
+                headline="See full case details"
+                hasCloseButton
+                closeButtonAriaLabel="Close"
+                primaryButtonProps={showMeButtonProps}
+                secondaryButtonProps={gotItButtonProps}
+                onDismiss={toggleCoachmark}
+                ariaDescribedBy="example-description1"
+                ariaLabelledBy="example-label1"
+              >
+                Want to see all of a case's information in one place? Now you
+                can expand rows by clicking on the arrow to the left of each
+                case number, showing all of the case details.
+              </TeachingBubbleContent>
+            </Coachmark>
+          )}
           <AgGridReact
-            // listening for events
             onGridReady={onGridReady}
-            // no binding, just providing hard coded strings for the properties
-            // boolean properties will default to true if provided (ie suppressRowClickSelection => suppressRowClickSelection="true")
-            // suppressRowClickSelection
+            masterDetail
+            // embedFullWidthRows  // causes detail cell renderer to render 3x (bug AG-4156)
+            detailRowAutoHeight
+            detailCellRenderer="detailCellRenderer"
+            detailCellRendererParams={{
+              metadata: metadata,
+              table: table
+            }}
             rowSelection="multiple"
             enableRangeSelection
             suppressPivotMode
@@ -208,7 +268,8 @@ const ServerSideGrid = props => {
                   }}
                 />
               ),
-              customStatusBar: CustomStatusBar
+              customStatusBar: CustomStatusBar,
+              detailCellRenderer: DetailCellRenderer
             }}
             // setting default column properties
             defaultColDef={{
@@ -224,7 +285,7 @@ const ServerSideGrid = props => {
             {gridColumns}
           </AgGridReact>
         </div>
-      </div>
+      </>
     );
   } else {
     return (
