@@ -15,7 +15,7 @@ import NavBar, { genNavStructure } from './Nav';
 import apiName from './ApiName';
 import { useEffect } from 'react';
 
-export const version = '0.1';
+export const version = '0.2';
 
 Amplify.configure(awsmobile);
 
