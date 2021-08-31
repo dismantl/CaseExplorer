@@ -1,7 +1,7 @@
 import re
 from sqlalchemy import cast, Date
 from sqlalchemy.sql import select, func, and_, or_, text
-from sqlalchemy.sql.expression import table
+# from sqlalchemy.sql.expression import table
 from flask import current_app
 import json
 from . import models
@@ -110,13 +110,15 @@ class DataService:
         orm_cls = get_orm_class_by_name(table_name)
         result = fetch_rows_from_model(orm_cls, req, total_only=True)
         return result
-
-
-def fetch_rows_by_cop(seq_number, req):
-    start_row = int(req['startRow'])
-    end_row = int(req['endRow'])
-    page_size = end_row - start_row
     
+    @classmethod
+    def fetch_filtered_total_by_cop(cls, seq_number, req=None):
+        result = fetch_rows_by_cop(seq_number, req, total_only=True)
+        return result
+
+
+
+def fetch_rows_by_cop(seq_number, req, total_only=False):
     with db_session(current_app.config.bpdwatch_db_engine) as bpdwatch_db:
         officer = bpdwatch_db.query(Officer).filter(Officer.unique_internal_identifier == seq_number).one()
         last_name = officer.last_name.upper()
@@ -124,35 +126,64 @@ def fetch_rows_by_cop(seq_number, req):
         middle_initial = officer.middle_initial.upper()
         suffix = officer.suffix.upper()
     if suffix:
-        or_clause = or_(
+        dscr_or_clause = or_(
             DSCRRelatedPerson.officer_id == seq_number,
             DSCRRelatedPerson.name == f'{last_name}, {first_name} {suffix}',
             DSCRRelatedPerson.name == f'{last_name}, {first_name[0]} {suffix}',
             DSCRRelatedPerson.name == f'{last_name}, {first_name} {middle_initial[0]} {suffix}',
             DSCRRelatedPerson.name == f'{last_name}, {first_name} {middle_initial[0]}. {suffix}',
         )
+        dstraf_or_clause = or_(
+            DSTRAF.officer_id == seq_number,
+            DSTRAF.officer_name == f'{last_name}, {first_name} {suffix}',
+            DSTRAF.officer_name == f'{last_name}, {first_name[0]} {suffix}',
+            DSTRAF.officer_name == f'{last_name}, {first_name} {middle_initial[0]} {suffix}',
+            DSTRAF.officer_name == f'{last_name}, {first_name} {middle_initial[0]}. {suffix}',
+        )
     else:
-        or_clause = or_(
+        dscr_or_clause = or_(
             DSCRRelatedPerson.officer_id == seq_number,
             DSCRRelatedPerson.name == f'{last_name}, {first_name}',
             DSCRRelatedPerson.name == f'{last_name}, {first_name[0]}',
             DSCRRelatedPerson.name == f'{last_name}, {first_name} {middle_initial[0]}',
             DSCRRelatedPerson.name == f'{last_name}, {first_name} {middle_initial[0]}.',
         )
+        dstraf_or_clause = or_(
+            DSTRAF.officer_id == seq_number,
+            DSTRAF.officer_name == f'{last_name}, {first_name}',
+            DSTRAF.officer_name == f'{last_name}, {first_name[0]}',
+            DSTRAF.officer_name == f'{last_name}, {first_name} {middle_initial[0]}',
+            DSTRAF.officer_name == f'{last_name}, {first_name} {middle_initial[0]}.',
+        )
+    dscr = and_(
+        dscr_or_clause,
+        DSCRRelatedPerson.connection.like('%POLICE%')
+    )
+    
+    q1 = Case.query\
+        .join(DSCRRelatedPerson, Case.case_number == DSCRRelatedPerson.case_number)\
+        .filter(dscr)
+    q2 = Case.query\
+        .join(DSTRAF, Case.case_number == DSTRAF.case_number)\
+        .filter(dstraf_or_clause)
+    query = q1.union(q2)
 
-    query = DSCR.query.join(DSCRRelatedPerson)\
-        .filter(DSCR.court_system == 'DISTRICT COURT FOR BALTIMORE CITY - CRIMINAL SYSTEM')\
-        .filter(DSCRRelatedPerson.connection.like('%POLICE%'))\
-        .filter(or_clause)
+    table = Case.__table__
+    if req:
+        query = build_where(query, table, req)
+        query = build_order_by(query, table, req)
+        query = build_group_by(query, table, req)
 
-    query = build_where(query, table, req)
-    query = build_order_by(query, table, req)
-    query = build_group_by(query, table, req)
+    if total_only:
+        return query.count()
+
     query = build_limit(query, table, req)
-
     results = query.all()
 
     results_len = len(results)
+    start_row = int(req['startRow'])
+    end_row = int(req['endRow'])
+    page_size = end_row - start_row
     current_last_row = start_row + results_len
     last_row = current_last_row if current_last_row <= end_row else -1
     rows = results[:page_size]
