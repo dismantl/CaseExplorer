@@ -74,7 +74,7 @@ const genRoutes = metadata => {
     }
     routes = routes.concat([
       <Route path="/bpd/:seq" key="/bpd/:seq">
-        <ServerSideGrid byCop metadata={metadata} table="dscr" />
+        <ServerSideGrid byCop metadata={metadata} table="cases" />
       </Route>,
       <Route path="/cases" key="/cases">
         <ServerSideGrid metadata={metadata} table="cases" />
