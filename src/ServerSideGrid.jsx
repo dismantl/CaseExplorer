@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useState } from 'react';
 import { API } from 'aws-amplify';
 import environment from './config';
 import { AgGridReact, AgGridColumn } from 'ag-grid-react';
@@ -58,6 +58,7 @@ const ServerSideGrid = props => {
     path,
     initialized = false;
   const { table, metadata, byCop } = props;
+  const [loadedData, { setTrue: setLoadedData }] = useBoolean(false);
 
   let coachmarkDefault = false;
   if (!localStorage['caseExplorerVisited']) {
@@ -110,6 +111,7 @@ const ServerSideGrid = props => {
     promise
       .then(response => {
         params.success({ rowData: response.rows, rowCount: response.lastRow });
+        setLoadedData(true);
         if (!initialized) initialized = true;
         else {
           const statusBarComponent = api.getStatusPanel('customStatusBarKey');
@@ -201,7 +203,7 @@ const ServerSideGrid = props => {
       <>
         <div style={{ height: '100vh' }} className="ag-theme-balham">
           <div className="coachmark-target" ref={coachmarkTarget}></div>
-          {isCoachmarkVisible && (
+          {isCoachmarkVisible && loadedData && (
             <Coachmark
               target={coachmarkTarget.current}
               positioningContainerProps={{
