@@ -252,7 +252,11 @@ const ServerSideGrid = props => {
                   statusPanel: 'customStatusBar',
                   key: 'customStatusBarKey',
                   align: 'center',
-                  statusPanelParams: { table: table }
+                  statusPanelParams: {
+                    table: table,
+                    byCop: byCop,
+                    seq: seq
+                  }
                 }
               ]
             }}

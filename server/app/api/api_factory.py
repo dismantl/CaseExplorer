@@ -30,6 +30,7 @@ def api_factory(schemas, model, description=None):
     @api.route(f'/{table_name}/filtered/total')
     class APIResourceFiltered(Resource):
         f'''Total number of {table_name.upper()} cases based on search criteria'''
+
         @accepts(schema=QueryParams, api=api)
         def post(self):
             f'''Get total number of {table_name.upper()} cases based on search criteria'''
@@ -54,17 +55,32 @@ def api_factory(schemas, model, description=None):
             def get(self, case_number):
                 return get_eager_query(model).filter(model.case_number == case_number).one()
 
-    if table_name == 'dscr':
+    if table_name == 'cases':
         @api.route('/bpd/seq/<string:seq_number>')
         class CasesByCop(Resource):
-            '''DSCR cases by BPD officer sequence number'''
+            '''Cases by BPD officer sequence number'''
 
             @accepts(schema=QueryParams, api=api)
             @api.marshal_with(schema_results)
             def post(self, seq_number):
-                '''Get a list of DSCR cases by BPD officer sequence number'''
+                '''Get a list of cases by BPD officer sequence number'''
 
                 return DataService.fetch_cases_by_cop(seq_number, request.parsed_obj)
+        
+        @api.route('/bpd/seq/<string:seq_number>/total')
+        class TotalByCop(Resource):
+            '''Total number of cases by BPD officer sequence number'''
+
+            @accepts(schema=QueryParams, api=api)
+            def post(self, seq_number):
+                '''Get total number of cases based on BPD officer sequence number and search criteria'''
+
+                return DataService.fetch_filtered_total_by_cop(seq_number, request.parsed_obj)
+            
+            def get(self, seq_number):
+                '''Get total number of cases based on BPD officer sequence number'''
+
+                return DataService.fetch_filtered_total_by_cop(seq_number)
 
     @api.route(f'/{table_name}/total')
     class APITotal(Resource):

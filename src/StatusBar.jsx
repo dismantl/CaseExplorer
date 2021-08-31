@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import environment from './config';
 import { checkStatus } from './utils';
 import { API } from 'aws-amplify';
@@ -12,18 +12,23 @@ export default class CustomStatusBar extends React.Component {
       count: 0,
       table: props.table,
       fetching: false,
-      currentParams: null
+      currentParams: null,
+      byCop: props.byCop,
+      seq: props.seq
     };
   }
 
   componentDidMount() {
+    const path = this.state.byCop
+      ? `/api/bpd/seq/${this.state.seq}/total`
+      : `/api/${this.state.table}/total`;
     let promise;
     if (environment === 'development') {
-      promise = fetch(`/api/${this.state.table}/total`)
+      promise = fetch(path)
         .then(checkStatus)
         .then(httpResponse => httpResponse.json());
     } else {
-      promise = API.get(apiName, `/api/${this.state.table}/total`);
+      promise = API.get(apiName, path);
     }
     promise
       .then(response => {
@@ -36,7 +41,9 @@ export default class CustomStatusBar extends React.Component {
 
   updateTotal(params) {
     this.setState({ filtered: true, fetching: true, currentParams: params });
-    const path = `/api/${this.state.table}/filtered/total`;
+    const path = this.state.byCop
+      ? `/api/bpd/seq/${this.state.seq}/total`
+      : `/api/${this.state.table}/filtered/total`;
     let countPromise;
     if (environment === 'development') {
       countPromise = fetch(path, {
