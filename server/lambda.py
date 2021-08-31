@@ -75,10 +75,10 @@ def handler(event, context):
                 seq_no = bpd_match.group('sequence_number')
                 req = json.loads(json.loads(event['body']))
                 results = DataService.fetch_cases_by_cop(seq_no, req)
-                results['rows'] = [marshal(row, rest_api.api_schemas['DSCR']) for row in results['rows']]
+                results['rows'] = [marshal(row, rest_api.api_schemas['Case']) for row in results['rows']]
                 return gen_response(200, json.dumps(results))
             elif bpd_total_match:
-                seq_no = bpd_match.group('sequence_number')
+                seq_no = bpd_total_match.group('sequence_number')
                 if event.get('body'):  # POST
                     req = json.loads(event['body'])
                     total = DataService.fetch_filtered_total_by_cop(seq_no, req)
