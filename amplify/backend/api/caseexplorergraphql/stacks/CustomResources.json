@@ -525,6 +525,132 @@
 				]
 			  }
 			}
+		  },
+		  "QueryDSCPResolver": {
+			"Type": "AWS::AppSync::Resolver",
+			"Properties": {
+			  "ApiId": {
+				"Ref": "AppSyncApiId"
+			  },
+			  "DataSourceName": {
+				"Fn::GetAtt": [
+				  "CaseExplorerLambdaDataSource",
+				  "Name"
+				]
+			  },
+			  "TypeName": "Query",
+			  "FieldName": "dscp",
+			  "RequestMappingTemplateS3Location": {
+				"Fn::Sub": [
+				  "s3://${S3DeploymentBucket}/${S3DeploymentRootKey}/resolvers/Query.dscp.req.vtl",
+				  {
+					"S3DeploymentBucket": {
+					  "Ref": "S3DeploymentBucket"
+					},
+					"S3DeploymentRootKey": {
+					  "Ref": "S3DeploymentRootKey"
+					}
+				  }
+				]
+			  },
+			  "ResponseMappingTemplateS3Location": {
+				"Fn::Sub": [
+				  "s3://${S3DeploymentBucket}/${S3DeploymentRootKey}/resolvers/Query.results.res.vtl",
+				  {
+					"S3DeploymentBucket": {
+					  "Ref": "S3DeploymentBucket"
+					},
+					"S3DeploymentRootKey": {
+					  "Ref": "S3DeploymentRootKey"
+					}
+				  }
+				]
+			  }
+			}
+		  },
+		  "QueryKResolver": {
+			"Type": "AWS::AppSync::Resolver",
+			"Properties": {
+			  "ApiId": {
+				"Ref": "AppSyncApiId"
+			  },
+			  "DataSourceName": {
+				"Fn::GetAtt": [
+				  "CaseExplorerLambdaDataSource",
+				  "Name"
+				]
+			  },
+			  "TypeName": "Query",
+			  "FieldName": "k",
+			  "RequestMappingTemplateS3Location": {
+				"Fn::Sub": [
+				  "s3://${S3DeploymentBucket}/${S3DeploymentRootKey}/resolvers/Query.k.req.vtl",
+				  {
+					"S3DeploymentBucket": {
+					  "Ref": "S3DeploymentBucket"
+					},
+					"S3DeploymentRootKey": {
+					  "Ref": "S3DeploymentRootKey"
+					}
+				  }
+				]
+			  },
+			  "ResponseMappingTemplateS3Location": {
+				"Fn::Sub": [
+				  "s3://${S3DeploymentBucket}/${S3DeploymentRootKey}/resolvers/Query.results.res.vtl",
+				  {
+					"S3DeploymentBucket": {
+					  "Ref": "S3DeploymentBucket"
+					},
+					"S3DeploymentRootKey": {
+					  "Ref": "S3DeploymentRootKey"
+					}
+				  }
+				]
+			  }
+			}
+		  },
+		  "QueryPGResolver": {
+			"Type": "AWS::AppSync::Resolver",
+			"Properties": {
+			  "ApiId": {
+				"Ref": "AppSyncApiId"
+			  },
+			  "DataSourceName": {
+				"Fn::GetAtt": [
+				  "CaseExplorerLambdaDataSource",
+				  "Name"
+				]
+			  },
+			  "TypeName": "Query",
+			  "FieldName": "pg",
+			  "RequestMappingTemplateS3Location": {
+				"Fn::Sub": [
+				  "s3://${S3DeploymentBucket}/${S3DeploymentRootKey}/resolvers/Query.pg.req.vtl",
+				  {
+					"S3DeploymentBucket": {
+					  "Ref": "S3DeploymentBucket"
+					},
+					"S3DeploymentRootKey": {
+					  "Ref": "S3DeploymentRootKey"
+					}
+				  }
+				]
+			  },
+			  "ResponseMappingTemplateS3Location": {
+				"Fn::Sub": [
+				  "s3://${S3DeploymentBucket}/${S3DeploymentRootKey}/resolvers/Query.results.res.vtl",
+				  {
+					"S3DeploymentBucket": {
+					  "Ref": "S3DeploymentBucket"
+					},
+					"S3DeploymentRootKey": {
+					  "Ref": "S3DeploymentRootKey"
+					}
+				  }
+				]
+			  }
+			}
 		  }
 	},
 	"Conditions": {
