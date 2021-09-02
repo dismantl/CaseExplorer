@@ -101,6 +101,9 @@ def handler(event, context):
                 table_name = case_match.group('table_name')
                 total = DataService.fetch_total(table_name)
                 return gen_response(200, total)
+            elif path == '/api/cases/count':  # only used by Case Harvester README badge
+                total = DataService.fetch_total('cases')
+                return gen_response(200, json.dumps({'count': total}))
             elif case_match:
                 table_name = case_match.group('table_name')
                 case_number = case_match.group('case_number')

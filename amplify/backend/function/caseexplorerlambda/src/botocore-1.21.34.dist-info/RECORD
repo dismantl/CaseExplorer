@@ -1,8 +1,9 @@
 botocore-1.21.34.dist-info/INSTALLER,sha256=zuuue4knoyJ-UwPPXg8fezS7VCrXJQrAP7zeNuwvFQg,4
 botocore-1.21.34.dist-info/LICENSE.txt,sha256=DVQuDIgE45qn836wDaWnYhSdxoLXgpRRKH4RuTjpRZQ,10174
 botocore-1.21.34.dist-info/METADATA,sha256=BKCb5x_UpsKuXX5k9k7xMjIEbxAhkf90sVRpoGfs84Y,5458
+botocore-1.21.34.dist-info/NOTICE,sha256=EngvHu56Vj2p8NF_NeI3lEcCDlxepA-x5i5i2-1jyTk,3636
 botocore-1.21.34.dist-info/RECORD,,
-botocore-1.21.34.dist-info/WHEEL,sha256=EVRjI69F5qVjm_YgqcTXPnTAv3BfSUr0WVAHuSP3Xoo,92
+botocore-1.21.34.dist-info/WHEEL,sha256=OqRkF0eY5GHssMorFjlbTIq072vpHpF60fIQA6lS9xA,92
 botocore-1.21.34.dist-info/top_level.txt,sha256=IdlNr9dnwi3lQt66dKnShE5HBUhIqBFqJmVhm11aijk,9
 botocore/__init__.py,sha256=fUgReh5Z5nvXYejwvcw4jzYnxpoVw1BSQSkobhFaAc0,3880
 botocore/__pycache__/__init__.cpython-37.pyc,,
