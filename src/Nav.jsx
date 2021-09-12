@@ -32,7 +32,7 @@ let navLinkGroups: INavLinkGroup[] = [
         expandAriaLabel: 'Expand section',
         collapseAriaLabel: 'Collapse section',
         links: [],
-        isExpanded: true
+        isExpanded: false
       }
     ],
     isExpanded: true
@@ -57,11 +57,8 @@ let navLinkGroups: INavLinkGroup[] = [
   }
 ];
 
-const genNavItem = (metadata, table) => {
+const genNavItem = (metadata, currentTable, table) => {
   const table_metadata = metadata[table];
-  let currentTable = getURLLastPart();
-  if (currentTable.indexOf('_') !== -1)
-    currentTable = currentTable.substring(0, currentTable.indexOf('_'));
   let links = [{ name: 'Overview', url: '/' + table, key: table }];
   for (const subtable of table_metadata.subtables) {
     const label = toTitleCase(subtable.replace(/^[^_]+_/, ''));
@@ -81,23 +78,29 @@ const genNavItem = (metadata, table) => {
 };
 
 export const genNavStructure = metadata => {
+  let currentTable = getURLLastPart();
+  if (currentTable.indexOf('_') !== -1)
+    currentTable = currentTable.substring(0, currentTable.indexOf('_'));
+  navLinkGroups[0].links[2].isExpanded =
+    currentTable.substring(0, 3) === 'ody' ? false : true;
   // MDEC
   navLinkGroups[0].links[1].links = [
-    genNavItem(metadata.tables, 'odycrim'),
-    genNavItem(metadata.tables, 'odytraf'),
-    genNavItem(metadata.tables, 'odycivil'),
-    genNavItem(metadata.tables, 'odycvcit')
+    genNavItem(metadata.tables, currentTable, 'odycrim'),
+    genNavItem(metadata.tables, currentTable, 'odytraf'),
+    genNavItem(metadata.tables, currentTable, 'odycivil'),
+    genNavItem(metadata.tables, currentTable, 'odycvcit')
   ];
   // non-MDEC
   navLinkGroups[0].links[2].links = [
-    genNavItem(metadata.tables, 'dscr'),
-    genNavItem(metadata.tables, 'k'),
-    genNavItem(metadata.tables, 'dstraf'),
-    genNavItem(metadata.tables, 'dscivil'),
-    genNavItem(metadata.tables, 'cc'),
-    genNavItem(metadata.tables, 'dscp'),
-    genNavItem(metadata.tables, 'dsk8'),
-    genNavItem(metadata.tables, 'pg')
+    genNavItem(metadata.tables, currentTable, 'dscr'),
+    genNavItem(metadata.tables, currentTable, 'k'),
+    genNavItem(metadata.tables, currentTable, 'dstraf'),
+    genNavItem(metadata.tables, currentTable, 'dscivil'),
+    genNavItem(metadata.tables, currentTable, 'cc'),
+    genNavItem(metadata.tables, currentTable, 'dscp'),
+    genNavItem(metadata.tables, currentTable, 'dsk8'),
+    genNavItem(metadata.tables, currentTable, 'pg'),
+    genNavItem(metadata.tables, currentTable, 'dv')
   ];
 };
 
