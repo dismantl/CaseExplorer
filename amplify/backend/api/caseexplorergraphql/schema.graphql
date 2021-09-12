@@ -249,18 +249,19 @@ type Case {
   parse_exempt: Boolean
   active: Boolean
   allow_unparsed_data: Boolean
-  dsk8: DSK8
-  k: K
-  dstraf: DSTRAF
-  dscivil: DSCIVIL
-  cc: CC
-  dscp: DSCP
-  odycrim: ODYCRIM
-  odytraf: ODYTRAF
   odycvcit: ODYCVCIT
   dscr: DSCR
-  odycivil: ODYCIVIL
+  dv: DV
+  cc: CC
+  dscp: DSCP
   pg: PG
+  odytraf: ODYTRAF
+  odycrim: ODYCRIM
+  dsk8: DSK8
+  odycivil: ODYCIVIL
+  k: K
+  dscivil: DSCIVIL
+  dstraf: DSTRAF
 }
 
 type CaseResultsResponse {
@@ -997,6 +998,63 @@ type DSTRAFTrial {
   location: String
   reason: String
   case_number: String
+}
+
+type DV {
+  defendants: [DVDefendant]
+  defendant_attorneys: [DVDefendantAttorney]
+  hearings: [DVHearing]
+  events: [DVEvent]
+  id: Int
+  court_system: String
+  case_type: String
+  filing_date: AWSDate
+  filing_date_str: String
+  case_status: String
+  order_valid_thru: AWSDate
+  order_valid_thru_str: String
+  case_number: String
+}
+
+type DVDefendant {
+  id: Int
+  city: String
+  state: String
+  case_number: String
+}
+
+type DVDefendantAttorney {
+  id: Int
+  name: String
+  case_number: String
+}
+
+type DVEvent {
+  id: Int
+  event_date: AWSDate
+  event_date_str: String
+  description: String
+  case_number: String
+}
+
+type DVHearing {
+  id: Int
+  hearing_date: AWSDate
+  hearing_date_str: String
+  hearing_time: AWSTime
+  hearing_time_str: String
+  room: String
+  location: String
+  served_date: AWSDate
+  served_date_str: String
+  hearing_type: String
+  result: String
+  case_number: String
+}
+
+type DVResultsResponse {
+  rows: [DV]
+  last_row: Int
 }
 
 
@@ -2495,18 +2553,19 @@ type PGResultsResponse {
 }
 
 type Query {
-  dsk8(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSK8ResultsResponse
-  k(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): KResultsResponse
-  dstraf(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSTRAFResultsResponse
-  dscivil(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSCIVILResultsResponse
-  cc(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): CCResultsResponse
-  dscp(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSCPResultsResponse
-  odycrim(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCRIMResultsResponse
-  odytraf(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYTRAFResultsResponse
   odycvcit(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCVCITResultsResponse
   dscr(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSCRResultsResponse
-  odycivil(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCIVILResultsResponse
+  dv(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DVResultsResponse
+  cc(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): CCResultsResponse
+  dscp(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSCPResultsResponse
   pg(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): PGResultsResponse
+  odytraf(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYTRAFResultsResponse
+  odycrim(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCRIMResultsResponse
+  dsk8(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSK8ResultsResponse
+  odycivil(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCIVILResultsResponse
+  k(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): KResultsResponse
+  dscivil(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSCIVILResultsResponse
+  dstraf(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSTRAFResultsResponse
   cases(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): CaseResultsResponse
 }
 
