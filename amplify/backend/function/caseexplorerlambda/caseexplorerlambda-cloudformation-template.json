@@ -75,6 +75,7 @@
           ]
         },
         "Runtime": "python3.7",
+        "MemorySize": 256,
         "Timeout": "300",
         "VpcConfig": {
           "SecurityGroupIds": [
