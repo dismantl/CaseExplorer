@@ -82,7 +82,9 @@ export const genNavStructure = metadata => {
   if (currentTable.indexOf('_') !== -1)
     currentTable = currentTable.substring(0, currentTable.indexOf('_'));
   navLinkGroups[0].links[2].isExpanded =
-    currentTable.substring(0, 3) === 'ody' ? false : true;
+    currentTable === '' || currentTable.substring(0, 3) === 'ody'
+      ? false
+      : true;
   // MDEC
   navLinkGroups[0].links[1].links = [
     genNavItem(metadata.tables, currentTable, 'odycrim'),
