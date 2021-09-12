@@ -10,15 +10,15 @@ const awsmobile = {
   aws_cloud_logic_custom: [
     {
       name: 'caseexplorerapi',
-      endpoint: 'https://znhgatkg70.execute-api.us-east-1.amazonaws.com/prod',
+      endpoint: 'https://u58tbar758.execute-api.us-east-1.amazonaws.com/prod',
       region: 'us-east-1'
     }
   ],
   aws_appsync_graphqlEndpoint:
-    'https://ajcoriu25jauln7kfslxfwbdbu.appsync-api.us-east-1.amazonaws.com/graphql',
+    'https://lv7xshcs4jgppl6wrqj7w6lxnq.appsync-api.us-east-1.amazonaws.com/graphql',
   aws_appsync_region: 'us-east-1',
   aws_appsync_authenticationType: 'API_KEY',
-  aws_appsync_apiKey: 'da2-ymve6ulhvbgelecg7ah5ov56ga'
+  aws_appsync_apiKey: 'da2-lgd6oddwivea3lw4pdon2tncuy'
 };
 
 export default awsmobile;
