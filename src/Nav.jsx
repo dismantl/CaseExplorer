@@ -102,7 +102,8 @@ export const genNavStructure = metadata => {
     genNavItem(metadata.tables, currentTable, 'dscp'),
     genNavItem(metadata.tables, currentTable, 'dsk8'),
     genNavItem(metadata.tables, currentTable, 'pg'),
-    genNavItem(metadata.tables, currentTable, 'dv')
+    genNavItem(metadata.tables, currentTable, 'dv'),
+    genNavItem(metadata.tables, currentTable, 'mcci')
   ];
 };
 
