@@ -245,23 +245,21 @@ type Case {
   detail_loc: String
   last_scrape: AWSDateTime
   last_parse: AWSDateTime
-  scrape_exempt: Boolean
-  parse_exempt: Boolean
   active: Boolean
-  allow_unparsed_data: Boolean
-  dsk8: DSK8
-  odytraf: ODYTRAF
-  dscp: DSCP
-  pg: PG
-  odycivil: ODYCIVIL
-  dv: DV
-  odycvcit: ODYCVCIT
-  dscr: DSCR
-  dscivil: DSCIVIL
   k: K
   dstraf: DSTRAF
   cc: CC
+  odycvcit: ODYCVCIT
+  dscr: DSCR
+  odytraf: ODYTRAF
+  dv: DV
   odycrim: ODYCRIM
+  odycivil: ODYCIVIL
+  dscp: DSCP
+  pg: PG
+  dscivil: DSCIVIL
+  dsk8: DSK8
+  mcci: MCCI
 }
 
 type CaseResultsResponse {
@@ -1411,6 +1409,187 @@ type KSupportOrder {
   case_number: String
 }
 
+type MCCI {
+  defendants: [MCCIDefendant]
+  aliases: [MCCIAlias]
+  plaintiffs: [MCCIPlaintiff]
+  interested_parties: [MCCIInterestedParty]
+  wards: [MCCIWard]
+  garnishees: [MCCIGarnishee]
+  attorneys: [MCCIAttorney]
+  resident_agents: [MCCIResidentAgent]
+  issues: [MCCIIssue]
+  court_schedule: [MCCICourtSchedule]
+  judgments: [MCCIJudgment]
+  dockets: [MCCIDocket]
+  audio_media: [MCCIAudioMedia]
+  id: Int
+  court_system: String
+  sub_type: String
+  filing_date: AWSDate
+  filing_date_str: String
+  case_status: String
+  case_number: String
+}
+
+type MCCIAlias {
+  id: Int
+  name: String
+  party: String
+  case_number: String
+}
+
+type MCCIAttorney {
+  id: Int
+  name: String
+  appearance_date: AWSDate
+  appearance_date_str: String
+  removal_date: AWSDate
+  removal_date_str: String
+  address: String
+  city: String
+  state: String
+  zip_code: String
+  phone: String
+  defendant_id: Int
+  plaintiff_id: Int
+  ward_id: Int
+  case_number: String
+}
+
+type MCCIAudioMedia {
+  id: Int
+  audio_media: String
+  audio_start: String
+  audio_stop: String
+  docket_id: Int
+  case_number: String
+}
+
+type MCCICourtSchedule {
+  id: Int
+  date: AWSDate
+  date_str: String
+  time: AWSTime
+  time_str: String
+  judge: String
+  location: String
+  courtroom: String
+  description: String
+  case_number: String
+}
+
+type MCCIDefendant {
+  attorneys: [MCCIAttorney]
+  id: Int
+  name: String
+  address: String
+  city: String
+  state: String
+  zip_code: String
+  case_number: String
+}
+
+type MCCIDocket {
+  id: Int
+  date: AWSDate
+  date_str: String
+  docket_number: Int
+  docket_description: String
+  docket_type: String
+  filed_by: String
+  docket_text: String
+  status: String
+  ruling_judge: String
+  reference_docket: String
+  case_number: String
+}
+
+type MCCIGarnishee {
+  id: Int
+  name: String
+  address: String
+  city: String
+  state: String
+  zip_code: String
+  case_number: String
+}
+
+type MCCIInterestedParty {
+  id: Int
+  name: String
+  address: String
+  city: String
+  state: String
+  zip_code: String
+  case_number: String
+}
+
+type MCCIIssue {
+  id: Int
+  issue: String
+  case_number: String
+}
+
+type MCCIJudgment {
+  id: Int
+  date: AWSDate
+  date_str: String
+  amount: Float
+  debtor: String
+  party_role: String
+  entered: AWSDate
+  entered_str: String
+  satisfied: AWSDate
+  satisfied_str: String
+  vacated: AWSDate
+  vacated_str: String
+  amended: AWSDate
+  amended_str: String
+  renewed: AWSDate
+  renewed_str: String
+  case_number: String
+}
+
+type MCCIPlaintiff {
+  attorneys: [MCCIAttorney]
+  resident_agent: [MCCIResidentAgent]
+  id: Int
+  name: String
+  address: String
+  city: String
+  state: String
+  zip_code: String
+  case_number: String
+}
+
+type MCCIResidentAgent {
+  id: Int
+  name: String
+  address: String
+  city: String
+  state: String
+  zip_code: String
+  plaintiff_id: Int
+  case_number: String
+}
+
+type MCCIResultsResponse {
+  rows: [MCCI]
+  last_row: Int
+}
+
+type MCCIWard {
+  attorneys: [MCCIAttorney]
+  id: Int
+  name: String
+  address: String
+  city: String
+  state: String
+  zip_code: String
+  case_number: String
+}
+
 input NumberFilterModel {
   field: String!
   filter_type: String!
@@ -2553,19 +2732,20 @@ type PGResultsResponse {
 }
 
 type Query {
-  dsk8(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSK8ResultsResponse
-  odytraf(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYTRAFResultsResponse
-  dscp(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSCPResultsResponse
-  pg(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): PGResultsResponse
-  odycivil(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCIVILResultsResponse
-  dv(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DVResultsResponse
-  odycvcit(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCVCITResultsResponse
-  dscr(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSCRResultsResponse
-  dscivil(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSCIVILResultsResponse
   k(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): KResultsResponse
   dstraf(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSTRAFResultsResponse
   cc(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): CCResultsResponse
+  odycvcit(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCVCITResultsResponse
+  dscr(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSCRResultsResponse
+  odytraf(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYTRAFResultsResponse
+  dv(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DVResultsResponse
   odycrim(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCRIMResultsResponse
+  odycivil(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCIVILResultsResponse
+  dscp(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSCPResultsResponse
+  pg(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): PGResultsResponse
+  dscivil(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSCIVILResultsResponse
+  dsk8(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSK8ResultsResponse
+  mcci(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): MCCIResultsResponse
   cases(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): CaseResultsResponse
 }
 
