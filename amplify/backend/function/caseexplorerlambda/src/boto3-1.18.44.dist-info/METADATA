@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: boto3
-Version: 1.18.43
+Version: 1.18.44
 Summary: The AWS SDK for Python
 Home-page: https://github.com/boto/boto3
 Author: Amazon Web Services
@@ -18,7 +18,7 @@ Classifier: Programming Language :: Python :: 3.6
 Classifier: Programming Language :: Python :: 3.7
 Classifier: Programming Language :: Python :: 3.8
 Requires-Python: >= 3.6
-Requires-Dist: botocore (<1.22.0,>=1.21.43)
+Requires-Dist: botocore (<1.22.0,>=1.21.44)
 Requires-Dist: jmespath (<1.0.0,>=0.7.1)
 Requires-Dist: s3transfer (<0.6.0,>=0.5.0)
 Provides-Extra: crt
