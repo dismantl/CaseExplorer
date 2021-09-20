@@ -95,14 +95,16 @@ export const genNavStructure = metadata => {
   // non-MDEC
   navLinkGroups[0].links[2].links = [
     genNavItem(metadata.tables, currentTable, 'dscr'),
-    genNavItem(metadata.tables, currentTable, 'k'),
-    genNavItem(metadata.tables, currentTable, 'dstraf'),
     genNavItem(metadata.tables, currentTable, 'dscivil'),
-    genNavItem(metadata.tables, currentTable, 'cc'),
     genNavItem(metadata.tables, currentTable, 'dscp'),
+    genNavItem(metadata.tables, currentTable, 'dstraf'),
+    genNavItem(metadata.tables, currentTable, 'k'),
+    genNavItem(metadata.tables, currentTable, 'cc'),
+    genNavItem(metadata.tables, currentTable, 'dv'),
     genNavItem(metadata.tables, currentTable, 'dsk8'),
     genNavItem(metadata.tables, currentTable, 'pg'),
-    genNavItem(metadata.tables, currentTable, 'dv'),
+    genNavItem(metadata.tables, currentTable, 'pgv'),
+    genNavItem(metadata.tables, currentTable, 'mccr'),
     genNavItem(metadata.tables, currentTable, 'mcci')
   ];
 };
