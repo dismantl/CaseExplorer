@@ -123,11 +123,13 @@ def fetch_rows_by_cop(seq_number, req, total_only=False):
         officer = bpdwatch_db.query(Officer).filter(Officer.unique_internal_identifier == seq_number).one()
         last_name = officer.last_name.upper()
         first_name = officer.first_name.upper()
-        middle_initial = officer.middle_initial.upper()
-        suffix = officer.suffix.upper()
-    if suffix:
+        middle_initial = officer.middle_initial.upper() if officer.middle_initial else None
+        suffix = officer.suffix.upper() if officer.suffix else None
+    if suffix and middle_initial:
         dscr_or_clause = or_(
             DSCRRelatedPerson.officer_id == seq_number,
+            DSCRRelatedPerson.name == f'{last_name}, {first_name}',
+            DSCRRelatedPerson.name == f'{last_name}, {first_name[0]}',
             DSCRRelatedPerson.name == f'{last_name}, {first_name} {suffix}',
             DSCRRelatedPerson.name == f'{last_name}, {first_name[0]} {suffix}',
             DSCRRelatedPerson.name == f'{last_name}, {first_name} {middle_initial[0]} {suffix}',
@@ -135,12 +137,14 @@ def fetch_rows_by_cop(seq_number, req, total_only=False):
         )
         dstraf_or_clause = or_(
             DSTRAF.officer_id == seq_number,
+            DSTRAF.officer_name == f'{last_name}, {first_name}',
+            DSTRAF.officer_name == f'{last_name}, {first_name[0]}',
             DSTRAF.officer_name == f'{last_name}, {first_name} {suffix}',
             DSTRAF.officer_name == f'{last_name}, {first_name[0]} {suffix}',
             DSTRAF.officer_name == f'{last_name}, {first_name} {middle_initial[0]} {suffix}',
             DSTRAF.officer_name == f'{last_name}, {first_name} {middle_initial[0]}. {suffix}',
         )
-    else:
+    elif middle_initial:
         dscr_or_clause = or_(
             DSCRRelatedPerson.officer_id == seq_number,
             DSCRRelatedPerson.name == f'{last_name}, {first_name}',
@@ -154,6 +158,32 @@ def fetch_rows_by_cop(seq_number, req, total_only=False):
             DSTRAF.officer_name == f'{last_name}, {first_name[0]}',
             DSTRAF.officer_name == f'{last_name}, {first_name} {middle_initial[0]}',
             DSTRAF.officer_name == f'{last_name}, {first_name} {middle_initial[0]}.',
+        )
+    elif suffix:
+        dscr_or_clause = or_(
+            DSCRRelatedPerson.officer_id == seq_number,
+            DSCRRelatedPerson.name == f'{last_name}, {first_name}',
+            DSCRRelatedPerson.name == f'{last_name}, {first_name[0]}',
+            DSCRRelatedPerson.name == f'{last_name}, {first_name} {suffix}',
+            DSCRRelatedPerson.name == f'{last_name}, {first_name[0]} {suffix}'
+        )
+        dstraf_or_clause = or_(
+            DSTRAF.officer_id == seq_number,
+            DSTRAF.officer_name == f'{last_name}, {first_name}',
+            DSTRAF.officer_name == f'{last_name}, {first_name[0]}',
+            DSTRAF.officer_name == f'{last_name}, {first_name} {suffix}',
+            DSTRAF.officer_name == f'{last_name}, {first_name[0]} {suffix}'
+        )
+    else:
+        dscr_or_clause = or_(
+            DSCRRelatedPerson.officer_id == seq_number,
+            DSCRRelatedPerson.name == f'{last_name}, {first_name}',
+            DSCRRelatedPerson.name == f'{last_name}, {first_name[0]}'
+        )
+        dstraf_or_clause = or_(
+            DSTRAF.officer_id == seq_number,
+            DSTRAF.officer_name == f'{last_name}, {first_name}',
+            DSTRAF.officer_name == f'{last_name}, {first_name[0]}'
         )
     dscr = and_(
         dscr_or_clause,
