@@ -39,7 +39,7 @@
         "aws:asset:property": "Code"
       },
       "Properties": {
-        "Handler": "lambda.handler",
+        "Handler": "server.lambda.handler",
         "FunctionName": {
           "Fn::If": [
             "ShouldNotCreateEnvResources",

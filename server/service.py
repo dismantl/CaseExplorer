@@ -1,13 +1,10 @@
 import re
-from sqlalchemy import cast, Date
+from sqlalchemy import cast, Date, create_engine
 from sqlalchemy.sql import select, func, and_, or_, text
-# from sqlalchemy.sql.expression import table
-from flask import current_app
-import json
 from . import models
-from .models import *
-from .utils import get_orm_class_by_name, get_eager_query, db_session, get_root_model_list
-from .officer import Officer
+from .models import ColumnMetadata, Case, DSCRRelatedPerson, DSTRAF
+from .utils import get_orm_class_by_name, get_eager_query, db_session, get_root_model_list, is_lambda
+from .config import config
 
 
 class DataService:
@@ -33,22 +30,24 @@ class DataService:
 
     @classmethod
     def fetch_seq_number_by_id(cls, id):
-        with db_session(current_app.config.bpdwatch_db_engine) as bpdwatch_db:
+        from .officer import Officer
+        with db_session(create_engine(config.BPDWATCH_DATABASE_URI)) as bpdwatch_db:
             officer = bpdwatch_db.query(Officer).get(id)
             return officer.unique_internal_identifier
 
 
     @classmethod
     def fetch_label_by_cop(cls, seq_number):
-        with db_session(current_app.config.bpdwatch_db_engine) as bpdwatch_db:
+        from .officer import Officer
+        with db_session(create_engine(config.BPDWATCH_DATABASE_URI)) as bpdwatch_db:
             officer = bpdwatch_db.query(Officer).filter(Officer.unique_internal_identifier == seq_number).one()
             return f'{officer.job_title()} {officer.full_name()} ({seq_number})'
 
 
     @classmethod
-    def fetch_rows_orm(cls, table_name, req):
+    def fetch_rows_orm(cls, db, table_name, req):
         orm_cls = get_orm_class_by_name(table_name)
-        result = fetch_rows_from_model(orm_cls, req)
+        result = fetch_rows_from_model(db, orm_cls, req)
         return {
             'rows': result['rows'],
             'last_row': result['last_row']
@@ -65,35 +64,35 @@ class DataService:
     
     @classmethod
     def fetch_metadata(cls):
-        query_results = ColumnMetadata.query.all()
-        column_metadata = {}
-        for result in query_results:
-            if result.redacted == True:
-                continue
-            if result.table not in column_metadata:
-                column_metadata[result.table] = {}
-            column_metadata[result.table][result.column_name] = {
-                'label': result.label,
-                'description': result.description,
-                'width_pixels': result.width_pixels,
-                'allowed_values': result.allowed_values,
-                'order': result.order
-            }
-
-        table_metadata = {}
-        for root_model in get_root_model_list(models):
-            # model_list.append(root_model)
-            subtables = []
-            for rel_name, relationship in root_model.__mapper__.relationships.items():
-                if relationship.target.name == 'cases':
+        with db_session() as db:
+            query_results = db.query(ColumnMetadata).all()
+            column_metadata = {}
+            for result in query_results:
+                if result.redacted == True:
                     continue
-                model = get_orm_class_by_name(relationship.target.name)
-                if model.__table__.name not in subtables:
-                    subtables.append(model.__table__.name)
-            table_metadata[root_model.__table__.name] = {
-                'subtables': subtables,
-                'description': root_model.__doc__
-            }
+                if result.table not in column_metadata:
+                    column_metadata[result.table] = {}
+                column_metadata[result.table][result.column_name] = {
+                    'label': result.label,
+                    'description': result.description,
+                    'width_pixels': result.width_pixels,
+                    'allowed_values': result.allowed_values,
+                    'order': result.order
+                }
+
+            table_metadata = {}
+            for root_model in get_root_model_list(models):
+                subtables = []
+                for rel_name, relationship in root_model.__mapper__.relationships.items():
+                    if relationship.target.name == 'cases':
+                        continue
+                    model = get_orm_class_by_name(relationship.target.name)
+                    if model.__table__.name not in subtables:
+                        subtables.append(model.__table__.name)
+                table_metadata[root_model.__table__.name] = {
+                    'subtables': subtables,
+                    'description': root_model.__doc__
+                }
         return {
             'columns': column_metadata,
             'tables': table_metadata
@@ -119,7 +118,8 @@ class DataService:
 
 
 def fetch_rows_by_cop(seq_number, req, total_only=False):
-    with db_session(current_app.config.bpdwatch_db_engine) as bpdwatch_db:
+    from .officer import Officer
+    with db_session(create_engine(config.BPDWATCH_DATABASE_URI)) as bpdwatch_db:
         officer = bpdwatch_db.query(Officer).filter(Officer.unique_internal_identifier == seq_number).one()
         last_name = officer.last_name.upper()
         first_name = officer.first_name.upper()
@@ -224,13 +224,16 @@ def fetch_rows_by_cop(seq_number, req, total_only=False):
     }
 
 
-def fetch_rows_from_model(cls, req, eager=False, total_only=False):
+def fetch_rows_from_model(db, cls, req, eager=False, total_only=False):
     start_row = int(req['startRow'])
     end_row = int(req['endRow'])
     page_size = end_row - start_row
     table = cls.__table__
 
-    query = get_eager_query(cls) if eager else cls.query
+    if is_lambda():
+        query = get_eager_query(cls, db) if eager else db.query(cls)
+    else:
+        query = get_eager_query(cls) if eager else cls.query
 
     # query = build_select(table, req)
     query = build_where(query, table, req)

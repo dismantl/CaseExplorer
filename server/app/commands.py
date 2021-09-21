@@ -5,7 +5,10 @@ import logging
 from flask.cli import with_appcontext
 from sqlalchemy import distinct
 from sqlalchemy.dialects.postgresql import insert
-from .utils import db_session, get_case_model_list
+import sys
+sys.path.append('..')
+
+from ..utils import db_session, get_case_model_list
 
 logger = logging.getLogger(__name__)
 

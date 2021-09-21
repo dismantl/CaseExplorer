@@ -1,9 +1,10 @@
-from .models import DSCRRelatedPerson
+import os
 import logging
 from logging.handlers import RotatingFileHandler
+from sqlalchemy import create_engine
 from sqlalchemy.orm import relation, selectinload, lazyload, sessionmaker
 from contextlib import contextmanager
-from flask import current_app
+from .config import config
 
 LOAD_STRATEGY = selectinload
 
@@ -66,8 +67,11 @@ def get_model_name_by_table_name(table_name):
             return model.__name__
     raise TableNotFound(f'Invalid table name {table_name}')
 
-def get_eager_query(model):
-    query = model.query
+def get_eager_query(model, db=None):
+    if db:
+        query = db.query(model)
+    else:
+        query = model.query
     visited_models = [model]
 
     def apply_load_strategy(query, parent_model, path=()):
@@ -86,7 +90,7 @@ def get_eager_query(model):
 @contextmanager
 def db_session(engine=None):
     """Provide a transactional scope around a series of operations."""
-    engine = engine or current_app.config.db_engine
+    engine = engine or create_engine(config.SQLALCHEMY_DATABASE_URI)
     db_factory = sessionmaker(bind = engine)
     db = db_factory()
     try:
@@ -98,6 +102,5 @@ def db_session(engine=None):
     finally:
         db.close()
 
-def get_case_numbers_by_officer_sequence_number(sequence_number):
-    related_persons = DSCRRelatedPerson.query.filter(DSCRRelatedPerson.officer_id == sequence_number).all()
-    return list(dict.fromkeys([x.case_number for x in related_persons]))
+def is_lambda():
+    return(os.getenv('AWS_LAMBDA_FUNCTION_NAME'))

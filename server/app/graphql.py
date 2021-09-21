@@ -3,7 +3,7 @@ import decimal
 from graphene import ObjectType, InputObjectType, List, Schema, Field, Int, Union, String, Boolean, Float
 from graphene.types.datetime import Date, DateTime, Time
 
-from .utils import get_root_model_list, get_orm_class_by_name
+from ..utils import get_root_model_list, get_orm_class_by_name
 
 class ValueColumn(InputObjectType):
     id = String()
@@ -58,8 +58,10 @@ class GraphQL:
             return self.init_app(app)
 
     def init_app(self, app):
-        from . import db
-        from .models.common import TableBase
+        # from . import db
+        from flask_sqlalchemy import SQLAlchemy
+        db = SQLAlchemy()
+        from ..models.common import TableBase
         TableBase.query = db.session.query_property()
         self.generate_schema()
         self.register_view(app)
@@ -79,7 +81,7 @@ class GraphQL:
         return self.generate_schema()
 
     def generate_schema(self):
-        from . import models
+        from .. import models
         if not self.schema:
             all_types = {}
             root_types = {}
@@ -184,7 +186,7 @@ def resolver_factory(model):
     def resolve_row_data(parent, info, start_row, end_row, row_group_cols,
                          value_cols, pivot_cols, pivot_mode, group_keys,
                          filter_model, sort_model):
-        from .service import DataService
+        from ..service import DataService
         results = DataService.fetch_rows_orm(
             model,
             {

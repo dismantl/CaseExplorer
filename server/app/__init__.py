@@ -5,23 +5,22 @@ from flask_restx import Api
 from sqlalchemy import create_engine
 
 from . import commands
-from .config import config
-from .utils import configure_logging
+from ..config import config
+from ..utils import configure_logging
 from .graphql import GraphQL
 from .api import RESTAPI
-from .service import DataService
+from ..service import DataService
 
 db = SQLAlchemy()
 graphql_service = GraphQL()
 data_service = DataService()
 rest_api = RESTAPI()
 
-def create_app(config_name):
+def create_app():
     app = Flask(__name__)
-    app.config.from_object(config[config_name])
-    config[config_name].init_app(app)
-    app.config.db_engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
-    app.config.bpdwatch_db_engine = create_engine(app.config['BPDWATCH_DATABASE_URI'])
+    app.config.from_object(config)
+    # app.config.db_engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+    # app.config.bpdwatch_db_engine = create_engine(app.config['BPDWATCH_DATABASE_URI'])
     configure_logging(app)
 
     # Module initialization
@@ -40,4 +39,4 @@ def create_app(config_name):
     return app
 
 
-app = create_app(os.getenv('FLASK_ENV') or 'default')
+# app = create_app()

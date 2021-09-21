@@ -1,11 +1,16 @@
-from .. import models
-from ..service import DataService
-from ..utils import get_case_model_list, db_session
-from ..officer import Officer
+import sys
+
+sys.path.append("..")
+
+from ... import models
+from ...service import DataService
+from ...utils import get_case_model_list, db_session
+from ...officer import Officer
 from .api_factory import api_factory
-from flask import Blueprint, current_app
+from flask import Blueprint
 from flask_restx import Api
 import json
+
 
 class RESTAPI:
     def __init__(self, app=None, root=None):
@@ -13,7 +18,7 @@ class RESTAPI:
             return self.init_app(app, root)
 
     def init_app(self, app, root='api'):
-        from .schema_factory import schema_factory
+        from ...schema_factory import schema_factory
 
         bp = Blueprint('api', __name__)
         self.bp = bp

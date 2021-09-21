@@ -3,8 +3,8 @@ from flask_accepts import accepts
 from flask_restx import Namespace, Resource
 
 from .interface import QueryParams
-from ..service import DataService
-from ..utils import get_eager_query, db_session, get_model_name_by_table_name, get_orm_class_by_name
+from ...service import DataService
+from ...utils import get_eager_query, db_session, get_model_name_by_table_name, get_orm_class_by_name
 
 def api_factory(schemas, model, description=None):
     table_name = model.__tablename__
