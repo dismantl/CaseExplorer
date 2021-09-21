@@ -39,7 +39,7 @@ start_frontend:
 	npm run start
 
 .PHONY: deploy_backend
-deploy_backend: copy_backend generate_api_specs
+deploy_backend: copy_backend
 	amplify push -y
 
 .PHONY: deploy_frontend
