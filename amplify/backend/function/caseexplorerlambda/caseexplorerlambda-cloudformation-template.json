@@ -102,6 +102,17 @@
         }
       }
     },
+    "LambdaFunctionVersion": {
+      "Type": "AWS::Lambda::Version",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "LambdaFunction"
+        },
+        "ProvisionedConcurrencyConfig": {
+          "ProvisionedConcurrentExecutions": 5
+        }
+      }
+    },
     "LambdaExecutionRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
