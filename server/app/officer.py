@@ -1,4 +1,4 @@
-from sqlalchemy import String, Integer, Date, ForeignKey, Boolean
+from sqlalchemy import String, Integer, Date, ForeignKey, Boolean, Index
 from sqlalchemy.orm import relationship
 from datetime import date
 from .models.common import TableBase, MetaColumn as Column
@@ -11,7 +11,7 @@ class Officer(TableBase):
     first_name = Column(String)
     middle_initial = Column(String)
     suffix = Column(String)
-    unique_internal_identifier = Column(String)
+    unique_internal_identifier = Column(String, unique=True)
     # assignments = relationship('Assignment', backref='officer', lazy='dynamic')
     assignments_lazy = relationship('Assignment')
 
@@ -53,3 +53,11 @@ class Job(TableBase):
     job_title = Column(String(255), index=True, unique=False, nullable=False)
     is_sworn_officer = Column(Boolean, index=True, default=True)
     order = Column(Integer, index=True, unique=False, nullable=False)
+
+
+class CopCache(TableBase):
+    __tablename__ = 'cops_cache'
+    __table_args__ = (Index('ixh_cops_cache_officer_seq_no', 'officer_seq_no', postgresql_using='hash'),)
+
+    officer_seq_no = Column(String, ForeignKey('officers.unique_internal_identifier'), primary_key=True)
+    case_number = Column(String, ForeignKey('cases.case_number'), primary_key=True)

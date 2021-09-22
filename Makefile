@@ -3,9 +3,50 @@ FRONTEND_DIR=src
 LAMBDA_TARGET=amplify/backend/function/caseexplorerlambda/src
 GRAPHQL_TARGET=amplify/backend/api/caseexplorergraphql
 BACKEND_API_DEPS=$(addprefix $(BACKEND_DIR)/app/api/,__init__.py api_factory.py interface.py schema_factory.py)
-BACKEND_MODEL_DEPS=$(addprefix $(BACKEND_DIR)/app/models/,__init__.py case.py CC.py common.py DSCIVIL.py DSCR.py DSK8.py DSCP.py DSTRAF.py ODYCRIM.py ODYTRAF.py ODYCVCIT.py ODYCIVIL.py DV.py K.py MCCI.py PG.py)
+BACKEND_MODEL_DEPS=$(addprefix $(BACKEND_DIR)/app/models/,__init__.py case.py CC.py common.py DSCIVIL.py DSCR.py DSK8.py DSCP.py DSTRAF.py ODYCRIM.py ODYTRAF.py ODYCVCIT.py ODYCIVIL.py DV.py K.py MCCI.py PG.py MCCR.py PGV.py)
 BACKEND_APP_DEPS=$(addprefix $(BACKEND_DIR)/app/,__init__.py commands.py config.py graphql.py officer.py service.py utils.py)
 BACKEND_DEPS=$(addprefix $(BACKEND_DIR)/,requirements.txt lambda.py) $(BACKEND_API_DEPS) $(BACKEND_MODEL_DEPS) $(BACKEND_APP_DEPS)
+STACK_PREFIX=caseexplorer
+AWS_REGION=us-east-1
+SECRETS_FILE=secrets.json
+CASEHARVESTER_STATIC_STACK=caseharvester-stack-static-prod
+DOCKER_REPO_NAME=caseexplorer
+
+.create-stack-bucket:
+	aws s3api create-bucket --bucket $(STACK_PREFIX)-stack --region $(AWS_REGION)
+	touch $@
+
+.deploy-stack: .create-stack-bucket cloudformation.yml $(SECRETS_FILE)
+	aws cloudformation package --template-file cloudformation.yml \
+		--output-template-file cloudformation-output.yml \
+		--s3-bucket $(STACK_PREFIX)-stack
+	aws cloudformation deploy --template-file cloudformation-output.yml \
+		--stack-name $(STACK_PREFIX)-stack \
+		--capabilities CAPABILITY_IAM \
+		--capabilities CAPABILITY_NAMED_IAM \
+		--parameter-overrides \
+			StaticStackName=$(CASEHARVESTER_STATIC_STACK) \
+			DockerRepoName=$(DOCKER_REPO_NAME) \
+			AWSRegion=$(AWS_REGION) \
+			$(shell jq -r '. as $$x|keys[]|. + "=" + $$x[.]' $(SECRETS_FILE))
+	touch $@
+
+.push-docker-image: .deploy-stack Dockerfile $(BACKEND_DEPS)
+	$(shell aws ecr get-login --region $(AWS_REGION) --no-include-email)
+	$(eval AWS_ACCOUNT_ID = $(shell aws sts get-caller-identity | grep Account | cut -d'"' -f4))
+	find $(BACKEND_DIR) -name *.pyc -delete
+	find $(BACKEND_DIR) -name __pycache__ -delete
+	docker build -t $(DOCKER_REPO_NAME) .
+	$(eval REPO_URL = $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/$(DOCKER_REPO_NAME))
+	docker tag $(DOCKER_REPO_NAME):latest $(REPO_URL):latest
+	docker push $(REPO_URL)
+	touch $@
+
+.PHONY: docker_image
+docker_image: .push-docker-image
+
+.PHONY: deploy_stack
+deploy_stack: .deploy-stack
 
 .PHONY: install_dependencies
 install_dependencies: $(BACKEND_DIR)/requirements.txt
@@ -39,7 +80,7 @@ start_frontend:
 	npm run start
 
 .PHONY: deploy_backend
-deploy_backend: copy_backend
+deploy_backend: copy_backend .push-docker-image
 	amplify push -y
 
 .PHONY: deploy_frontend

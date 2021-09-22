@@ -1,11 +1,16 @@
+import os
 import json
 import click
 import csv
 import logging
+from datetime import datetime
 from flask.cli import with_appcontext
-from sqlalchemy import distinct
+from sqlalchemy import distinct, create_engine
+from sqlalchemy.sql import and_, or_
 from sqlalchemy.dialects.postgresql import insert
 from .utils import db_session, get_case_model_list
+from .models import Case, DSTRAF, DSCRRelatedPerson
+from .officer import Officer, CopCache
 
 logger = logging.getLogger(__name__)
 
@@ -121,3 +126,135 @@ def update_metadata():
                     else:
                         metadatum.order = order
                         order += 1
+
+@click.command()
+@with_appcontext
+def cache_cops():
+    '''Update cops_cache table with matches between officer sequence numbers and case numbers'''
+    start_command = datetime.now()
+    from . import app
+    with db_session(app.config.bpdwatch_db_engine) as bpdwatch_db:
+        officers = bpdwatch_db.query(Officer).all()
+        write_db_uri = os.environ.get('MJCS_DATABASE_URL')
+        if not write_db_uri:
+            raise Exception('Must specify MJCS_DATABASE_URL environment variable with write-enabled credentials')
+        write_engine = create_engine(write_db_uri)
+        durations = []
+        for officer in officers:
+            start = datetime.now()
+            with db_session(write_engine) as db:
+                logger.info(f'Importing officer {officer.full_name()} ({officer.unique_internal_identifier})')
+                import_stmt = insert(Officer).values(
+                    last_name=officer.last_name,
+                    first_name=officer.first_name,
+                    middle_initial=officer.middle_initial,
+                    suffix=officer.suffix,
+                    unique_internal_identifier=officer.unique_internal_identifier
+                )
+                upsert_stmt = import_stmt.on_conflict_do_update(
+                    constraint='officers_unique_internal_identifier_key',
+                    set_=dict(
+                        last_name=import_stmt.excluded.last_name,
+                        first_name=import_stmt.excluded.first_name,
+                        middle_initial=import_stmt.excluded.middle_initial,
+                        suffix=import_stmt.excluded.suffix,
+                        unique_internal_identifier=import_stmt.excluded.unique_internal_identifier
+                    )
+                )
+                db.execute(upsert_stmt)
+
+                logger.info(f'Updating cache for officer {officer.full_name()} ({officer.unique_internal_identifier})')
+                last_name = officer.last_name.upper()
+                first_name = officer.first_name.upper()
+                middle_initial = officer.middle_initial.upper() if officer.middle_initial else None
+                suffix = officer.suffix.upper() if officer.suffix else None
+                seq_number = officer.unique_internal_identifier
+                if suffix and middle_initial:
+                    dscr_or_clause = or_(
+                        DSCRRelatedPerson.officer_id == seq_number,
+                        DSCRRelatedPerson.name == f'{last_name}, {first_name}',
+                        DSCRRelatedPerson.name == f'{last_name}, {first_name[0]}',
+                        DSCRRelatedPerson.name == f'{last_name}, {first_name} {suffix}',
+                        DSCRRelatedPerson.name == f'{last_name}, {first_name[0]} {suffix}',
+                        DSCRRelatedPerson.name == f'{last_name}, {first_name} {middle_initial[0]} {suffix}',
+                        DSCRRelatedPerson.name == f'{last_name}, {first_name} {middle_initial[0]}. {suffix}',
+                    )
+                    dstraf_or_clause = or_(
+                        DSTRAF.officer_id == seq_number,
+                        DSTRAF.officer_name == f'{last_name}, {first_name}',
+                        DSTRAF.officer_name == f'{last_name}, {first_name[0]}',
+                        DSTRAF.officer_name == f'{last_name}, {first_name} {suffix}',
+                        DSTRAF.officer_name == f'{last_name}, {first_name[0]} {suffix}',
+                        DSTRAF.officer_name == f'{last_name}, {first_name} {middle_initial[0]} {suffix}',
+                        DSTRAF.officer_name == f'{last_name}, {first_name} {middle_initial[0]}. {suffix}',
+                    )
+                elif middle_initial:
+                    dscr_or_clause = or_(
+                        DSCRRelatedPerson.officer_id == seq_number,
+                        DSCRRelatedPerson.name == f'{last_name}, {first_name}',
+                        DSCRRelatedPerson.name == f'{last_name}, {first_name[0]}',
+                        DSCRRelatedPerson.name == f'{last_name}, {first_name} {middle_initial[0]}',
+                        DSCRRelatedPerson.name == f'{last_name}, {first_name} {middle_initial[0]}.',
+                    )
+                    dstraf_or_clause = or_(
+                        DSTRAF.officer_id == seq_number,
+                        DSTRAF.officer_name == f'{last_name}, {first_name}',
+                        DSTRAF.officer_name == f'{last_name}, {first_name[0]}',
+                        DSTRAF.officer_name == f'{last_name}, {first_name} {middle_initial[0]}',
+                        DSTRAF.officer_name == f'{last_name}, {first_name} {middle_initial[0]}.',
+                    )
+                elif suffix:
+                    dscr_or_clause = or_(
+                        DSCRRelatedPerson.officer_id == seq_number,
+                        DSCRRelatedPerson.name == f'{last_name}, {first_name}',
+                        DSCRRelatedPerson.name == f'{last_name}, {first_name[0]}',
+                        DSCRRelatedPerson.name == f'{last_name}, {first_name} {suffix}',
+                        DSCRRelatedPerson.name == f'{last_name}, {first_name[0]} {suffix}'
+                    )
+                    dstraf_or_clause = or_(
+                        DSTRAF.officer_id == seq_number,
+                        DSTRAF.officer_name == f'{last_name}, {first_name}',
+                        DSTRAF.officer_name == f'{last_name}, {first_name[0]}',
+                        DSTRAF.officer_name == f'{last_name}, {first_name} {suffix}',
+                        DSTRAF.officer_name == f'{last_name}, {first_name[0]} {suffix}'
+                    )
+                else:
+                    dscr_or_clause = or_(
+                        DSCRRelatedPerson.officer_id == seq_number,
+                        DSCRRelatedPerson.name == f'{last_name}, {first_name}',
+                        DSCRRelatedPerson.name == f'{last_name}, {first_name[0]}'
+                    )
+                    dstraf_or_clause = or_(
+                        DSTRAF.officer_id == seq_number,
+                        DSTRAF.officer_name == f'{last_name}, {first_name}',
+                        DSTRAF.officer_name == f'{last_name}, {first_name[0]}'
+                    )
+                dscr = and_(
+                    dscr_or_clause,
+                    DSCRRelatedPerson.connection.like('%POLICE%')
+                )
+
+                q1 = db.query(Case.case_number)\
+                    .join(DSCRRelatedPerson, Case.case_number == DSCRRelatedPerson.case_number)\
+                    .filter(dscr)
+                q2 = db.query(Case.case_number)\
+                    .join(DSTRAF, Case.case_number == DSTRAF.case_number)\
+                    .filter(dstraf_or_clause)
+                query = q1.union(q2)
+
+                results = query.all()
+                for case_number, in results:
+                    stmt = insert(CopCache).values(
+                        case_number=case_number,
+                        officer_seq_no=officer.unique_internal_identifier
+                    )
+                    upsert_stmt = stmt.on_conflict_do_nothing(
+                        'cops_cache_pkey'
+                    )
+                    db.execute(upsert_stmt)
+            end = datetime.now()
+            seconds = (end-start).seconds
+            durations.append(seconds)
+            logger.info(f'Found {len(results)} cases, took {seconds} seconds, averaging {sum(durations)/len(durations)} seconds each.')
+    end_command = datetime.now()
+    logger.info(f'Command took {(end_command-start_command).seconds} seconds.')
