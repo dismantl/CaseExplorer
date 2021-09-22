@@ -92,7 +92,7 @@ Resources:
               - "ecr:UploadLayerPart"
               - "ecr:CompleteLayerUpload"
 
-  DailyCopCacherTask:
+  CopCacherTask:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
@@ -115,7 +115,7 @@ Resources:
               awslogs-create-group: true
               awslogs-region: !Ref AWSRegion
               awslogs-group: caseexplorer-cop-cacher
-              awslogs-stream-prefix: caseexplorer-cop-cacher-daily-logs
+              awslogs-stream-prefix: caseexplorer-cop-cacher-logs
       RequiresCompatibilities:
         - FARGATE
       Cpu: 512
@@ -124,19 +124,19 @@ Resources:
       NetworkMode: awsvpc
       TaskRoleArn: !GetAtt TaskRole.Arn
   
-  DailyCopCacherRule:
+  CopCacherRule:
     Type: AWS::Events::Rule
     Properties:
-      Name: daily_cop_cacher
-      Description: Daily cache cop-involved case numbers
-      ScheduleExpression: cron(0 4 * * ? *)  # midnight ET
+      Name: cop_cacher_rule
+      Description: Weekly cache cop-involved case numbers
+      ScheduleExpression: cron(0 4 ? * 1 *)  # Sunday midnight ET
       Targets:
         - Id: cop_cacher_ecs_task_target
           Arn: !GetAtt ECSCluster.Arn
           RoleArn: !GetAtt ExecutionRole.Arn
           EcsParameters:
             LaunchType: FARGATE
-            TaskDefinitionArn: !Ref DailyCopCacherTask
+            TaskDefinitionArn: !Ref CopCacherTask
             TaskCount: 1
             NetworkConfiguration:
               AwsVpcConfiguration:
