@@ -1868,6 +1868,14 @@ class ENUM(sqltypes.NativeForEmulated, sqltypes.Enum):
          be used to emit SQL to a target bind.
 
         """
+        native_enum = kw.pop("native_enum", None)
+        if native_enum is False:
+            util.warn(
+                "the native_enum flag does not apply to the "
+                "sqlalchemy.dialects.postgresql.ENUM datatype; this type "
+                "always refers to ENUM.   Use sqlalchemy.types.Enum for "
+                "non-native enum."
+            )
         self.create_type = kw.pop("create_type", True)
         super(ENUM, self).__init__(*enums, **kw)
 
@@ -3425,7 +3433,7 @@ class PGDialect(default.DefaultDialect):
         return bool(cursor.scalar())
 
     def _get_server_version_info(self, connection):
-        v = connection.exec_driver_sql("select version()").scalar()
+        v = connection.exec_driver_sql("select pg_catalog.version()").scalar()
         m = re.match(
             r".*(?:PostgreSQL|EnterpriseDB) "
             r"(\d+)\.?(\d+)?(?:\.(\d+))?(?:\.\d+)?(?:devel|beta)?",

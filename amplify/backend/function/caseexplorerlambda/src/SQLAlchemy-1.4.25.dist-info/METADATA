@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: SQLAlchemy
-Version: 1.4.23
+Version: 1.4.25
 Summary: Database Abstraction Library
 Home-page: https://www.sqlalchemy.org
 Author: Mike Bayer
@@ -27,15 +27,19 @@ Classifier: Topic :: Database :: Front-Ends
 Requires-Python: !=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,>=2.7
 Description-Content-Type: text/x-rst
 Requires-Dist: importlib-metadata ; python_version < "3.8"
-Requires-Dist: greenlet (!=0.4.17) ; python_version >= "3" and platform_machine in "x86_64 X86_64 aarch64 AARCH64 ppc64le PPC64LE amd64 AMD64 win32 WIN32"
+Requires-Dist: greenlet (!=0.4.17) ; python_version >= "3" and (platform_machine == "aarch64" or (platform_machine == "ppc64le" or (platform_machine == "x86_64" or (platform_machine == "amd64" or (platform_machine == "AMD64" or (platform_machine == "win32" or platform_machine == "WIN32"))))))
 Provides-Extra: aiomysql
 Requires-Dist: greenlet (!=0.4.17) ; (python_version >= "3") and extra == 'aiomysql'
 Requires-Dist: aiomysql ; (python_version >= "3") and extra == 'aiomysql'
 Provides-Extra: aiosqlite
+Requires-Dist: typing-extensions (!=3.10.0.1) ; extra == 'aiosqlite'
 Requires-Dist: greenlet (!=0.4.17) ; (python_version >= "3") and extra == 'aiosqlite'
 Requires-Dist: aiosqlite ; (python_version >= "3") and extra == 'aiosqlite'
 Provides-Extra: asyncio
 Requires-Dist: greenlet (!=0.4.17) ; (python_version >= "3") and extra == 'asyncio'
+Provides-Extra: asyncmy
+Requires-Dist: greenlet (!=0.4.17) ; (python_version >= "3") and extra == 'asyncmy'
+Requires-Dist: asyncmy (>=0.2.0) ; (python_version >= "3") and extra == 'asyncmy'
 Provides-Extra: mariadb_connector
 Requires-Dist: mariadb (>=1.0.1) ; (python_version >= "3") and extra == 'mariadb_connector'
 Provides-Extra: mssql
@@ -51,7 +55,7 @@ Provides-Extra: mysql
 Requires-Dist: mysqlclient (<2,>=1.4.0) ; (python_version < "3") and extra == 'mysql'
 Requires-Dist: mysqlclient (>=1.4.0) ; (python_version >= "3") and extra == 'mysql'
 Provides-Extra: mysql_connector
-Requires-Dist: mysqlconnector ; extra == 'mysql_connector'
+Requires-Dist: mysql-connector-python ; extra == 'mysql_connector'
 Provides-Extra: oracle
 Requires-Dist: cx-oracle (<8,>=7) ; (python_version < "3") and extra == 'oracle'
 Requires-Dist: cx-oracle (>=7) ; (python_version >= "3") and extra == 'oracle'

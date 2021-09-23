@@ -646,7 +646,7 @@ class DefaultDialect(interfaces.Dialect):
                         % (", ".join(name for name, obj in trans_objs))
                     )
 
-        dbapi_connection = connection.connection.connection
+        dbapi_connection = connection.connection.dbapi_connection
         for name, characteristic, value in characteristic_values:
             characteristic.set_characteristic(self, dbapi_connection, value)
         connection.connection._connection_record.finalize_callback.append(
@@ -778,6 +778,9 @@ class DefaultDialect(interfaces.Dialect):
             else:
                 name = unicode(name)  # noqa
         return name
+
+    def get_driver_connection(self, connection):
+        return connection
 
 
 class _RendersLiteral(object):
@@ -1835,8 +1838,9 @@ class DefaultExecutionContext(interfaces.ExecutionContext):
         # to avoid many calls of get_insert_default()/
         # get_update_default()
         for c in insert_prefetch:
-            if c.default and c.default.is_scalar:
+            if c.default and not c.default.is_sequence and c.default.is_scalar:
                 scalar_defaults[c] = c.default.arg
+
         for c in update_prefetch:
             if c.onupdate and c.onupdate.is_scalar:
                 scalar_defaults[c] = c.onupdate.arg

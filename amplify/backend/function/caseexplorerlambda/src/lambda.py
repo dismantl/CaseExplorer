@@ -16,8 +16,7 @@ from flask_restx import marshal
 from app import app, rest_api
 from app.service import DataService
 from app.graphql import transform_filter_model
-from app.utils import (get_model_name_by_table_name, get_eager_query, get_orm_class_by_name, TableNotFound,
-    get_case_numbers_by_officer_sequence_number)
+from app.utils import get_model_name_by_table_name, get_eager_query, get_orm_class_by_name, TableNotFound
 
 
 logger = logging.getLogger(__name__)

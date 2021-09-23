@@ -948,6 +948,8 @@ class Session(_SessionClassMethods):
 
     """
 
+    _is_asyncio = False
+
     @util.deprecated_params(
         autocommit=(
             "2.0",
@@ -1049,17 +1051,13 @@ class Session(_SessionClassMethods):
         :param enable_baked_queries: defaults to ``True``.  A flag consumed
            by the :mod:`sqlalchemy.ext.baked` extension to determine if
            "baked queries" should be cached, as is the normal operation
-           of this extension.  When set to ``False``, all caching is disabled,
-           including baked queries defined by the calling application as
-           well as those used internally.  Setting this flag to ``False``
-           can significantly reduce memory use, however will also degrade
-           performance for those areas that make use of baked queries
-           (such as relationship loaders).   Additionally, baked query
-           logic in the calling application or potentially within the ORM
-           that may be malfunctioning due to cache key collisions or similar
-           can be flagged by observing if this flag resolves the issue.
+           of this extension.  When set to ``False``, caching as used by
+           this particular extension is disabled.
 
-           .. versionadded:: 1.2
+           .. versionchanged:: 1.4 The ``sqlalchemy.ext.baked`` extension is
+              legacy and is not used by any of SQLAlchemy's internals. This
+              flag therefore only affects applications that are making explicit
+              use of this extension within their own code.
 
         :param expire_on_commit:  Defaults to ``True``. When ``True``, all
            instances will be fully expired after each :meth:`~.commit`,
@@ -1311,6 +1309,7 @@ class Session(_SessionClassMethods):
                 "subtransactions are not implemented in future "
                 "Session objects."
             )
+
         if self._autobegin():
             if not subtransactions and not nested and not _subtrans:
                 return self._transaction
@@ -1328,6 +1327,7 @@ class Session(_SessionClassMethods):
         elif not self.autocommit:
             # outermost transaction.  must be a not nested and not
             # a subtransaction
+
             assert not nested and not _subtrans and not subtransactions
             trans = SessionTransaction(self)
             assert self._transaction is trans
@@ -1581,7 +1581,7 @@ class Session(_SessionClassMethods):
         :param execution_options: optional dictionary of execution options,
          which will be associated with the statement execution.  This
          dictionary can provide a subset of the options that are accepted
-         by :meth:`_future.Connection.execution_options`, and may also
+         by :meth:`_engine.Connection.execution_options`, and may also
          provide additional options understood only in an ORM context.
 
         :param bind_arguments: dictionary of additional arguments to determine
@@ -1723,6 +1723,35 @@ class Session(_SessionClassMethods):
             bind_arguments=bind_arguments,
             **kw
         ).scalar()
+
+    def scalars(
+        self,
+        statement,
+        params=None,
+        execution_options=util.EMPTY_DICT,
+        bind_arguments=None,
+        **kw
+    ):
+        """Execute a statement and return the results as scalars.
+
+        Usage and parameters are the same as that of
+        :meth:`_orm.Session.execute`; the return result is a
+        :class:`_result.ScalarResult` filtering object which
+        will return single elements rather than :class:`_row.Row` objects.
+
+        :return:  a :class:`_result.ScalarResult` object
+
+        .. versionadded:: 1.4.24
+
+        """
+
+        return self.execute(
+            statement,
+            params=params,
+            execution_options=execution_options,
+            bind_arguments=bind_arguments,
+            **kw
+        ).scalars()
 
     def close(self):
         """Close out the transactional resources and ORM objects used by this
@@ -2843,7 +2872,7 @@ class Session(_SessionClassMethods):
             load_options=load_options,
         )
 
-    def merge(self, instance, load=True):
+    def merge(self, instance, load=True, options=None):
         """Copy the state of a given instance into a corresponding instance
         within this :class:`.Session`.
 
@@ -2889,6 +2918,11 @@ class Session(_SessionClassMethods):
          produced as "clean", so it is only appropriate that the given objects
          should be "clean" as well, else this suggests a mis-use of the
          method.
+        :param options: optional sequence of loader options which will be
+         applied to the :meth:`_orm.Session.get` method when the merge
+         operation loads the existing version of the object from the database.
+
+         .. versionadded:: 1.4.24
 
 
         .. seealso::
@@ -2916,6 +2950,7 @@ class Session(_SessionClassMethods):
                 attributes.instance_state(instance),
                 attributes.instance_dict(instance),
                 load=load,
+                options=options,
                 _recursive=_recursive,
                 _resolve_conflict_map=_resolve_conflict_map,
             )
@@ -2927,6 +2962,7 @@ class Session(_SessionClassMethods):
         state,
         state_dict,
         load=True,
+        options=None,
         _recursive=None,
         _resolve_conflict_map=None,
     ):
@@ -2990,7 +3026,12 @@ class Session(_SessionClassMethods):
                 new_instance = True
 
             elif key_is_persistent:
-                merged = self.get(mapper.class_, key[1], identity_token=key[2])
+                merged = self.get(
+                    mapper.class_,
+                    key[1],
+                    identity_token=key[2],
+                    options=options,
+                )
 
         if merged is None:
             merged = mapper.class_manager.new_instance()
@@ -3455,11 +3496,14 @@ class Session(_SessionClassMethods):
         SQL expressions.
 
         The objects as given are not added to the session and no additional
-        state is established on them, unless the ``return_defaults`` flag
-        is also set, in which case primary key attributes and server-side
-        default values will be populated.
-
-        .. versionadded:: 1.0.0
+        state is established on them. If the
+        :paramref:`_orm.Session.bulk_save_objects.return_defaults` flag is set,
+        then server-generated primary key values will be assigned to the
+        returned objects, but **not server side defaults**; this is a
+        limitation in the implementation. If stateful objects are desired,
+        please use the standard :meth:`_orm.Session.add_all` approach or
+        as an alternative newer mass-insert features such as
+        :ref:`orm_dml_returning_objects`.
 
         .. warning::
 
@@ -3468,6 +3512,14 @@ class Session(_SessionClassMethods):
             Features such as object management, relationship handling,
             and SQL clause support are **silently omitted** in favor of raw
             INSERT/UPDATES of records.
+
+            Please note that newer versions of SQLAlchemy are **greatly
+            improving the efficiency** of the standard flush process. It is
+            **strongly recommended** to not use the bulk methods as they
+            represent a forking of SQLAlchemy's functionality and are slowly
+            being moved into legacy status.  New features such as
+            :ref:`orm_dml_returning_objects` are both more efficient than
+            the "bulk" methods and provide more predictable functionality.
 
             **Please read the list of caveats at**
             :ref:`bulk_operations_caveats` **before using this method, and
@@ -3500,7 +3552,9 @@ class Session(_SessionClassMethods):
          and other multi-table mappings to insert correctly without the need
          to provide primary key values ahead of time; however,
          :paramref:`.Session.bulk_save_objects.return_defaults` **greatly
-         reduces the performance gains** of the method overall.
+         reduces the performance gains** of the method overall.  It is strongly
+         advised to please use the standard :meth:`_orm.Session.add_all`
+         approach.
 
         :param update_changed_only: when True, UPDATE statements are rendered
          based on those attributes in each state that have logged changes.
@@ -3569,6 +3623,14 @@ class Session(_SessionClassMethods):
             Features such as object management, relationship handling,
             and SQL clause support are **silently omitted** in favor of raw
             INSERT of records.
+
+            Please note that newer versions of SQLAlchemy are **greatly
+            improving the efficiency** of the standard flush process. It is
+            **strongly recommended** to not use the bulk methods as they
+            represent a forking of SQLAlchemy's functionality and are slowly
+            being moved into legacy status.  New features such as
+            :ref:`orm_dml_returning_objects` are both more efficient than
+            the "bulk" methods and provide more predictable functionality.
 
             **Please read the list of caveats at**
             :ref:`bulk_operations_caveats` **before using this method, and
@@ -3662,6 +3724,14 @@ class Session(_SessionClassMethods):
             Features such as object management, relationship handling,
             and SQL clause support are **silently omitted** in favor of raw
             UPDATES of records.
+
+            Please note that newer versions of SQLAlchemy are **greatly
+            improving the efficiency** of the standard flush process. It is
+            **strongly recommended** to not use the bulk methods as they
+            represent a forking of SQLAlchemy's functionality and are slowly
+            being moved into legacy status.  New features such as
+            :ref:`orm_dml_returning_objects` are both more efficient than
+            the "bulk" methods and provide more predictable functionality.
 
             **Please read the list of caveats at**
             :ref:`bulk_operations_caveats` **before using this method, and

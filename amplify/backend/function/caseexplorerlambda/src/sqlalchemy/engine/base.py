@@ -440,6 +440,11 @@ class Connection(Connectable):
     def connection(self):
         """The underlying DB-API connection managed by this Connection.
 
+        This is a SQLAlchemy connection-pool proxied connection
+        which then has the attribute
+        :attr:`_pool._ConnectionFairy.dbapi_connection` that refers to the
+        actual driver connection.
+
         .. seealso::
 
 
@@ -1157,9 +1162,27 @@ class Connection(Connectable):
         """Executes and returns the first column of the first row.
 
         The underlying result/cursor is closed after execution.
+
         """
 
         return self.execute(object_, *multiparams, **params).scalar()
+
+    def scalars(self, object_, *multiparams, **params):
+        """Executes and returns a scalar result set, which yields scalar values
+        from the first column of each row.
+
+        This method is equivalent to calling :meth:`_engine.Connection.execute`
+        to receive a :class:`_result.Result` object, then invoking the
+        :meth:`_result.Result.scalars` method to produce a
+        :class:`_result.ScalarResult` instance.
+
+        :return: a :class:`_result.ScalarResult`
+
+        .. versionadded:: 1.4.24
+
+        """
+
+        return self.execute(object_, *multiparams, **params).scalars()
 
     def execute(self, statement, *multiparams, **params):
         r"""Executes a SQL statement construct and returns a
@@ -1287,6 +1310,7 @@ class Connection(Connectable):
 
         if self._has_events or self.engine._has_events:
             (
+                default,
                 distilled_params,
                 event_multiparams,
                 event_params,
@@ -1335,6 +1359,7 @@ class Connection(Connectable):
 
         if self._has_events or self.engine._has_events:
             (
+                ddl,
                 distilled_params,
                 event_multiparams,
                 event_params,
@@ -1399,7 +1424,7 @@ class Connection(Connectable):
         else:
             distilled_params = []
 
-        return distilled_params, event_multiparams, event_params
+        return elem, distilled_params, event_multiparams, event_params
 
     def _execute_clauseelement(
         self, elem, multiparams, params, execution_options
@@ -1415,6 +1440,7 @@ class Connection(Connectable):
         has_events = self._has_events or self.engine._has_events
         if has_events:
             (
+                elem,
                 distilled_params,
                 event_multiparams,
                 event_params,
@@ -1492,6 +1518,7 @@ class Connection(Connectable):
 
         if self._has_events or self.engine._has_events:
             (
+                compiled,
                 distilled_params,
                 event_multiparams,
                 event_params,
@@ -1536,6 +1563,7 @@ class Connection(Connectable):
         if not future:
             if self._has_events or self.engine._has_events:
                 (
+                    statement,
                     distilled_params,
                     event_multiparams,
                     event_params,

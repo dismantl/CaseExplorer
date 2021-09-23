@@ -14,6 +14,9 @@ from ...orm import Session
 from ...orm import state as _instance_state
 from ...util.concurrency import greenlet_spawn
 
+_EXECUTE_OPTIONS = util.immutabledict({"prebuffer_rows": True})
+_STREAM_OPTIONS = util.immutabledict({"stream_results": True})
+
 
 @util.create_proxy_methods(
     Session,
@@ -48,22 +51,41 @@ from ...util.concurrency import greenlet_spawn
 class AsyncSession(ReversibleProxy):
     """Asyncio version of :class:`_orm.Session`.
 
+    The :class:`_asyncio.AsyncSession` is a proxy for a traditional
+    :class:`_orm.Session` instance.
 
     .. versionadded:: 1.4
 
+    To use an :class:`_asyncio.AsyncSession` with custom :class:`_orm.Session`
+    implementations, see the
+    :paramref:`_asyncio.AsyncSession.sync_session_class` parameter.
+
+
     """
 
-    __slots__ = (
-        "binds",
-        "bind",
-        "sync_session",
-        "_proxied",
-        "_slots_dispatch",
-    )
+    _is_asyncio = True
 
     dispatch = None
 
-    def __init__(self, bind=None, binds=None, **kw):
+    def __init__(self, bind=None, binds=None, sync_session_class=None, **kw):
+        r"""Construct a new :class:`_asyncio.AsyncSession`.
+
+        All parameters other than ``sync_session_class`` are passed to the
+        ``sync_session_class`` callable directly to instantiate a new
+        :class:`_orm.Session`. Refer to :meth:`_orm.Session.__init__` for
+        parameter documentation.
+
+        :param sync_session_class:
+          A :class:`_orm.Session` subclass or other callable which will be used
+          to construct the :class:`_orm.Session` which will be proxied. This
+          parameter may be used to provide custom :class:`_orm.Session`
+          subclasses. Defaults to the
+          :attr:`_asyncio.AsyncSession.sync_session_class` class-level
+          attribute.
+
+          .. versionadded:: 1.4.24
+
+        """
         kw["future"] = True
         if bind:
             self.bind = bind
@@ -76,9 +98,29 @@ class AsyncSession(ReversibleProxy):
                 for key, b in binds.items()
             }
 
+        if sync_session_class:
+            self.sync_session_class = sync_session_class
+
         self.sync_session = self._proxied = self._assign_proxied(
-            Session(bind=bind, binds=binds, **kw)
+            self.sync_session_class(bind=bind, binds=binds, **kw)
         )
+
+    sync_session_class = Session
+    """The class or callable that provides the
+    underlying :class:`_orm.Session` instance for a particular
+    :class:`_asyncio.AsyncSession`.
+
+    At the class level, this attribute is the default value for the
+    :paramref:`_asyncio.AsyncSession.sync_session_class` parameter. Custom
+    subclasses of :class:`_asyncio.AsyncSession` can override this.
+
+    At the instance level, this attribute indicates the current class or
+    callable that was used to provide the :class:`_orm.Session` instance for
+    this :class:`_asyncio.AsyncSession` instance.
+
+    .. versionadded:: 1.4.24
+
+    """
 
     async def refresh(
         self, instance, attribute_names=None, with_for_update=None
@@ -90,6 +132,10 @@ class AsyncSession(ReversibleProxy):
 
         This is the async version of the :meth:`_orm.Session.refresh` method.
         See that method for a complete description of all options.
+
+        .. seealso::
+
+            :meth:`_orm.Session.refresh` - main documentation for refresh
 
         """
 
@@ -136,9 +182,20 @@ class AsyncSession(ReversibleProxy):
         **kw
     ):
         """Execute a statement and return a buffered
-        :class:`_engine.Result` object."""
+        :class:`_engine.Result` object.
 
-        execution_options = execution_options.union({"prebuffer_rows": True})
+        .. seealso::
+
+            :meth:`_orm.Session.execute` - main documentation for execute
+
+        """
+
+        if execution_options:
+            execution_options = util.immutabledict(execution_options).union(
+                _EXECUTE_OPTIONS
+            )
+        else:
+            execution_options = _EXECUTE_OPTIONS
 
         return await greenlet_spawn(
             self.sync_session.execute,
@@ -157,7 +214,13 @@ class AsyncSession(ReversibleProxy):
         bind_arguments=None,
         **kw
     ):
-        """Execute a statement and return a scalar result."""
+        """Execute a statement and return a scalar result.
+
+        .. seealso::
+
+            :meth:`_orm.Session.scalar` - main documentation for scalar
+
+        """
 
         result = await self.execute(
             statement,
@@ -167,6 +230,37 @@ class AsyncSession(ReversibleProxy):
             **kw
         )
         return result.scalar()
+
+    async def scalars(
+        self,
+        statement,
+        params=None,
+        execution_options=util.EMPTY_DICT,
+        bind_arguments=None,
+        **kw
+    ):
+        """Execute a statement and return scalar results.
+
+        :return: a :class:`_result.ScalarResult` object
+
+        .. versionadded:: 1.4.24
+
+        .. seealso::
+
+            :meth:`_orm.Session.scalars` - main documentation for scalars
+
+            :meth:`_asyncio.AsyncSession.stream_scalars` - streaming version
+
+        """
+
+        result = await self.execute(
+            statement,
+            params=params,
+            execution_options=execution_options,
+            bind_arguments=bind_arguments,
+            **kw
+        )
+        return result.scalars()
 
     async def get(
         self,
@@ -179,6 +273,10 @@ class AsyncSession(ReversibleProxy):
     ):
         """Return an instance based on the given primary key identifier,
         or ``None`` if not found.
+
+        .. seealso::
+
+            :meth:`_orm.Session.get` - main documentation for get
 
 
         """
@@ -203,7 +301,12 @@ class AsyncSession(ReversibleProxy):
         """Execute a statement and return a streaming
         :class:`_asyncio.AsyncResult` object."""
 
-        execution_options = execution_options.union({"stream_results": True})
+        if execution_options:
+            execution_options = util.immutabledict(execution_options).union(
+                _STREAM_OPTIONS
+            )
+        else:
+            execution_options = _STREAM_OPTIONS
 
         result = await greenlet_spawn(
             self.sync_session.execute,
@@ -215,6 +318,37 @@ class AsyncSession(ReversibleProxy):
         )
         return _result.AsyncResult(result)
 
+    async def stream_scalars(
+        self,
+        statement,
+        params=None,
+        execution_options=util.EMPTY_DICT,
+        bind_arguments=None,
+        **kw
+    ):
+        """Execute a statement and return a stream of scalar results.
+
+        :return: an :class:`_asyncio.AsyncScalarResult` object
+
+        .. versionadded:: 1.4.24
+
+        .. seealso::
+
+            :meth:`_orm.Session.scalars` - main documentation for scalars
+
+            :meth:`_asyncio.AsyncSession.scalars` - non streaming version
+
+        """
+
+        result = await self.stream(
+            statement,
+            params=params,
+            execution_options=execution_options,
+            bind_arguments=bind_arguments,
+            **kw
+        )
+        return result.scalars()
+
     async def delete(self, instance):
         """Mark an instance as deleted.
 
@@ -223,17 +357,24 @@ class AsyncSession(ReversibleProxy):
         As this operation may need to cascade along unloaded relationships,
         it is awaitable to allow for those queries to take place.
 
+        .. seealso::
+
+            :meth:`_orm.Session.delete` - main documentation for delete
 
         """
         return await greenlet_spawn(self.sync_session.delete, instance)
 
-    async def merge(self, instance, load=True):
+    async def merge(self, instance, load=True, options=None):
         """Copy the state of a given instance into a corresponding instance
         within this :class:`_asyncio.AsyncSession`.
 
+        .. seealso::
+
+            :meth:`_orm.Session.merge` - main documentation for merge
+
         """
         return await greenlet_spawn(
-            self.sync_session.merge, instance, load=load
+            self.sync_session.merge, instance, load=load, options=options
         )
 
     async def flush(self, objects=None):
@@ -241,7 +382,7 @@ class AsyncSession(ReversibleProxy):
 
         .. seealso::
 
-            :meth:`_orm.Session.flush`
+            :meth:`_orm.Session.flush` - main documentation for flush
 
         """
         await greenlet_spawn(self.sync_session.flush, objects=objects)
@@ -277,13 +418,26 @@ class AsyncSession(ReversibleProxy):
         else:
             return None
 
-    async def connection(self):
+    async def connection(self, **kw):
         r"""Return a :class:`_asyncio.AsyncConnection` object corresponding to
         this :class:`.Session` object's transactional state.
 
+        This method may also be used to establish execution options for the
+        database connection used by the current transaction.
+
+        .. versionadded:: 1.4.24  Added **kw arguments which are passed through
+           to the underlying :meth:`_orm.Session.connection` method.
+
+        .. seealso::
+
+            :meth:`_orm.Session.connection` - main documentation for
+            "connection"
+
         """
 
-        sync_connection = await greenlet_spawn(self.sync_session.connection)
+        sync_connection = await greenlet_spawn(
+            self.sync_session.connection, **kw
+        )
         return engine.AsyncConnection._retrieve_proxy_for_target(
             sync_connection
         )

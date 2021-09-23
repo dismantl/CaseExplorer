@@ -266,7 +266,8 @@ Constraint checking on SQLite has three prerequisites:
 * The SQLite library must be compiled *without* the SQLITE_OMIT_FOREIGN_KEY
   or SQLITE_OMIT_TRIGGER symbols enabled.
 * The ``PRAGMA foreign_keys = ON`` statement must be emitted on all
-  connections before use.
+  connections before use -- including the initial call to
+  :meth:`sqlalchemy.schema.MetaData.create_all`.
 
 SQLAlchemy allows for the ``PRAGMA`` statement to be emitted automatically for
 new connections through the usage of events::
@@ -1915,7 +1916,9 @@ class SQLiteDialect(default.DefaultDialect):
                 14,
             )
 
-    _isolation_lookup = {"READ UNCOMMITTED": 1, "SERIALIZABLE": 0}
+    _isolation_lookup = util.immutabledict(
+        {"READ UNCOMMITTED": 1, "SERIALIZABLE": 0}
+    )
 
     def set_isolation_level(self, connection, level):
         try:
@@ -1925,7 +1928,11 @@ class SQLiteDialect(default.DefaultDialect):
                 exc.ArgumentError(
                     "Invalid value '%s' for isolation_level. "
                     "Valid isolation levels for %s are %s"
-                    % (level, self.name, ", ".join(self._isolation_lookup))
+                    % (
+                        level,
+                        self.name,
+                        ", ".join(self._isolation_lookup),
+                    )
                 ),
                 replace_context=err,
             )

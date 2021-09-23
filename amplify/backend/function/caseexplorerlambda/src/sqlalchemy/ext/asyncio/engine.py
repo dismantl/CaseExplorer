@@ -9,6 +9,7 @@ from .base import ProxyComparable
 from .base import StartableContext
 from .result import AsyncResult
 from ... import exc
+from ... import inspection
 from ... import util
 from ...engine import create_engine as _create_engine
 from ...engine.base import NestedTransaction
@@ -80,6 +81,7 @@ class AsyncConnection(ProxyComparable, StartableContext, AsyncConnectable):
     # create a new AsyncConnection that matches this one given only the
     # "sync" elements.
     __slots__ = (
+        "engine",
         "sync_engine",
         "sync_connection",
     )
@@ -111,7 +113,6 @@ class AsyncConnection(ProxyComparable, StartableContext, AsyncConnectable):
     def connection(self):
         """Not implemented for async; call
         :meth:`_asyncio.AsyncConnection.get_raw_connection`.
-
         """
         raise exc.InvalidRequestError(
             "AsyncConnection.connection accessor is not implemented as the "
@@ -123,9 +124,14 @@ class AsyncConnection(ProxyComparable, StartableContext, AsyncConnectable):
         """Return the pooled DBAPI-level connection in use by this
         :class:`_asyncio.AsyncConnection`.
 
-        This is typically the SQLAlchemy connection-pool proxied connection
-        which then has an attribute .connection that refers to the actual
-        DBAPI-level connection.
+        This is a SQLAlchemy connection-pool proxied connection
+        which then has the attribute
+        :attr:`_pool._ConnectionFairy.driver_connection` that refers to the
+        actual driver connection. Its
+        :attr:`_pool._ConnectionFairy.dbapi_connection` refers instead
+        to an :class:`_engine.AdaptedConnection` instance that
+        adapts the driver connection to the DBAPI protocol.
+
         """
         conn = self._sync_connection()
 
@@ -437,6 +443,47 @@ class AsyncConnection(ProxyComparable, StartableContext, AsyncConnectable):
         result = await self.execute(statement, parameters, execution_options)
         return result.scalar()
 
+    async def scalars(
+        self,
+        statement,
+        parameters=None,
+        execution_options=util.EMPTY_DICT,
+    ):
+        r"""Executes a SQL statement construct and returns a scalar objects.
+
+        This method is shorthand for invoking the
+        :meth:`_engine.Result.scalars` method after invoking the
+        :meth:`_future.Connection.execute` method.  Parameters are equivalent.
+
+        :return: a :class:`_engine.ScalarResult` object.
+
+        .. versionadded:: 1.4.24
+
+        """
+        result = await self.execute(statement, parameters, execution_options)
+        return result.scalars()
+
+    async def stream_scalars(
+        self,
+        statement,
+        parameters=None,
+        execution_options=util.EMPTY_DICT,
+    ):
+        r"""Executes a SQL statement and returns a streaming scalar result
+        object.
+
+        This method is shorthand for invoking the
+        :meth:`_engine.AsyncResult.scalars` method after invoking the
+        :meth:`_future.Connection.stream` method.  Parameters are equivalent.
+
+        :return: an :class:`_asyncio.AsyncScalarResult` object.
+
+        .. versionadded:: 1.4.24
+
+        """
+        result = await self.stream(statement, parameters, execution_options)
+        return result.scalars()
+
     async def run_sync(self, fn, *arg, **kw):
         """Invoke the given sync callable passing self as the first argument.
 
@@ -709,3 +756,24 @@ def _get_sync_engine_or_connection(async_engine):
         raise exc.ArgumentError(
             "AsyncEngine expected, got %r" % async_engine
         ) from e
+
+
+@inspection._inspects(AsyncConnection)
+def _no_insp_for_async_conn_yet(subject):
+    raise exc.NoInspectionAvailable(
+        "Inspection on an AsyncConnection is currently not supported. "
+        "Please use ``run_sync`` to pass a callable where it's possible "
+        "to call ``inspect`` on the passed connection.",
+        code="xd3s",
+    )
+
+
+@inspection._inspects(AsyncEngine)
+def _no_insp_for_async_engine_xyet(subject):
+    raise exc.NoInspectionAvailable(
+        "Inspection on an AsyncEngine is currently not supported. "
+        "Please obtain a connection then use ``conn.run_sync`` to pass a "
+        "callable where it's possible to call ``inspect`` on the "
+        "passed connection.",
+        code="xd3s",
+    )

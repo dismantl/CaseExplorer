@@ -36,6 +36,7 @@ def create_app(config_name):
     app.cli.add_command(commands.export_column_metadata)
     app.cli.add_command(commands.import_column_metadata)
     app.cli.add_command(commands.update_metadata)
+    app.cli.add_command(commands.cache_cops)
 
     return app
 
