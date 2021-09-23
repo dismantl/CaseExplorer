@@ -46,3 +46,9 @@ src/config.js
 
 .vscode/
 include/
+
+.create-stack-bucket
+.deploy-stack
+.push-docker-image
+cloudformation-output.yml
+secrets.json

@@ -7,7 +7,7 @@ import json
 from . import models
 from .models import *
 from .utils import get_orm_class_by_name, get_eager_query, db_session, get_root_model_list
-from .officer import Officer
+from .officer import Officer, CopCache
 
 
 class DataService:
@@ -119,84 +119,9 @@ class DataService:
 
 
 def fetch_rows_by_cop(seq_number, req, total_only=False):
-    with db_session(current_app.config.bpdwatch_db_engine) as bpdwatch_db:
-        officer = bpdwatch_db.query(Officer).filter(Officer.unique_internal_identifier == seq_number).one()
-        last_name = officer.last_name.upper()
-        first_name = officer.first_name.upper()
-        middle_initial = officer.middle_initial.upper() if officer.middle_initial else None
-        suffix = officer.suffix.upper() if officer.suffix else None
-    if suffix and middle_initial:
-        dscr_or_clause = or_(
-            DSCRRelatedPerson.officer_id == seq_number,
-            DSCRRelatedPerson.name == f'{last_name}, {first_name}',
-            DSCRRelatedPerson.name == f'{last_name}, {first_name[0]}',
-            DSCRRelatedPerson.name == f'{last_name}, {first_name} {suffix}',
-            DSCRRelatedPerson.name == f'{last_name}, {first_name[0]} {suffix}',
-            DSCRRelatedPerson.name == f'{last_name}, {first_name} {middle_initial[0]} {suffix}',
-            DSCRRelatedPerson.name == f'{last_name}, {first_name} {middle_initial[0]}. {suffix}',
-        )
-        dstraf_or_clause = or_(
-            DSTRAF.officer_id == seq_number,
-            DSTRAF.officer_name == f'{last_name}, {first_name}',
-            DSTRAF.officer_name == f'{last_name}, {first_name[0]}',
-            DSTRAF.officer_name == f'{last_name}, {first_name} {suffix}',
-            DSTRAF.officer_name == f'{last_name}, {first_name[0]} {suffix}',
-            DSTRAF.officer_name == f'{last_name}, {first_name} {middle_initial[0]} {suffix}',
-            DSTRAF.officer_name == f'{last_name}, {first_name} {middle_initial[0]}. {suffix}',
-        )
-    elif middle_initial:
-        dscr_or_clause = or_(
-            DSCRRelatedPerson.officer_id == seq_number,
-            DSCRRelatedPerson.name == f'{last_name}, {first_name}',
-            DSCRRelatedPerson.name == f'{last_name}, {first_name[0]}',
-            DSCRRelatedPerson.name == f'{last_name}, {first_name} {middle_initial[0]}',
-            DSCRRelatedPerson.name == f'{last_name}, {first_name} {middle_initial[0]}.',
-        )
-        dstraf_or_clause = or_(
-            DSTRAF.officer_id == seq_number,
-            DSTRAF.officer_name == f'{last_name}, {first_name}',
-            DSTRAF.officer_name == f'{last_name}, {first_name[0]}',
-            DSTRAF.officer_name == f'{last_name}, {first_name} {middle_initial[0]}',
-            DSTRAF.officer_name == f'{last_name}, {first_name} {middle_initial[0]}.',
-        )
-    elif suffix:
-        dscr_or_clause = or_(
-            DSCRRelatedPerson.officer_id == seq_number,
-            DSCRRelatedPerson.name == f'{last_name}, {first_name}',
-            DSCRRelatedPerson.name == f'{last_name}, {first_name[0]}',
-            DSCRRelatedPerson.name == f'{last_name}, {first_name} {suffix}',
-            DSCRRelatedPerson.name == f'{last_name}, {first_name[0]} {suffix}'
-        )
-        dstraf_or_clause = or_(
-            DSTRAF.officer_id == seq_number,
-            DSTRAF.officer_name == f'{last_name}, {first_name}',
-            DSTRAF.officer_name == f'{last_name}, {first_name[0]}',
-            DSTRAF.officer_name == f'{last_name}, {first_name} {suffix}',
-            DSTRAF.officer_name == f'{last_name}, {first_name[0]} {suffix}'
-        )
-    else:
-        dscr_or_clause = or_(
-            DSCRRelatedPerson.officer_id == seq_number,
-            DSCRRelatedPerson.name == f'{last_name}, {first_name}',
-            DSCRRelatedPerson.name == f'{last_name}, {first_name[0]}'
-        )
-        dstraf_or_clause = or_(
-            DSTRAF.officer_id == seq_number,
-            DSTRAF.officer_name == f'{last_name}, {first_name}',
-            DSTRAF.officer_name == f'{last_name}, {first_name[0]}'
-        )
-    dscr = and_(
-        dscr_or_clause,
-        DSCRRelatedPerson.connection.like('%POLICE%')
-    )
-    
-    q1 = Case.query\
-        .join(DSCRRelatedPerson, Case.case_number == DSCRRelatedPerson.case_number)\
-        .filter(dscr)
-    q2 = Case.query\
-        .join(DSTRAF, Case.case_number == DSTRAF.case_number)\
-        .filter(dstraf_or_clause)
-    query = q1.union(q2)
+    query = Case.query\
+        .join(CopCache, Case.case_number == CopCache.case_number)\
+        .filter(CopCache.officer_seq_no == seq_number)
 
     table = Case.__table__
     if req:
