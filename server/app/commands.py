@@ -141,6 +141,10 @@ def cache_cops():
         write_engine = create_engine(write_db_uri)
         durations = []
         for officer in officers:
+            if officer.department_id != 1:  # BPD only
+                continue
+            if not officer.unique_internal_identifier:
+                continue
             start = datetime.now()
             with db_session(write_engine) as db:
                 logger.info(f'Importing officer {officer.full_name()} ({officer.unique_internal_identifier})')
