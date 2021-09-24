@@ -12,6 +12,7 @@ class Officer(TableBase):
     middle_initial = Column(String)
     suffix = Column(String)
     unique_internal_identifier = Column(String, unique=True)
+    department_id = Column(Integer)
     # assignments = relationship('Assignment', backref='officer', lazy='dynamic')
     assignments_lazy = relationship('Assignment')
 
