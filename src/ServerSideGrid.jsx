@@ -130,6 +130,17 @@ const ServerSideGrid = props => {
   const onGridReady = params => {
     api = params.api;
     params.api.setServerSideDatasource({ getRows: getRows });
+    if (byCop) {
+      const columnState = {
+        state: [
+          {
+            colId: 'filing_date',
+            sort: 'desc'
+          }
+        ]
+      };
+      params.columnApi.applyColumnState(columnState);
+    }
   };
 
   if (metadata) {
