@@ -123,6 +123,23 @@ def fetch_rows_by_cop(seq_number, req, total_only=False):
         .join(CopCache, Case.case_number == CopCache.case_number)\
         .filter(CopCache.officer_seq_no == seq_number)
 
+    # If no results in cache table, just do active search by sequence number
+    if query.count() == 0:
+        q1 = Case.query\
+            .join(DSCRRelatedPerson, Case.case_number == DSCRRelatedPerson.case_number)\
+            .filter(
+                and_(
+                    DSCRRelatedPerson.connection.like('%POLICE%'),
+                    DSCRRelatedPerson.agency_code == 'AD',
+                    DSCRRelatedPerson.officer_id == seq_number,
+                )
+            )
+        q2 = Case.query\
+            .join(DSTRAF, Case.case_number == DSTRAF.case_number)\
+            .filter(DSTRAF.officer_id == seq_number)
+        query = q1.union(q2)
+
+    # Apply filters
     table = Case.__table__
     if req:
         query = build_where(query, table, req)
