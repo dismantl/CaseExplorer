@@ -176,62 +176,62 @@ def cache_cops():
                 if suffix and middle_initial:
                     dscr_or_clause = or_(
                         DSCRRelatedPerson.officer_id == seq_number,
-                        DSCRRelatedPerson.name == f'{last_name}, {first_name}',
-                        DSCRRelatedPerson.name == f'{last_name}, {first_name[0]}',
-                        DSCRRelatedPerson.name == f'{last_name}, {first_name} {suffix}',
-                        DSCRRelatedPerson.name == f'{last_name}, {first_name[0]} {suffix}',
-                        DSCRRelatedPerson.name == f'{last_name}, {first_name} {middle_initial[0]} {suffix}',
-                        DSCRRelatedPerson.name == f'{last_name}, {first_name} {middle_initial[0]}. {suffix}',
+                        and_(DSCRRelatedPerson.name == f'{last_name}, {first_name}', DSCRRelatedPerson.officer_id == None),
+                        and_(DSCRRelatedPerson.name == f'{last_name}, {first_name[0]}', DSCRRelatedPerson.officer_id == None),
+                        and_(DSCRRelatedPerson.name == f'{last_name}, {first_name} {suffix}', DSCRRelatedPerson.officer_id == None),
+                        and_(DSCRRelatedPerson.name == f'{last_name}, {first_name[0]} {suffix}', DSCRRelatedPerson.officer_id == None),
+                        and_(DSCRRelatedPerson.name == f'{last_name}, {first_name} {middle_initial[0]} {suffix}', DSCRRelatedPerson.officer_id == None),
+                        and_(DSCRRelatedPerson.name == f'{last_name}, {first_name} {middle_initial[0]}. {suffix}', DSCRRelatedPerson.officer_id == None)
                     )
                     dstraf_or_clause = or_(
                         DSTRAF.officer_id == seq_number,
-                        DSTRAF.officer_name == f'{last_name}, {first_name}',
-                        DSTRAF.officer_name == f'{last_name}, {first_name[0]}',
-                        DSTRAF.officer_name == f'{last_name}, {first_name} {suffix}',
-                        DSTRAF.officer_name == f'{last_name}, {first_name[0]} {suffix}',
-                        DSTRAF.officer_name == f'{last_name}, {first_name} {middle_initial[0]} {suffix}',
-                        DSTRAF.officer_name == f'{last_name}, {first_name} {middle_initial[0]}. {suffix}',
+                        and_(DSTRAF.officer_name == f'{last_name}, {first_name}', DSTRAF.officer_id == None),
+                        and_(DSTRAF.officer_name == f'{last_name}, {first_name[0]}', DSTRAF.officer_id == None),
+                        and_(DSTRAF.officer_name == f'{last_name}, {first_name} {suffix}', DSTRAF.officer_id == None),
+                        and_(DSTRAF.officer_name == f'{last_name}, {first_name[0]} {suffix}', DSTRAF.officer_id == None),
+                        and_(DSTRAF.officer_name == f'{last_name}, {first_name} {middle_initial[0]} {suffix}', DSTRAF.officer_id == None),
+                        and_(DSTRAF.officer_name == f'{last_name}, {first_name} {middle_initial[0]}. {suffix}', DSTRAF.officer_id == None)
                     )
                 elif middle_initial:
                     dscr_or_clause = or_(
                         DSCRRelatedPerson.officer_id == seq_number,
-                        DSCRRelatedPerson.name == f'{last_name}, {first_name}',
-                        DSCRRelatedPerson.name == f'{last_name}, {first_name[0]}',
-                        DSCRRelatedPerson.name == f'{last_name}, {first_name} {middle_initial[0]}',
-                        DSCRRelatedPerson.name == f'{last_name}, {first_name} {middle_initial[0]}.',
+                        and_(DSCRRelatedPerson.name == f'{last_name}, {first_name}', DSCRRelatedPerson.officer_id == None),
+                        and_(DSCRRelatedPerson.name == f'{last_name}, {first_name[0]}', DSCRRelatedPerson.officer_id == None),
+                        and_(DSCRRelatedPerson.name == f'{last_name}, {first_name} {middle_initial[0]}', DSCRRelatedPerson.officer_id == None),
+                        and_(DSCRRelatedPerson.name == f'{last_name}, {first_name} {middle_initial[0]}.', DSCRRelatedPerson.officer_id == None)
                     )
                     dstraf_or_clause = or_(
                         DSTRAF.officer_id == seq_number,
-                        DSTRAF.officer_name == f'{last_name}, {first_name}',
-                        DSTRAF.officer_name == f'{last_name}, {first_name[0]}',
-                        DSTRAF.officer_name == f'{last_name}, {first_name} {middle_initial[0]}',
-                        DSTRAF.officer_name == f'{last_name}, {first_name} {middle_initial[0]}.',
+                        and_(DSTRAF.officer_name == f'{last_name}, {first_name}', DSTRAF.officer_id == None),
+                        and_(DSTRAF.officer_name == f'{last_name}, {first_name[0]}', DSTRAF.officer_id == None),
+                        and_(DSTRAF.officer_name == f'{last_name}, {first_name} {middle_initial[0]}', DSTRAF.officer_id == None),
+                        and_(DSTRAF.officer_name == f'{last_name}, {first_name} {middle_initial[0]}.', DSTRAF.officer_id == None)
                     )
                 elif suffix:
                     dscr_or_clause = or_(
                         DSCRRelatedPerson.officer_id == seq_number,
-                        DSCRRelatedPerson.name == f'{last_name}, {first_name}',
-                        DSCRRelatedPerson.name == f'{last_name}, {first_name[0]}',
-                        DSCRRelatedPerson.name == f'{last_name}, {first_name} {suffix}',
-                        DSCRRelatedPerson.name == f'{last_name}, {first_name[0]} {suffix}'
+                        and_(DSCRRelatedPerson.name == f'{last_name}, {first_name}', DSCRRelatedPerson.officer_id == None),
+                        and_(DSCRRelatedPerson.name == f'{last_name}, {first_name[0]}', DSCRRelatedPerson.officer_id == None),
+                        and_(DSCRRelatedPerson.name == f'{last_name}, {first_name} {suffix}', DSCRRelatedPerson.officer_id == None),
+                        and_(DSCRRelatedPerson.name == f'{last_name}, {first_name[0]} {suffix}', DSCRRelatedPerson.officer_id == None),
                     )
                     dstraf_or_clause = or_(
                         DSTRAF.officer_id == seq_number,
-                        DSTRAF.officer_name == f'{last_name}, {first_name}',
-                        DSTRAF.officer_name == f'{last_name}, {first_name[0]}',
-                        DSTRAF.officer_name == f'{last_name}, {first_name} {suffix}',
-                        DSTRAF.officer_name == f'{last_name}, {first_name[0]} {suffix}'
+                        and_(DSTRAF.officer_name == f'{last_name}, {first_name}', DSTRAF.officer_id == None),
+                        and_(DSTRAF.officer_name == f'{last_name}, {first_name[0]}', DSTRAF.officer_id == None),
+                        and_(DSTRAF.officer_name == f'{last_name}, {first_name} {suffix}', DSTRAF.officer_id == None),
+                        and_(DSTRAF.officer_name == f'{last_name}, {first_name[0]} {suffix}', DSTRAF.officer_id == None)
                     )
                 else:
                     dscr_or_clause = or_(
                         DSCRRelatedPerson.officer_id == seq_number,
-                        DSCRRelatedPerson.name == f'{last_name}, {first_name}',
-                        DSCRRelatedPerson.name == f'{last_name}, {first_name[0]}'
+                        and_(DSCRRelatedPerson.name == f'{last_name}, {first_name}', DSCRRelatedPerson.officer_id == None),
+                        and_(DSCRRelatedPerson.name == f'{last_name}, {first_name[0]}', DSCRRelatedPerson.officer_id == None)
                     )
                     dstraf_or_clause = or_(
                         DSTRAF.officer_id == seq_number,
-                        DSTRAF.officer_name == f'{last_name}, {first_name}',
-                        DSTRAF.officer_name == f'{last_name}, {first_name[0]}'
+                        and_(DSTRAF.officer_name == f'{last_name}, {first_name}', DSTRAF.officer_id == None),
+                        and_(DSTRAF.officer_name == f'{last_name}, {first_name[0]}', DSTRAF.officer_id == None)
                     )
                 dscr = and_(
                     dscr_or_clause,
