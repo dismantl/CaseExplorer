@@ -58,11 +58,10 @@ install_dependencies: $(BACKEND_DIR)/requirements.txt
 copy_backend: $(BACKEND_DEPS)
 	rm -r $(LAMBDA_TARGET) || true
 	mkdir -p $(LAMBDA_TARGET)
-	pip install --target $(LAMBDA_TARGET) -r $(BACKEND_DIR)/requirements.txt
+	pip install --target $(LAMBDA_TARGET)/lib -r $(BACKEND_DIR)/requirements.txt
+	cp -r $(BACKEND_DIR)/psycopg2-3.7 $(LAMBDA_TARGET)/lib/psycopg2
 	cp -r $(BACKEND_DIR)/app $(LAMBDA_TARGET)/
-	cp $(BACKEND_DIR)/app/.env $(LAMBDA_TARGET)/app/env
 	cp $(BACKEND_DIR)/lambda.py $(LAMBDA_TARGET)/
-	cp -r $(BACKEND_DIR)/psycopg2-3.7 $(LAMBDA_TARGET)/psycopg2
 	find $(LAMBDA_TARGET) -name *.pyc -delete
 	find $(LAMBDA_TARGET) -name __pycache__ -delete
 

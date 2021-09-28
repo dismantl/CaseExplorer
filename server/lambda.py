@@ -4,12 +4,8 @@ import sys
 import json
 import logging
 
-# srcpath = os.path.dirname(os.path.abspath(__file__))
-# sys.path.append(srcpath+"/.requirements")
-
-from dotenv import load_dotenv
-env_dir = os.path.join(os.path.dirname(__file__), 'app')
-load_dotenv(dotenv_path=os.path.join(env_dir,'env'))
+srcpath = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(srcpath+"/lib")
 
 from sqlalchemy.orm.exc import NoResultFound
 from flask_restx import marshal
