@@ -20,8 +20,8 @@ export default class CustomStatusBar extends React.Component {
 
   componentDidMount() {
     const path = this.state.byCop
-      ? `/v1/bpd/seq/${this.state.seq}/total`
-      : `/v1/${this.state.table}/total`;
+      ? `/api/v1/bpd/seq/${this.state.seq}/total`
+      : `/api/v1/${this.state.table}/total`;
     let promise;
     if (environment === 'development') {
       promise = fetch(path)
@@ -42,8 +42,8 @@ export default class CustomStatusBar extends React.Component {
   updateTotal(params) {
     this.setState({ filtered: true, fetching: true, currentParams: params });
     const path = this.state.byCop
-      ? `/v1/bpd/seq/${this.state.seq}/total`
-      : `/v1/${this.state.table}/filtered/total`;
+      ? `/api/v1/bpd/seq/${this.state.seq}/total`
+      : `/api/v1/${this.state.table}/filtered/total`;
     let countPromise;
     if (environment === 'development') {
       countPromise = fetch(path, {

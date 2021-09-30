@@ -21,7 +21,7 @@ const CopFinder: React.FunctionComponent = props => {
     let promise, path;
     if (copVal.includes('bpdwatch.com')) {
       const id = copVal.substring(copVal.lastIndexOf('/') + 1);
-      path = `/v1/bpd/id/${id}`;
+      path = `/api/v1/bpd/id/${id}`;
       if (environment === 'development') {
         promise = fetch(path)
           .then(checkStatus)
