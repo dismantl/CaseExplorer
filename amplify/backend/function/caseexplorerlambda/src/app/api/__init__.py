@@ -12,7 +12,7 @@ class RESTAPI:
         if app:
             return self.init_app(app, root)
 
-    def init_app(self, app, root='v1'):
+    def init_app(self, app, root='api/v1'):
         from .schema_factory import schema_factory
 
         bp = Blueprint('api', __name__)
