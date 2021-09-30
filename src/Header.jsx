@@ -37,6 +37,14 @@ const Header = props => {
               onClick: toggleModal
             },
             {
+              key: 'exports',
+              text: 'Exports',
+              ariaLabel: 'CloudDownload',
+              iconProps: { iconName: 'CloudDownload' },
+              onClick: () =>
+                window.open('https://exports.mdcaseexplorer.com', '_blank')
+            },
+            {
               key: 'donate',
               text: 'Donate',
               ariaLabel: 'Donate',
