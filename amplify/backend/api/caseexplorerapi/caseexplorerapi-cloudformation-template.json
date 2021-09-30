@@ -87,7 +87,7 @@
             ],
             "paths": {
               
-              "/api": {
+              "/v1": {
                 "options": {
                   "consumes": [
                     "application/json"
@@ -186,7 +186,7 @@
                   }
                 }
               },
-              "/api/{proxy+}": {
+              "/v1/{proxy+}": {
                 "options": {
                   "consumes": [
                     "application/json"
