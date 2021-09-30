@@ -1,6 +1,6 @@
 from .. import models
 from ..service import DataService
-from ..utils import get_case_model_list, db_session
+from ..utils import get_case_model_list, get_root_model_list, snake_to_title
 from ..officer import Officer
 from .api_factory import api_factory
 from flask import Blueprint, current_app
@@ -12,7 +12,7 @@ class RESTAPI:
         if app:
             return self.init_app(app, root)
 
-    def init_app(self, app, root='api'):
+    def init_app(self, app, root='v1'):
         from .schema_factory import schema_factory
 
         bp = Blueprint('api', __name__)
@@ -30,13 +30,22 @@ class RESTAPI:
         def label_by_seq_number(seq_number):
             return json.dumps(DataService.fetch_label_by_cop(seq_number))
 
-        api = Api(bp, title='CaseExplorer REST API', version='0.1.0')
+        api = Api(bp, title='CaseExplorer REST API', version='1.0')
         self.api = api
         self.api_schemas = schema_factory(api)
 
         all_models = get_case_model_list(models)
+        root_models = {m.__tablename__: m for m in get_root_model_list(models)}
         for model in all_models:
-            sub_api = api_factory(self.api_schemas, model)  # TODO provide descriptions for docstrings
+            if model.__tablename__ == 'cases':
+                desc = 'Cases'
+            elif '_' in model.__tablename__:
+                root_model = root_models[model.__tablename__.split('_')[0]]
+                truncated_modelname = model.__tablename__.split('_',1)[1]
+                desc = f'{root_model.__doc__}: {snake_to_title(truncated_modelname)}'
+            else:
+                desc = model.__doc__
+            sub_api = api_factory(self.api_schemas, model, desc)
             self.cases_api = sub_api
             api.add_namespace(sub_api, path=f'/{root}')
 

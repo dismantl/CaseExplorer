@@ -101,3 +101,6 @@ def db_session(engine=None):
 def get_case_numbers_by_officer_sequence_number(sequence_number):
     related_persons = DSCRRelatedPerson.query.filter(DSCRRelatedPerson.officer_id == sequence_number).all()
     return list(dict.fromkeys([x.case_number for x in related_persons]))
+
+def snake_to_title(string):
+    return string.replace('_', ' ').title()

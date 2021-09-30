@@ -18,42 +18,34 @@ def api_factory(schemas, model, description=None):
 
     @api.route(f'/{table_name}')
     class APIResource(Resource):
-        f'''{table_name.upper()}'''
-
         @accepts(schema=QueryParams, api=api)
         @api.marshal_with(schema_results)
         def post(self):
-            f'''Get a list of {description}'''
-
             return DataService.fetch_rows_orm(table_name, request.parsed_obj)
+        post.__doc__ = f'''Get a list of {description}'''
         
     @api.route(f'/{table_name}/filtered/total')
     class APIResourceFiltered(Resource):
-        f'''Total number of {table_name.upper()} cases based on search criteria'''
-
         @accepts(schema=QueryParams, api=api)
         def post(self):
-            f'''Get total number of {table_name.upper()} cases based on search criteria'''
-
             return DataService.fetch_filtered_total(table_name, request.parsed_obj)
+        post.__doc__ = f'''Get total number of {description} filtered by search criteria'''
 
     @api.route(f'/{table_name}/<string:case_number>')
     class APIResourceCaseNumber(Resource):
-        f'''{table_name.upper()} by case number'''
-
         @api.marshal_with(schema)
         def get(self, case_number):
             return model.query.filter(model.case_number == case_number).one()
+        get.__doc__ = f'''{description} by case number'''
 
     if table_name != 'cases' and hasattr(model,'is_root') and model.is_root == True:
         schema_full = schemas[f'{model_name}Full']
         @api.route(f'/{table_name}/<string:case_number>/full')
         class APIResourceCaseNumberFull(Resource):
-            f'''{table_name.upper()} full case details by case number'''
-
             @api.marshal_with(schema_full)
             def get(self, case_number):
                 return get_eager_query(model).filter(model.case_number == case_number).one()
+            get.__doc__ = f'''{description} full case details by case number'''
 
     if table_name == 'cases':
         @api.route('/bpd/seq/<string:seq_number>')
@@ -84,11 +76,10 @@ def api_factory(schemas, model, description=None):
 
     @api.route(f'/{table_name}/total')
     class APITotal(Resource):
-        f'''Total number of {description} (estimate)'''
-
         def get(self):
             with db_session() as db:
                 results = db.execute(f"SELECT reltuples FROM pg_class WHERE oid = '{table_name}'::regclass").scalar()
             return int(results)
+        get.__doc__ = f'''Total number of {description} (estimate)'''
 
     return api
