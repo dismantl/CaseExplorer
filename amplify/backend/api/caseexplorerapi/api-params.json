@@ -1,7 +1,7 @@
 {
     "paths": [
         {
-            "name": "/api",
+            "name": "/v1",
             "lambdaFunction": "caseexplorerlambda",
             "privacy": {
                 "open": true
