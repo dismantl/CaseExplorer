@@ -4,12 +4,8 @@ import sys
 import json
 import logging
 
-# srcpath = os.path.dirname(os.path.abspath(__file__))
-# sys.path.append(srcpath+"/.requirements")
-
-from dotenv import load_dotenv
-env_dir = os.path.join(os.path.dirname(__file__), 'app')
-load_dotenv(dotenv_path=os.path.join(env_dir,'env'))
+srcpath = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(srcpath+"/lib")
 
 from sqlalchemy.orm.exc import NoResultFound
 from flask_restx import marshal
@@ -61,14 +57,14 @@ def handler(event, context):
     else:  # REST API
         with app.app_context():
             path = event['path']
-            bpd_match = re.fullmatch(r'/api/bpd/seq/(?P<sequence_number>\w\d\d\d)', path)
-            bpd_total_match = re.fullmatch(r'/api/bpd/seq/(?P<sequence_number>\w\d\d\d)/total', path)
-            bpd_id_match = re.fullmatch(r'/api/bpd/id/(?P<id>\d+)', path)
-            bpd_label_match = re.fullmatch(r'/api/bpd/label/(?P<sequence_number>\w\d\d\d)', path)
-            case_match = re.fullmatch(r'/api/(?P<table_name>\w+)(/(?P<case_number>\w+))?(?P<full>/full)?', path)
-            total_match = re.fullmatch(r'/api/(?P<table_name>\w+)/total', path)
-            total_filtered_match = re.fullmatch(r'/api/(?P<table_name>\w+)/filtered/total', path)
-            if path == '/api/metadata':
+            bpd_match = re.fullmatch(r'/v1/bpd/seq/(?P<sequence_number>\w\d\d\d)', path)
+            bpd_total_match = re.fullmatch(r'/v1/bpd/seq/(?P<sequence_number>\w\d\d\d)/total', path)
+            bpd_id_match = re.fullmatch(r'/v1/bpd/id/(?P<id>\d+)', path)
+            bpd_label_match = re.fullmatch(r'/v1/bpd/label/(?P<sequence_number>\w\d\d\d)', path)
+            case_match = re.fullmatch(r'/v1/(?P<table_name>\w+)(/(?P<case_number>\w+))?(?P<full>/full)?', path)
+            total_match = re.fullmatch(r'/v1/(?P<table_name>\w+)/total', path)
+            total_filtered_match = re.fullmatch(r'/v1/(?P<table_name>\w+)/filtered/total', path)
+            if path == '/v1/metadata':
                 return gen_response(200, json.dumps(DataService.fetch_metadata()))
             elif bpd_match:
                 seq_no = bpd_match.group('sequence_number')
@@ -100,7 +96,7 @@ def handler(event, context):
                 table_name = total_match.group('table_name')
                 total = DataService.fetch_total(table_name)
                 return gen_response(200, total)
-            elif path == '/api/cases/count':  # only used by Case Harvester README badge
+            elif path == '/v1/cases/count':  # only used by Case Harvester README badge
                 total = DataService.fetch_total('cases')
                 return gen_response(200, json.dumps({'count': total}))
             elif case_match:
