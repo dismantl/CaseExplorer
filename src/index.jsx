@@ -22,11 +22,11 @@ Amplify.configure(awsmobile);
 const fetchMetadata = callback => {
   let promise;
   if (environment === 'development') {
-    promise = fetch('/api/metadata')
+    promise = fetch('/v1/metadata')
       .then(checkStatus)
       .then(httpResponse => httpResponse.json());
   } else {
-    promise = API.get(apiName, '/api/metadata');
+    promise = API.get(apiName, '/v1/metadata');
   }
   promise.then(metadata => {
     callback(metadata);
@@ -99,7 +99,7 @@ const App = props => {
         setTitle(getTitle(res));
       } else {
         const seq_number = getURLLastPart();
-        const path = `/api/bpd/label/${seq_number}`;
+        const path = `/v1/bpd/label/${seq_number}`;
         let promise;
         if (environment === 'development') {
           promise = fetch(path)

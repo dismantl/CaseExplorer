@@ -90,8 +90,8 @@ const ServerSideGrid = props => {
     [toggleCoachmark]
   );
 
-  if (byCop) path = `/api/bpd/seq/${seq}`;
-  else path = `/api/${table}`;
+  if (byCop) path = `/v1/bpd/seq/${seq}`;
+  else path = `/v1/${table}`;
 
   const getRows = params => {
     let promise;
