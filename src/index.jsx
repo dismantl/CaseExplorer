@@ -14,6 +14,8 @@ import Header from './Header';
 import NavBar, { genNavStructure } from './Nav';
 import apiName from './ApiName';
 import { useEffect } from 'react';
+import SwaggerUI from 'swagger-ui-react';
+import 'swagger-ui-react/swagger-ui.css';
 
 export const version = '0.2';
 
@@ -38,6 +40,10 @@ const getTitle = metadata => {
   let title = '';
   if (table === '' || table === 'cases') {
     title = 'All Cases';
+  } else if (table === 'rest') {
+    title = 'REST API';
+  } else if (table === 'graphql') {
+    title = 'GraphQL API';
   } else if (metadata.tables[table] != null) {
     title = metadata.tables[table].description;
   } else {
@@ -137,7 +143,14 @@ const App = props => {
           </div>
           <div className="content">
             <Switch>
-              <Route path="/graphql" component={GraphiQLClient} />
+              <Route
+                path="/graphql"
+                key="/graphql"
+                component={GraphiQLClient}
+              />
+              <Route path="/rest" key="/rest">
+                <SwaggerUI url="/swagger.json" />
+              </Route>
               {genRoutes(metadata)}
             </Switch>
           </div>

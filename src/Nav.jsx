@@ -49,8 +49,7 @@ let navLinkGroups: INavLinkGroup[] = [
       {
         name: 'REST',
         key: 'REST',
-        url: 'https://portal.mdcaseexplorer.com',
-        target: '_blank'
+        url: '/rest'
       }
     ],
     isExpanded: false
@@ -84,7 +83,9 @@ export const genNavStructure = metadata => {
   navLinkGroups[0].links[2].isExpanded =
     currentTable === '' ||
     currentTable.substring(0, 3) === 'ody' ||
-    window.location.pathname.split('/')[1] === 'bpd'
+    window.location.pathname.split('/')[1] === 'bpd' ||
+    currentTable === 'graphql' ||
+    currentTable === 'rest'
       ? false
       : true;
   // MDEC

@@ -95,7 +95,7 @@ deploy: deploy_backend deploy_frontend
 generate_api_specs: $(BACKEND_DEPS)
 	FLASK_APP=$(BACKEND_DIR)/app flask print-graphql-schema $(BACKEND_DIR)/schema.graphql
 	sed -E -e 's/(DateTime|Date|Time)$$/AWS\1/g; /^scalar AWS(DateTime|Date|Time)$$/d' $(BACKEND_DIR)/schema.graphql > $(GRAPHQL_TARGET)/schema.graphql
-	FLASK_APP=$(BACKEND_DIR)/app flask print-swagger-spec $(BACKEND_DIR)/swagger.json
+	FLASK_APP=$(BACKEND_DIR)/app flask print-swagger-spec public/swagger.json
 
 .PHONY: sync_models
 sync_models:
