@@ -136,3 +136,7 @@ code {
   left: 290px;
   top: 32px;
 }
+
+.content .swagger-ui .scheme-container {
+  display: none;
+}
