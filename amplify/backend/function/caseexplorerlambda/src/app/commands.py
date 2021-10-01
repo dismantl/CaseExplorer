@@ -124,7 +124,9 @@ def update_metadata():
                     logger.info(f'Setting redacted=True for {model.__table__.name}.{column.name}')
                     metadatum.redacted = True
                 else:
-                    if column.name == 'case_number':
+                    if column.name == 'id':
+                        continue
+                    elif column.name == 'case_number':
                         metadatum.order = 0
                     else:
                         metadatum.order = order
