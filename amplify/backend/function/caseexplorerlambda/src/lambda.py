@@ -68,7 +68,7 @@ def handler(event, context):
                 return gen_response(200, json.dumps(DataService.fetch_metadata()))
             elif bpd_match:
                 seq_no = bpd_match.group('sequence_number')
-                req = json.loads(json.loads(event['body']))
+                req = json.loads(event['body'])
                 results = DataService.fetch_cases_by_cop(seq_no, req)
                 results['rows'] = [marshal(row, rest_api.api_schemas['Case']) for row in results['rows']]
                 return gen_response(200, json.dumps(results))
@@ -109,7 +109,7 @@ def handler(event, context):
                         model_name = get_model_name_by_table_name(table_name)
                     except TableNotFound:
                         return gen_404(path)
-                    req = json.loads(json.loads(event['body']))
+                    req = json.loads(event['body'])
                     results = DataService.fetch_rows_orm(table_name, req)
                     results['rows'] = [marshal(row, rest_api.api_schemas[model_name]) for row in results['rows']]
                     return gen_response(200, json.dumps(results))

@@ -30,7 +30,7 @@ class RESTAPI:
         def label_by_seq_number(seq_number):
             return json.dumps(DataService.fetch_label_by_cop(seq_number))
 
-        api = Api(bp, title='CaseExplorer REST API', version='1.0')
+        api = Api(bp, title='Case Explorer REST API', version='1.0')
         self.api = api
         self.api_schemas = schema_factory(api)
 

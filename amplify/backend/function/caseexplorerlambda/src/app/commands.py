@@ -36,6 +36,8 @@ def print_swagger_spec(output):
     from . import app, rest_api
     with app.test_request_context(), open(output, 'w') as specfile:
         spec = Swagger(rest_api.api).as_dict()
+        spec['schemes'] = ['https']
+        spec['host'] = 'api.mdcaseexplorer.com'
         specfile.write(
             json.dumps(
                 spec,
