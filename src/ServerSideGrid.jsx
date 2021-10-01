@@ -105,7 +105,7 @@ const ServerSideGrid = props => {
         .then(httpResponse => httpResponse.json());
     } else {
       promise = API.post(apiName, path, {
-        body: JSON.stringify(params.request)
+        body: params.request
       });
     }
     promise
