@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: click
-Version: 8.0.1
+Version: 8.0.3
 Summary: Composable command line interface toolkit
 Home-page: https://palletsprojects.com/p/click/
 Author: Armin Ronacher
@@ -23,6 +23,7 @@ Classifier: Operating System :: OS Independent
 Classifier: Programming Language :: Python
 Requires-Python: >=3.6
 Description-Content-Type: text/x-rst
+License-File: LICENSE.rst
 Requires-Dist: colorama ; platform_system == "Windows"
 Requires-Dist: importlib-metadata ; python_version < "3.8"
 
@@ -54,7 +55,7 @@ Install and update using `pip`_:
 
     $ pip install -U click
 
-.. _pip: https://pip.pypa.io/en/stable/quickstart/
+.. _pip: https://pip.pypa.io/en/stable/getting-started/
 
 
 A Simple Example

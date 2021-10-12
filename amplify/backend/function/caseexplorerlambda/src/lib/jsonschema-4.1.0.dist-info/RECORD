@@ -1,11 +1,11 @@
 ../../bin/jsonschema,sha256=G9VFxUc_AhUwtGQRyuH-acyGEHhRYFm33HUBnAm2tBY,249
-jsonschema-4.0.1.dist-info/COPYING,sha256=T5KgFaE8TRoEC-8BiqE0MLTxvHO0Gxa7hGw0Z2bedDk,1057
-jsonschema-4.0.1.dist-info/INSTALLER,sha256=zuuue4knoyJ-UwPPXg8fezS7VCrXJQrAP7zeNuwvFQg,4
-jsonschema-4.0.1.dist-info/METADATA,sha256=kQ8lfwt_QoAsYbv0neygzf9kfZyjKghX-XWw2TDaLNI,7149
-jsonschema-4.0.1.dist-info/RECORD,,
-jsonschema-4.0.1.dist-info/WHEEL,sha256=ewwEueio1C2XeHTvT17n8dZUJgOvyCWCt0WVNLClP9o,92
-jsonschema-4.0.1.dist-info/entry_points.txt,sha256=KaVUBBSLyzi5naUkVg-r3q6T_igdLgaHY6Mm3oLX73s,52
-jsonschema-4.0.1.dist-info/top_level.txt,sha256=jGoNS61vDONU8U7p0Taf-y_8JVG1Z2CJ5Eif6zMN_cw,11
+jsonschema-4.1.0.dist-info/COPYING,sha256=T5KgFaE8TRoEC-8BiqE0MLTxvHO0Gxa7hGw0Z2bedDk,1057
+jsonschema-4.1.0.dist-info/INSTALLER,sha256=zuuue4knoyJ-UwPPXg8fezS7VCrXJQrAP7zeNuwvFQg,4
+jsonschema-4.1.0.dist-info/METADATA,sha256=1OW1-Oen0fLhthxMdffXQ4mSJDaqneKgZ4njzS2yt9o,7218
+jsonschema-4.1.0.dist-info/RECORD,,
+jsonschema-4.1.0.dist-info/WHEEL,sha256=ewwEueio1C2XeHTvT17n8dZUJgOvyCWCt0WVNLClP9o,92
+jsonschema-4.1.0.dist-info/entry_points.txt,sha256=KaVUBBSLyzi5naUkVg-r3q6T_igdLgaHY6Mm3oLX73s,52
+jsonschema-4.1.0.dist-info/top_level.txt,sha256=jGoNS61vDONU8U7p0Taf-y_8JVG1Z2CJ5Eif6zMN_cw,11
 jsonschema/__init__.py,sha256=oVNRL1-NyOVpA53cGb5oDzo7HqOjYmuPGOtFYE_ag0c,1492
 jsonschema/__main__.py,sha256=Sfz1ZNeogymj_KZxq6JXY3F6O_1v28sLIiskusifQ5s,40
 jsonschema/__pycache__/__init__.cpython-37.pyc,,
@@ -60,7 +60,7 @@ jsonschema/tests/test_cli.py,sha256=BBQqNwuxhtyHQtWK-Zt78iiP8fbqFpZoRKjyEATDqYs,
 jsonschema/tests/test_deprecations.py,sha256=KhDheiF5KzAQx4GvoFniR5Uw4v03hIn973UqlfgF-Tc,3572
 jsonschema/tests/test_exceptions.py,sha256=WOFFmvp9l9OgCR-bPx_VkLifuNNn7xnPeqpqk7Tjxf8,15700
 jsonschema/tests/test_format.py,sha256=Gu4are4xUyRQc8YL0z-RlDOIc9_96ISv83hZRf8R2t0,3763
-jsonschema/tests/test_jsonschema_test_suite.py,sha256=eG91_tULuGbP1gfahZXEAefDg9C3Y3xZdIax4q71Vyo,11575
+jsonschema/tests/test_jsonschema_test_suite.py,sha256=Z9CKx28YL5wyXOhvgKYHhDd0_eeUoXnK-rRViCgIO4g,12995
 jsonschema/tests/test_types.py,sha256=DyvSKPtuaIu93Lkde80PkJkNOKgvCbaDYAfHz0yxyL0,6803
 jsonschema/tests/test_utils.py,sha256=lJRVYyQeZQTUCTU_M3BhlkxPMgjsc8KQCd7U_Qkook8,3749
 jsonschema/tests/test_validators.py,sha256=lF8vEcsMwLgkqmWp7zoMX31G7WZyCkjwHOhHD096QuU,73230

@@ -85,7 +85,6 @@ type CCDistrictCaseNumber {
 type CCDocument {
   id: Int
   document_number: Int
-  sequence_number: Int
   file_date: AWSDate
   file_date_str: String
   entered_date: AWSDate
@@ -246,22 +245,23 @@ type Case {
   last_scrape: AWSDateTime
   last_parse: AWSDateTime
   active: Boolean
+  scrape_exempt: Boolean
+  dscr: DSCR
+  dstraf: DSTRAF
   mccr: MCCR
-  odycivil: ODYCIVIL
-  cc: CC
-  k: K
-  odytraf: ODYTRAF
+  pg: PG
+  mcci: MCCI
+  pgv: PGV
   dv: DV
   dscp: DSCP
+  odytraf: ODYTRAF
+  k: K
   odycrim: ODYCRIM
+  cc: CC
   dsk8: DSK8
-  dscr: DSCR
+  odycivil: ODYCIVIL
   dscivil: DSCIVIL
-  dstraf: DSTRAF
-  mcci: MCCI
   odycvcit: ODYCVCIT
-  pg: PG
-  pgv: PGV
 }
 
 type CaseResultsResponse {
@@ -367,6 +367,8 @@ type DSCIVILJudgment {
   renewed_lien_date_str: String
   satisfaction_date: AWSDate
   satisfaction_date_str: String
+  possession_awardee: String
+  awardee: String
   case_number: String
 }
 
@@ -379,9 +381,6 @@ type DSCIVILRelatedPerson {
   city: String
   state: String
   zip_code: String
-  agency_code: String
-  agency_sub_code: String
-  officer_id: String
   attorney_code: Int
   attorney_firm: String
   complaint_id: Int
@@ -400,9 +399,8 @@ type DSCIVILTrial {
   time: AWSTime
   time_str: String
   room: String
-  trial_type: String
+  duration: String
   location: String
-  reason: String
   case_number: String
 }
 
@@ -498,9 +496,6 @@ type DSCPDefendant {
 type DSCPDefendantAlias {
   id: Int
   alias_name: String
-  city: String
-  state: String
-  zip_code: String
   case_number: String
 }
 
@@ -517,16 +512,9 @@ type DSCPRelatedPerson {
   id: Int
   name: String
   connection: String
-  address_1: String
-  address_2: String
-  city: String
-  state: String
-  zip_code: String
   agency_code: String
   agency_sub_code: String
   officer_id: String
-  attorney_code: Int
-  attorney_firm: String
   case_number: String
 }
 
@@ -544,7 +532,6 @@ type DSCPTrial {
   room: String
   trial_type: String
   location: String
-  reason: String
   case_number: String
 }
 
@@ -667,8 +654,6 @@ type DSCRRelatedPerson {
   agency_code: String
   agency_sub_code: String
   officer_id: String
-  attorney_code: Int
-  attorney_firm: String
   case_number: String
 }
 
@@ -686,7 +671,6 @@ type DSCRTrial {
   room: String
   trial_type: String
   location: String
-  reason: String
   case_number: String
 }
 
@@ -793,8 +777,6 @@ type DSK8Defendant {
   id: Int
   race: String
   sex: String
-  height: Int
-  weight: Int
   city: String
   state: String
   zip_code: String
@@ -828,11 +810,6 @@ type DSK8RelatedPerson {
   city: String
   state: String
   zip_code: String
-  agency_code: String
-  agency_sub_code: String
-  officer_id: String
-  attorney_code: Int
-  attorney_firm: String
   case_number: String
 }
 
@@ -848,7 +825,6 @@ type DSK8Trial {
   time: AWSTime
   time_str: String
   room: String
-  trial_type: String
   location: String
   reason: String
   case_number: String
@@ -863,7 +839,6 @@ type DSTRAF {
   trials: [DSTRAFTrial]
   id: Int
   court_system: String
-  citation_number: String
   district_code: Int
   location_code: Int
   violation_date: AWSDate
@@ -880,7 +855,6 @@ type DSTRAF {
 
 type DSTRAFCharge {
   id: Int
-  charge: String
   article: String
   sec: Int
   sub_sec: String
@@ -946,7 +920,6 @@ type DSTRAFDisposition {
   suspended_court_costs: Float
   suspended_cicf: Float
   addition_statement: String
-  addition_charge: String
   addition_article: String
   addition_sec: Int
   addition_sub_sec: String
@@ -974,11 +947,6 @@ type DSTRAFRelatedPerson {
   city: String
   state: String
   zip_code: String
-  agency_code: String
-  agency_sub_code: String
-  officer_id: String
-  attorney_code: Int
-  attorney_firm: String
   case_number: String
 }
 
@@ -994,7 +962,6 @@ type DSTRAFTrial {
   time: AWSTime
   time_str: String
   room: String
-  trial_type: String
   location: String
   reason: String
   case_number: String
@@ -1081,10 +1048,7 @@ input FilterModel {
 }
 
 type K {
-  district_case_numbers: [KDistrictCaseNumber]
-  plaintiffs: [KPlaintiff]
   defendants: [KDefendant]
-  defendant_aliases: [KDefendantAlias]
   related_persons: [KRelatedPerson]
   party_aliases: [KPartyAlias]
   party_addresses: [KPartyAddress]
@@ -1113,7 +1077,6 @@ type K {
 
 type KAttorney {
   id: Int
-  plaintiff_id: Int
   defendant_id: Int
   related_person_id: Int
   name: String
@@ -1138,7 +1101,6 @@ type KCharge {
   statute_code: String
   charge_description: String
   charge_class: String
-  probable_cause: Boolean
   offense_date_from: AWSDate
   offense_date_from_str: String
   offense_date_to: AWSDate
@@ -1147,26 +1109,18 @@ type KCharge {
   citation: String
   charge_amend_number: Int
   sentence_version: Int
-  agency_name: String
-  officer_id: String
   plea: String
   plea_date: AWSDate
   plea_date_str: String
   disposition: String
   disposition_date: AWSDate
   disposition_date_str: String
-  converted_disposition: String
   disposition_merged_text: String
   jail_life: Boolean
-  jail_death: Boolean
-  jail_start_date: AWSDate
-  jail_start_date_str: String
-  jail_cons_conc: String
   jail_years: Int
   jail_months: Int
   jail_days: Int
   jail_hours: Int
-  jail_suspended_term: String
   jail_suspended_years: Int
   jail_suspended_months: Int
   jail_suspended_days: Int
@@ -1221,30 +1175,16 @@ type KDefendant {
   attorneys: [KAttorney]
   id: Int
   party_type: String
-  party_number: Int
-  business_org_name: String
-  case_number: String
-}
-
-type KDefendantAlias {
-  id: Int
-  alias_name: String
-  city: String
-  state: String
-  zip_code: String
-  case_number: String
-}
-
-type KDistrictCaseNumber {
-  id: Int
-  district_case_number: String
+  race: String
+  sex: String
+  height: Int
+  weight: Int
   case_number: String
 }
 
 type KDocument {
   id: Int
   document_number: Int
-  sequence_number: Int
   file_date: AWSDate
   file_date_str: String
   entered_date: AWSDate
@@ -1312,7 +1252,6 @@ type KJudgmentModification {
 
 type KPartyAddress {
   id: Int
-  plaintiff_id: Int
   defendant_id: Int
   related_person_id: Int
   address_1: String
@@ -1326,22 +1265,9 @@ type KPartyAddress {
 
 type KPartyAlias {
   id: Int
-  plaintiff_id: Int
   defendant_id: Int
   related_person_id: Int
   name: String
-  case_number: String
-}
-
-type KPlaintiff {
-  aliases: [KPartyAlias]
-  addresses: [KPartyAddress]
-  attorneys: [KAttorney]
-  id: Int
-  party_type: String
-  party_number: Int
-  name: String
-  business_org_name: String
   case_number: String
 }
 
@@ -1351,9 +1277,7 @@ type KRelatedPerson {
   attorneys: [KAttorney]
   id: Int
   party_type: String
-  party_number: Int
   name: String
-  business_org_name: String
   case_number: String
 }
 
@@ -1373,8 +1297,8 @@ type KSentencingNetTools {
   probation_days: Int
   probation_hours: Int
   fine_amount: Float
-  fine_due_date_str: String
   fine_due_date: AWSDate
+  fine_due_date_str: String
   cws_hours: Int
   credit_time_served: Int
   case_number: String
@@ -1748,6 +1672,8 @@ type MCCRDocket {
   docket_type: String
   filed_by: String
   docket_text: String
+  status: String
+  ruling_judge: String
   case_number: String
 }
 
@@ -1913,10 +1839,6 @@ type ODYCIVILDefendant {
   attorneys: [ODYCIVILAttorney]
   id: Int
   name: String
-  race: String
-  sex: String
-  height: Int
-  weight: Int
   DOB: AWSDate
   DOB_str: String
   address_1: String
@@ -1945,7 +1867,6 @@ type ODYCIVILDocument {
   id: Int
   file_date: AWSDate
   file_date_str: String
-  filed_by: String
   document_name: String
   comment: String
   case_number: String
@@ -2106,7 +2027,6 @@ type ODYCIVILService {
   service_type: String
   issued_date: AWSDate
   issued_date_str: String
-  service_status: String
   case_number: String
 }
 
@@ -2271,7 +2191,6 @@ type ODYCRIMDocument {
   id: Int
   file_date: AWSDate
   file_date_str: String
-  filed_by: String
   document_name: String
   case_number: String
 }
@@ -2282,10 +2201,6 @@ type ODYCRIMInvolvedParty {
   id: Int
   party_type: String
   name: String
-  appearance_date: AWSDate
-  appearance_date_str: String
-  removal_date: AWSDate
-  removal_date_str: String
   agency_name: String
   address_1: String
   address_2: String
@@ -2338,7 +2253,6 @@ type ODYCRIMService {
   service_type: String
   issued_date: AWSDate
   issued_date_str: String
-  service_status: String
   case_number: String
 }
 
@@ -2370,7 +2284,6 @@ type ODYCVCIT {
   charges: [ODYCVCITCharge]
   probation: [ODYCVCITProbation]
   restitutions: [ODYCVCITRestitution]
-  sex_offender_registrations: [ODYCVCITSexOffenderRegistration]
   warrants: [ODYCVCITWarrant]
   bail_bonds: [ODYCVCITBailBond]
   bond_settings: [ODYCVCITBondSetting]
@@ -2456,24 +2369,16 @@ type ODYCVCITCharge {
   disposition_date: AWSDate
   disposition_date_str: String
   converted_disposition: String
-  jail_life: Boolean
-  jail_death: Boolean
   jail_start_date: AWSDate
   jail_start_date_str: String
-  jail_cons_conc: String
   jail_years: Int
   jail_months: Int
   jail_days: Int
   jail_hours: Int
-  jail_suspended_term: String
   jail_suspended_years: Int
   jail_suspended_months: Int
   jail_suspended_days: Int
   jail_suspended_hours: Int
-  jail_suspend_all_but_years: Int
-  jail_suspend_all_but_months: Int
-  jail_suspend_all_but_days: Int
-  jail_suspend_all_but_hours: Int
   case_number: String
 }
 
@@ -2510,7 +2415,6 @@ type ODYCVCITDocument {
   id: Int
   file_date: AWSDate
   file_date_str: String
-  filed_by: String
   document_name: String
   case_number: String
 }
@@ -2521,10 +2425,6 @@ type ODYCVCITInvolvedParty {
   id: Int
   party_type: String
   name: String
-  appearance_date: AWSDate
-  appearance_date_str: String
-  removal_date: AWSDate
-  removal_date_str: String
   agency_name: String
   address_1: String
   address_2: String
@@ -2577,14 +2477,6 @@ type ODYCVCITService {
   service_type: String
   issued_date: AWSDate
   issued_date_str: String
-  service_status: String
-  case_number: String
-}
-
-type ODYCVCITSexOffenderRegistration {
-  id: Int
-  type: String
-  notes: String
   case_number: String
 }
 
@@ -2615,7 +2507,6 @@ type ODYTRAF {
   id: Int
   court_system: String
   location: String
-  citation_number: String
   case_title: String
   case_type: String
   filing_date: AWSDate
@@ -2625,9 +2516,6 @@ type ODYTRAF {
   violation_time: AWSTime
   violation_time_str: String
   violation_county: String
-  agency_name: String
-  officer_id: String
-  officer_name: String
   case_status: String
   case_number: String
 }
@@ -2717,7 +2605,6 @@ type ODYTRAFCharge {
   probation_unsupervised_months: Int
   probation_unsupervised_days: Int
   probation_unsupervised_hours: Int
-  jail_life_death: String
   jail_start_date: AWSDate
   jail_start_date_str: String
   jail_years: Int
@@ -2767,7 +2654,6 @@ type ODYTRAFDocument {
   id: Int
   file_date: AWSDate
   file_date_str: String
-  filed_by: String
   document_name: String
   comment: String
   case_number: String
@@ -2779,10 +2665,6 @@ type ODYTRAFInvolvedParty {
   id: Int
   party_type: String
   name: String
-  appearance_date: AWSDate
-  appearance_date_str: String
-  removal_date: AWSDate
-  removal_date_str: String
   agency_name: String
   address_1: String
   address_2: String
@@ -2810,7 +2692,6 @@ type ODYTRAFService {
   requested_by: String
   issued_date: AWSDate
   issued_date_str: String
-  service_status: String
   case_number: String
 }
 
@@ -2849,7 +2730,6 @@ type PGAttorney {
   name: String
   attorney_type: String
   address_1: String
-  address_2: String
   city: String
   state: String
   zip_code: String
@@ -2983,6 +2863,8 @@ type PGVDefendant {
   id: Int
   party_number: Int
   party_type: String
+  name: String
+  address_1: String
   city: String
   state: String
   zip_code: String
@@ -3031,7 +2913,6 @@ type PGVPlaintiff {
   party_type: String
   name: String
   address_1: String
-  address_2: String
   city: String
   state: String
   zip_code: String
@@ -3044,22 +2925,22 @@ type PGVResultsResponse {
 }
 
 type Query {
+  dscr(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSCRResultsResponse
+  dstraf(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSTRAFResultsResponse
   mccr(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): MCCRResultsResponse
-  odycivil(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCIVILResultsResponse
-  cc(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): CCResultsResponse
-  k(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): KResultsResponse
-  odytraf(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYTRAFResultsResponse
+  pg(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): PGResultsResponse
+  mcci(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): MCCIResultsResponse
+  pgv(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): PGVResultsResponse
   dv(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DVResultsResponse
   dscp(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSCPResultsResponse
+  odytraf(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYTRAFResultsResponse
+  k(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): KResultsResponse
   odycrim(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCRIMResultsResponse
+  cc(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): CCResultsResponse
   dsk8(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSK8ResultsResponse
-  dscr(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSCRResultsResponse
+  odycivil(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCIVILResultsResponse
   dscivil(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSCIVILResultsResponse
-  dstraf(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSTRAFResultsResponse
-  mcci(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): MCCIResultsResponse
   odycvcit(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCVCITResultsResponse
-  pg(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): PGResultsResponse
-  pgv(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): PGVResultsResponse
   cases(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): CaseResultsResponse
 }
 

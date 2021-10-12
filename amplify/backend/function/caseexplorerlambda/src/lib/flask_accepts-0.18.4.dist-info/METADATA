@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: flask-accepts
-Version: 0.18.2
+Version: 0.18.4
 Summary: Easy, opinionated Flask input/output handling with Flask-restx and Marshmallow
 Home-page: UNKNOWN
 Author: Alan "AJ" Pryor, Jr.

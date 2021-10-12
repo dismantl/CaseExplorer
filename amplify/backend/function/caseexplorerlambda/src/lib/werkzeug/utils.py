@@ -588,7 +588,7 @@ def append_slash_redirect(environ: "WSGIEnvironment", code: int = 301) -> "Respo
 
 
 def send_file(
-    path_or_file: t.Union[os.PathLike, str, t.BinaryIO],
+    path_or_file: t.Union[os.PathLike, str, t.IO[bytes]],
     environ: "WSGIEnvironment",
     mimetype: t.Optional[str] = None,
     as_attachment: bool = False,
@@ -650,6 +650,10 @@ def send_file(
     :param _root_path: Do not use. For internal use only. Use
         :func:`send_from_directory` to safely send files under a path.
 
+    .. versionchanged:: 2.0.2
+        ``send_file`` only sets a detected ``Content-Encoding`` if
+        ``as_attachment`` is disabled.
+
     .. versionadded:: 2.0
         Adapted from Flask's implementation.
 
@@ -677,7 +681,7 @@ def send_file(
         response_class = Response
 
     path: t.Optional[str] = None
-    file: t.Optional[t.BinaryIO] = None
+    file: t.Optional[t.IO[bytes]] = None
     size: t.Optional[int] = None
     mtime: t.Optional[float] = None
     headers = Headers()
@@ -716,7 +720,9 @@ def send_file(
         if mimetype is None:
             mimetype = "application/octet-stream"
 
-        if encoding is not None:
+        # Don't send encoding for attachments, it causes browsers to
+        # save decompress tar.gz files.
+        if encoding is not None and not as_attachment:
             headers.set("Content-Encoding", encoding)
 
     if download_name is not None:
@@ -841,7 +847,7 @@ def send_from_directory(
             raise NotFound()
     except ValueError:
         # path contains null byte on Python < 3.8
-        raise NotFound()
+        raise NotFound() from None
 
     return send_file(path, environ, **kwargs)
 
@@ -874,11 +880,13 @@ def import_string(import_name: str, silent: bool = False) -> t.Any:
         try:
             return getattr(module, obj_name)
         except AttributeError as e:
-            raise ImportError(e)
+            raise ImportError(e) from None
 
     except ImportError as e:
         if not silent:
-            raise ImportStringError(import_name, e).with_traceback(sys.exc_info()[2])
+            raise ImportStringError(import_name, e).with_traceback(
+                sys.exc_info()[2]
+            ) from None
 
     return None
 

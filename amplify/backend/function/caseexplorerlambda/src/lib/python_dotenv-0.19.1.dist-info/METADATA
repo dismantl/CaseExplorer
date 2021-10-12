@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: python-dotenv
-Version: 0.19.0
+Version: 0.19.1
 Summary: Read key-value pairs from a .env file and set them as environment variables
 Home-page: https://github.com/theskumar/python-dotenv
 Author: Saurabh Kumar
@@ -16,6 +16,7 @@ Classifier: Programming Language :: Python :: 3.6
 Classifier: Programming Language :: Python :: 3.7
 Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
 Classifier: Programming Language :: Python :: Implementation :: PyPy
 Classifier: Intended Audience :: Developers
 Classifier: Intended Audience :: System Administrators
@@ -26,6 +27,7 @@ Classifier: Topic :: Utilities
 Classifier: Environment :: Web Environment
 Requires-Python: >=3.5
 Description-Content-Type: text/markdown
+License-File: LICENSE
 Provides-Extra: cli
 Requires-Dist: click (>=5.0) ; extra == 'cli'
 
@@ -263,6 +265,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.1] - 2021-08-09
+
+### Added
+
+- Add support for Python 3.10. (#359 by [@theskumar])
+
 ## [0.19.0] - 2021-07-24
 
 ### Changed
@@ -479,13 +487,13 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## 0.6.2
 
 -   Fix dotenv list command ([@ticosax](https://github.com/ticosax))
--   Add iPython Suport
+-   Add iPython Support
     ([@tillahoffmann](https://github.com/tillahoffmann))
 
 ## 0.6.0
 
 -   Drop support for Python 2.6
--   Handle escaped charaters and newlines in quoted values. (Thanks
+-   Handle escaped characters and newlines in quoted values. (Thanks
     [@iameugenejo](https://github.com/iameugenejo))
 -   Remove any spaces around unquoted key/value. (Thanks
     [@paulochf](https://github.com/paulochf))
@@ -517,6 +525,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 [#172]: https://github.com/theskumar/python-dotenv/issues/172
 [#176]: https://github.com/theskumar/python-dotenv/issues/176
 [#183]: https://github.com/theskumar/python-dotenv/issues/183
+[#359]: https://github.com/theskumar/python-dotenv/issues/359
 
 [@Flimm]: https://github.com/Flimm
 [@alanjds]: https://github.com/alanjds
@@ -543,7 +552,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 [@yannham]: https://github.com/yannham
 [@zueve]: https://github.com/zueve
 
-[Unreleased]: https://github.com/theskumar/python-dotenv/compare/v0.19.0...HEAD
+[Unreleased]: https://github.com/theskumar/python-dotenv/compare/v0.19.1...HEAD
+[0.19.1]: https://github.com/theskumar/python-dotenv/compare/v0.19.0...v0.19.1
 [0.19.0]: https://github.com/theskumar/python-dotenv/compare/v0.18.0...v0.19.0
 [0.18.0]: https://github.com/theskumar/python-dotenv/compare/v0.17.1...v0.18.0
 [0.17.1]: https://github.com/theskumar/python-dotenv/compare/v0.17.0...v0.17.1

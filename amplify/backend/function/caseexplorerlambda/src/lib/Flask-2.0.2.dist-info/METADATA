@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: Flask
-Version: 2.0.1
+Version: 2.0.2
 Summary: A simple framework for building complex web applications.
 Home-page: https://palletsprojects.com/p/flask
 Author: Armin Ronacher
@@ -29,6 +29,7 @@ Classifier: Topic :: Internet :: WWW/HTTP :: WSGI :: Application
 Classifier: Topic :: Software Development :: Libraries :: Application Frameworks
 Requires-Python: >=3.6
 Description-Content-Type: text/x-rst
+License-File: LICENSE.rst
 Requires-Dist: Werkzeug (>=2.0)
 Requires-Dist: Jinja2 (>=3.0)
 Requires-Dist: itsdangerous (>=2.0)
@@ -66,7 +67,7 @@ Install and update using `pip`_:
 
     $ pip install -U Flask
 
-.. _pip: https://pip.pypa.io/en/stable/quickstart/
+.. _pip: https://pip.pypa.io/en/stable/getting-started/
 
 
 A Simple Example

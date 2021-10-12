@@ -134,6 +134,7 @@ from .urls import _fast_url_quote
 from .urls import url_encode
 from .urls import url_join
 from .urls import url_quote
+from .urls import url_unquote
 from .utils import cached_property
 from .utils import redirect
 from .wsgi import get_host
@@ -402,7 +403,7 @@ class Subdomain(RuleFactory):
     for the current request.
     """
 
-    def __init__(self, subdomain: str, rules: t.Iterable["Rule"]) -> None:
+    def __init__(self, subdomain: str, rules: t.Iterable[RuleFactory]) -> None:
         self.subdomain = subdomain
         self.rules = rules
 
@@ -428,7 +429,7 @@ class Submount(RuleFactory):
     Now the rule ``'blog/show'`` matches ``/blog/entry/<entry_slug>``.
     """
 
-    def __init__(self, path: str, rules: t.Iterable["Rule"]) -> None:
+    def __init__(self, path: str, rules: t.Iterable[RuleFactory]) -> None:
         self.path = path.rstrip("/")
         self.rules = rules
 
@@ -453,7 +454,7 @@ class EndpointPrefix(RuleFactory):
         ])
     """
 
-    def __init__(self, prefix: str, rules: t.Iterable["Rule"]) -> None:
+    def __init__(self, prefix: str, rules: t.Iterable[RuleFactory]) -> None:
         self.prefix = prefix
         self.rules = rules
 
@@ -498,7 +499,9 @@ class RuleTemplateFactory(RuleFactory):
     :internal:
     """
 
-    def __init__(self, rules: t.Iterable["Rule"], context: t.Dict[str, t.Any]) -> None:
+    def __init__(
+        self, rules: t.Iterable[RuleFactory], context: t.Dict[str, t.Any]
+    ) -> None:
         self.rules = rules
         self.context = context
 
@@ -944,7 +947,10 @@ class Rule(RuleFactory):
                     if path.endswith("/") and not new_path.endswith("/"):
                         new_path += "/"
                     if new_path.count("/") < path.count("/"):
-                        path = new_path
+                        # The URL will be encoded when MapAdapter.match
+                        # handles the RequestPath raised below. Decode
+                        # the URL here to avoid a double encoding.
+                        path = url_unquote(new_path)
                         require_redirect = True
 
                 if require_redirect:
@@ -1585,10 +1591,12 @@ class Map:
             script_name = "/"
         if path_info is None:
             path_info = "/"
+
         try:
             server_name = _encode_idna(server_name)  # type: ignore
-        except UnicodeError:
-            raise BadHost()
+        except UnicodeError as e:
+            raise BadHost() from e
+
         return MapAdapter(
             self,
             server_name,
@@ -1650,11 +1658,12 @@ class Map:
         environ = _get_environ(environ)
         wsgi_server_name = get_host(environ).lower()
         scheme = environ["wsgi.url_scheme"]
+        upgrade = any(
+            v.strip() == "upgrade"
+            for v in environ.get("HTTP_CONNECTION", "").lower().split(",")
+        )
 
-        if (
-            environ.get("HTTP_CONNECTION", "").lower() == "upgrade"
-            and environ.get("HTTP_UPGRADE", "").lower() == "websocket"
-        ):
+        if upgrade and environ.get("HTTP_UPGRADE", "").lower() == "websocket":
             scheme = "wss" if scheme == "https" else "ws"
 
         if server_name is None:
@@ -1966,13 +1975,13 @@ class MapAdapter:
                         url_quote(e.path_info, self.map.charset, safe="/:|+"),
                         query_args,
                     )
-                )
+                ) from None
             except RequestAliasRedirect as e:
                 raise RequestRedirect(
                     self.make_alias_redirect_url(
                         path, rule.endpoint, e.matched_values, method, query_args
                     )
-                )
+                ) from None
             if rv is None:
                 continue
             if rule.methods is not None and method not in rule.methods:

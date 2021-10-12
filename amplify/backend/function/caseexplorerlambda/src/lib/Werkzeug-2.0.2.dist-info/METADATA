@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: Werkzeug
-Version: 2.0.1
+Version: 2.0.2
 Summary: The comprehensive WSGI web application library.
 Home-page: https://palletsprojects.com/p/werkzeug/
 Author: Armin Ronacher
@@ -29,6 +29,7 @@ Classifier: Topic :: Internet :: WWW/HTTP :: WSGI :: Middleware
 Classifier: Topic :: Software Development :: Libraries :: Application Frameworks
 Requires-Python: >=3.6
 Description-Content-Type: text/x-rst
+License-File: LICENSE.rst
 Requires-Dist: dataclasses ; python_version < "3.7"
 Provides-Extra: watchdog
 Requires-Dist: watchdog ; extra == 'watchdog'
@@ -83,7 +84,7 @@ Install and update using `pip`_:
 
     pip install -U Werkzeug
 
-.. _pip: https://pip.pypa.io/en/stable/quickstart/
+.. _pip: https://pip.pypa.io/en/stable/getting-started/
 
 
 A Simple Example

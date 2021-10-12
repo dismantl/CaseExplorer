@@ -1,13 +1,13 @@
 from datetime import datetime
 from os import PathLike
 from typing import Any
-from typing import BinaryIO
 from typing import Callable
 from typing import Collection
 from typing import Dict
 from typing import FrozenSet
 from typing import Generic
 from typing import Hashable
+from typing import IO
 from typing import Iterable
 from typing import Iterator
 from typing import List
@@ -23,10 +23,13 @@ from typing import Union
 from _typeshed.wsgi import WSGIEnvironment
 
 from typing_extensions import Literal
+from typing_extensions import SupportsIndex
 
 K = TypeVar("K")
 V = TypeVar("V")
 T = TypeVar("T")
+D = TypeVar("D")
+_CD = TypeVar("_CD", bound="CallbackDict")
 
 def is_immutable(self: object) -> NoReturn: ...
 def iter_multi_items(
@@ -36,7 +39,7 @@ def iter_multi_items(
 class ImmutableListMixin(List[V]):
     _hash_cache: Optional[int]
     def __hash__(self) -> int: ...  # type: ignore
-    def __delitem__(self, key: Union[int, slice]) -> NoReturn: ...
+    def __delitem__(self, key: Union[SupportsIndex, slice]) -> NoReturn: ...
     def __iadd__(self, other: t.Any) -> NoReturn: ...  # type: ignore
     def __imul__(self, other: int) -> NoReturn: ...
     def __setitem__(  # type: ignore
@@ -98,14 +101,14 @@ class UpdateDictMixin(Dict[K, V]):
     ) -> None: ...
 
 class TypeConversionDict(Dict[K, V]):
-    @overload  # type: ignore
-    def get(self, key: K) -> Optional[V]: ...
     @overload
-    def get(self, key: K, default: Union[V, T] = ...) -> Union[V, T]: ...
+    def get(self, key: K, default: None = ..., type: None = ...) -> Optional[V]: ...
     @overload
-    def get(
-        self, key: K, default: Optional[T] = None, type: Callable[[V], T] = ...
-    ) -> Optional[T]: ...
+    def get(self, key: K, default: D, type: None = ...) -> Union[D, V]: ...
+    @overload
+    def get(self, key: K, default: D, type: Callable[[V], T]) -> Union[D, T]: ...
+    @overload
+    def get(self, key: K, type: Callable[[V], T]) -> Optional[T]: ...
 
 class ImmutableTypeConversionDict(ImmutableDictMixin[K, V], TypeConversionDict[K, V]):
     def copy(self) -> TypeConversionDict[K, V]: ...
@@ -115,7 +118,7 @@ class MultiDict(TypeConversionDict[K, V]):
     def __init__(
         self,
         mapping: Optional[
-            Union[Mapping[K, Union[V, Iterable[V]]], Iterable[Tuple[K, V]]]
+            Union[Mapping[K, Union[Iterable[V], V]], Iterable[Tuple[K, V]]]
         ] = None,
     ) -> None: ...
     def __getitem__(self, item: K) -> V: ...
@@ -141,7 +144,7 @@ class MultiDict(TypeConversionDict[K, V]):
     @overload
     def to_dict(self, flat: Literal[False]) -> Dict[K, List[V]]: ...
     def update(  # type: ignore
-        self, mapping: Union[Mapping[K, V], Iterable[Tuple[K, V]]]
+        self, mapping: Union[Mapping[K, Union[Iterable[V], V]], Iterable[Tuple[K, V]]]
     ) -> None: ...
     @overload
     def pop(self, key: K) -> V: ...
@@ -343,7 +346,7 @@ class FileMultiDict(MultiDict[str, "FileStorage"]):
     def add_file(
         self,
         name: str,
-        file: Union[FileStorage, str, BinaryIO],
+        file: Union[FileStorage, str, IO[bytes]],
         filename: Optional[str] = None,
         content_type: Optional[str] = None,
     ) -> None: ...
@@ -683,7 +686,7 @@ class CallbackDict(UpdateDictMixin[K, V], Dict[K, V]):
     def __init__(
         self,
         initial: Optional[Union[Mapping[K, V], Iterable[Tuple[K, V]]]] = None,
-        on_update: Optional[Callable[[CallbackDict], None]] = None,
+        on_update: Optional[Callable[[_CD], None]] = None,
     ) -> None: ...
 
 class HeaderSet(Set[str]):
@@ -877,13 +880,13 @@ class WWWAuthenticate(UpdateDictMixin[str, str], Dict[str, str]):
 
 class FileStorage:
     name: Optional[str]
-    stream: BinaryIO
+    stream: IO[bytes]
     filename: Optional[str]
     headers: Headers
     _parsed_content_type: Tuple[str, Dict[str, str]]
     def __init__(
         self,
-        stream: Optional[BinaryIO] = None,
+        stream: Optional[IO[bytes]] = None,
         filename: Optional[str] = None,
         name: Optional[str] = None,
         content_type: Optional[str] = None,
@@ -900,7 +903,10 @@ class FileStorage:
     @property
     def mimetype_params(self) -> Dict[str, str]: ...
     def save(
-        self, dst: Union[str, PathLike, BinaryIO], buffer_size: int = ...
+        self, dst: Union[str, PathLike, IO[bytes]], buffer_size: int = ...
     ) -> None: ...
     def close(self) -> None: ...
+    def __bool__(self) -> bool: ...
+    def __getattr__(self, name: str) -> Any: ...
     def __iter__(self) -> Iterator[bytes]: ...
+    def __repr__(self) -> str: ...

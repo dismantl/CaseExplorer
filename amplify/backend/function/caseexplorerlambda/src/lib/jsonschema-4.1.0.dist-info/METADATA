@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: jsonschema
-Version: 4.0.1
+Version: 4.1.0
 Summary: An implementation of JSON Schema validation for Python
 Home-page: https://github.com/Julian/jsonschema
 Author: Julian Berman
@@ -16,6 +16,7 @@ Classifier: Programming Language :: Python
 Classifier: Programming Language :: Python :: 3.7
 Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
 Classifier: Programming Language :: Python :: Implementation :: CPython
 Classifier: Programming Language :: Python :: Implementation :: PyPy
 Requires-Python: >=3.7
@@ -73,8 +74,8 @@ jsonschema
    :target: https://zenodo.org/badge/latestdoi/3072629
 
 
-``jsonschema`` is an implementation of `JSON Schema
-<https://json-schema.org>`_ for Python.
+``jsonschema`` is an implementation of the `JSON Schema
+<https://json-schema.org>`_ specification for Python.
 
 .. code-block:: python
 
