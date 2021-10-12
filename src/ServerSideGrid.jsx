@@ -175,7 +175,7 @@ const ServerSideGrid = props => {
             key={table + '.' + column.name}
           />
         );
-      } else if (column.name.search('date') > 0) {
+      } else if (column.name.endsWith('date') > 0) {
         gridColumn = (
           <AgGridColumn
             field={column.name}

@@ -82,7 +82,6 @@ class DataService:
 
         table_metadata = {}
         for root_model in get_root_model_list(models):
-            # model_list.append(root_model)
             subtables = []
             for rel_name, relationship in root_model.__mapper__.relationships.items():
                 if relationship.target.name == 'cases':
@@ -445,7 +444,7 @@ def build_order_by(query, table, req):
             col_id = item['colId']
             sort = item['sort']
             if not grouping or col_id in group_col_ids:
-                if 'date_' in col_id:
+                if col_id[-4:] == 'date':
                     if sort == 'asc':
                         query = query.order_by(cast(table.c[col_id], Date).asc())
                     elif sort == 'desc':
