@@ -1,136 +1,42 @@
+<!-- To use swap with index.html and invalidate web cache -->
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="msapplication-TileColor" content="#ffffff">
-    <meta name="theme-color" content="#ffffff" />
-    <meta
-    name="MD Case Explorer"
-    content="Web application and APIs for exploring Maryland court case data"
-    />
-    <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico" />
-    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<title>Site Maintenance</title>
+<style>
+  body {
+    text-align: center;
+    padding: 20px;
+  }
 
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
+  @media (min-width: 768px) {
+    body {
+      padding-top: 150px;
+    }
+  }
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>MD Case Explorer</title>
+  h1 {
+    font-size: 50px;
+  }
 
-    <link href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" rel="stylesheet">
+  body {
+    font: 20px Helvetica, sans-serif;
+    color: #333;
+  }
 
-    <style>
-        html, body {
-            height: 100%;
-        }
+  article {
+    display: block;
+    text-align: left;
+    max-width: 650px;
+    margin: 0 auto;
+  }
+</style>
 
-        body {
-            line-height: 1
-        }
-
-        h1 {
-            font-size: 1.5rem;
-        }
-
-        div.card-body > a {
-            margin-top: 5px
-        }
-
-        .btn-primary {
-            margin-right: 5px;
-        }
-
-        button {
-            margin-left: 4px;
-            margin-right: 4px;
-        }
-
-        .align-right {
-            text-align: right
-        }
-
-        .customHeaderMenuButton {
-            margin-left: 4px;
-            float: left;
-        }
-
-        .customHeaderLabel {
-            margin-left: 5px;
-            float: left;
-        }
-
-        .customSortDownLabel {
-            float: left;
-            margin-left: 10px;
-        }
-
-        .customSortUpLabel {
-            float: left;
-            margin-left: 3px;
-        }
-
-        .customSortRemoveLabel {
-            float: left;
-            font-size: 11px;
-            margin-left: 3px;
-        }
-
-        .active {
-            color: cornflowerblue;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .customHeaderLabel {
-            margin-left: 5px;
-            float: left;
-        }
-    </style>
-
-  <!-- Matomo -->
-  <script>
-    var _paq = window._paq = window._paq || [];
-    /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
-    _paq.push(['trackPageView']);
-    _paq.push(['enableLinkTracking']);
-    (function() {
-      var u="//analytics.acab.enterprises/";
-      _paq.push(['setTrackerUrl', u+'matomo.php']);
-      _paq.push(['setSiteId', '1']);
-      var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
-      g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
-    })();
-  </script>
-  <!-- End Matomo Code -->
-
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
-  </body>
-</html>
+<article>
+  <h1>We&rsquo;ll be back soon!</h1>
+  <div>
+    <p>
+      Sorry for the inconvenience but we&rsquo;re performing some maintenance at the moment. We&rsquo;ll be back online
+      shortly!
+    </p>
+    <p>&mdash; Open Justice Baltimore</p>
+  </div>
+</article>
