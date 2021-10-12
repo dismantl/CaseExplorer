@@ -160,5 +160,7 @@ const App = props => {
   }
 };
 
-initializeIcons();
-ReactDOM.render(<App />, document.getElementById('root'));
+if (document.getElementById('root')) {
+  initializeIcons();
+  ReactDOM.render(<App />, document.getElementById('root'));
+}

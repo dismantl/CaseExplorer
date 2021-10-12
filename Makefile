@@ -88,6 +88,10 @@ deploy_frontend:
 	npm run build
 	amplify publish -y
 
+.PHONY: toggle_maintenance
+toggle_maintenance:
+	mv public/index.html public/tmp_index.html && mv public/maintenance_index.html public/index.html && mv public/tmp_index.html public/maintenance_index.html
+
 .PHONY: deploy
 deploy: deploy_backend deploy_frontend
 
