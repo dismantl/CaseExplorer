@@ -75,7 +75,6 @@ class DataService:
             column_metadata[result.table][result.column_name] = {
                 'label': result.label,
                 'description': result.description,
-                'width_pixels': result.width_pixels,
                 'allowed_values': result.allowed_values,
                 'order': result.order
             }

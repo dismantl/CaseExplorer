@@ -62,6 +62,7 @@ def handler(event, context):
             bpd_id_match = re.fullmatch(r'/api/v1/bpd/id/(?P<id>\d+)', path)
             bpd_label_match = re.fullmatch(r'/api/v1/bpd/label/(?P<sequence_number>\w\d\d\d)', path)
             case_match = re.fullmatch(r'/api/v1/(?P<table_name>\w+)(/(?P<case_number>\w+))?(?P<full>/full)?', path)
+            html_match = re.fullmatch(r'/api/v1/html/(?P<case_number>\w+)', path)
             total_match = re.fullmatch(r'/api/v1/(?P<table_name>\w+)/total', path)
             total_filtered_match = re.fullmatch(r'/api/v1/(?P<table_name>\w+)/filtered/total', path)
             if path == '/api/v1/metadata':
@@ -99,6 +100,10 @@ def handler(event, context):
             elif path == '/api/v1/cases/count':  # only used by Case Harvester README badge
                 total = DataService.fetch_total('cases')
                 return gen_response(200, json.dumps({'count': total}))
+            elif html_match:
+                case_number = html_match.group('case_number')
+                obj = app.config.case_details_bucket.Object(case_number).get()
+                return gen_response(200, json.dumps({'html': obj['Body'].read().decode('utf-8')}))
             elif case_match:
                 table_name = case_match.group('table_name')
                 case_number = case_match.group('case_number')
