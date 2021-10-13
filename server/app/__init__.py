@@ -1,4 +1,5 @@
 import os
+import boto3
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_restx import Api
@@ -22,6 +23,7 @@ def create_app(config_name):
     config[config_name].init_app(app)
     app.config.db_engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
     app.config.bpdwatch_db_engine = create_engine(app.config['BPDWATCH_DATABASE_URI'])
+    app.config.case_details_bucket = boto3.resource('s3').Bucket(app.config['CASE_DETAILS_BUCKET'])
     configure_logging(app)
 
     # Module initialization
@@ -41,4 +43,4 @@ def create_app(config_name):
     return app
 
 
-app = create_app(os.getenv('FLASK_ENV') or 'default')
+app = create_app('default')

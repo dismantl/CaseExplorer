@@ -23,6 +23,7 @@ Create a file at `server/app/.env` with the information for connecting to the pr
 ```
 SQLALCHEMY_DATABASE_URI_PRODUCTION=postgresql://case_explorer:Wt1Wc3yny9XHhChCktVj@db.openjusticebaltimore.org/mjcs
 SQLALCHEMY_DATABASE_URI_DEVELOPMENT=postgresql://case_explorer:qntsu004A&DCxQyqrV5Q@dev.db.openjusticebaltimore.org/mjcs
+CASE_DETAILS_BUCKET=mjcs-case-details
 ```
 
 To use the Search By BPD Officer feature, you'll also need to set `BPDWATCH_DATABASE_URI` to provide information for the BPD Watch database.
@@ -34,7 +35,7 @@ You can use the following commands to run a local version of Case Explorer for d
 1. Create and/or activate your Python virtual environment
 1. `make install_dependencies`
 1. `make generate_api_specs`
-1. `make start_prod_backend` (or `start_backend` to use the development database)
+1. `make start_backend`
 1. (in another terminal) `make start_frontend`
 
 ### Generate API specifications

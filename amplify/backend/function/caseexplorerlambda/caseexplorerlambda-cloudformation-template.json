@@ -14,6 +14,12 @@
     "VpcSubnet2": {
       "Type": "String"
     },
+    "VpcRouteTable": {
+      "Type": "String"
+    },
+    "VpcId": {
+      "Type": "String"
+    },
     "deploymentBucketName": {
       "Type": "String"
     },
@@ -209,8 +215,67 @@
                   }
                 ]
               }
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:ListBucket"
+              ],
+              "Resource": [
+                "arn:aws:s3:::mjcs-case-details"
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:GetObject"
+              ],
+              "Resource": [
+                "arn:aws:s3:::mjcs-case-details/*"
+              ]
             }
           ]
+        }
+      }
+    },
+    "S3VpcGatewayEndpoint": {
+      "Type": "AWS::EC2::VPCEndpoint",
+      "Properties": {
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": "*",
+              "Action": [
+                "s3:ListBucket"
+              ],
+              "Resource": [
+                "arn:aws:s3:::mjcs-case-details"
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Principal": "*",
+              "Action": [
+                "s3:GetObject"
+              ],
+              "Resource": [
+                "arn:aws:s3:::mjcs-case-details/*"
+              ]
+            }
+          ]
+        },
+        "RouteTableIds": [
+          {
+            "Ref": "VpcRouteTable"
+          }
+        ],
+        "ServiceName": {
+          "Fn::Sub": "com.amazonaws.${AWS::Region}.s3"
+        },
+        "VpcId": {
+          "Ref": "VpcId"
         }
       }
     }

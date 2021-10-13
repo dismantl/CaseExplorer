@@ -112,8 +112,10 @@ const ServerSideGrid = props => {
       .then(response => {
         params.success({ rowData: response.rows, rowCount: response.lastRow });
         setLoadedData(true);
-        if (!initialized) initialized = true;
-        else {
+        if (!initialized) {
+          initialized = true;
+          params.columnApi.autoSizeAllColumns();
+        } else {
           const statusBarComponent = api.getStatusPanel('customStatusBarKey');
           let componentInstance = statusBarComponent;
           if (statusBarComponent)
@@ -163,9 +165,7 @@ const ServerSideGrid = props => {
             field={column.name}
             headerName={columnLabel}
             headerTooltip={tooltipText}
-            width={
-              colMetadata.width_pixels === null ? 200 : colMetadata.width_pixels
-            }
+            width={200}
             filter="agSetColumnFilter"
             filterParams={{
               values: colMetadata.allowed_values,
@@ -181,9 +181,7 @@ const ServerSideGrid = props => {
             field={column.name}
             headerName={columnLabel}
             headerTooltip={tooltipText}
-            width={
-              colMetadata.width_pixels === null ? 200 : colMetadata.width_pixels
-            }
+            width={200}
             filter="agDateColumnFilter"
             filterParams={{
               debounceMs: 1000
@@ -197,9 +195,7 @@ const ServerSideGrid = props => {
             field={column.name}
             headerName={columnLabel}
             headerTooltip={tooltipText}
-            width={
-              colMetadata.width_pixels === null ? 200 : colMetadata.width_pixels
-            }
+            width={200}
             key={table + '.' + column.name}
             cellRenderer={
               column.name === 'case_number' ? 'agGroupCellRenderer' : ''
@@ -245,6 +241,7 @@ const ServerSideGrid = props => {
           )}
           <AgGridReact
             onGridReady={onGridReady}
+            suppressColumnVirtualisation
             masterDetail
             // embedFullWidthRows  // causes detail cell renderer to render 3x (bug AG-4156)
             detailRowAutoHeight
