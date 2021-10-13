@@ -78,7 +78,7 @@ export default class DetailCellRenderer extends Component {
           field={column.name}
           headerName={columnLabel}
           headerTooltip={tooltipText}
-          width={metadata.width_pixels === null ? 200 : metadata.width_pixels}
+          width={200}
           key={table + '.' + column.name}
         />
       );

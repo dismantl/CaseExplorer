@@ -55,11 +55,11 @@ def export_column_metadata(output):
     from . import models
     with open(output, 'w', newline='') as outfile:
         writer = csv.writer(outfile)
-        writer.writerow(['Table name', 'Column name', 'Label', 'Description', 'Width in pixels'])
+        writer.writerow(['Table name', 'Column name', 'Label', 'Description'])
         rows = []
         if models.ColumnMetadata.query.count() > 0:
             for row in models.ColumnMetadata.query.all():
-                rows.append([row.table, row.column_name, row.label, row.description, row.width_pixels])
+                rows.append([row.table, row.column_name, row.label, row.description])
         else:
             for table in models.Case.metadata.sorted_tables:
                 for col in table.columns:
@@ -83,13 +83,11 @@ def import_column_metadata(input):
                 column_name = row[1]
                 label = row[2]
                 description = row[3]
-                width_pixels = row[4]
                 stmt = insert(models.ColumnMetadata).values(
                     table=table,
                     column_name=column_name,
                     label=label,
-                    description=description or None,
-                    width_pixels=int(width_pixels) if width_pixels else None
+                    description=description or None
                 )
                 upsert_stmt = stmt.on_conflict_do_update(
                     constraint='column_metadata_table_column_name_key',
@@ -97,8 +95,7 @@ def import_column_metadata(input):
                         table=stmt.excluded.table,
                         column_name=stmt.excluded.column_name,
                         label=stmt.excluded.label,
-                        description=stmt.excluded.description,
-                        width_pixels=stmt.excluded.width_pixels
+                        description=stmt.excluded.description
                     )
                 )
                 db.execute(upsert_stmt)
