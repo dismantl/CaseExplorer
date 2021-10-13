@@ -5,6 +5,7 @@ import Amplify from 'aws-amplify';
 import awsmobile from './aws-exports';
 import './index.css';
 import ServerSideGrid from './ServerSideGrid';
+import CaseRenderer from './CaseDetails';
 import GraphiQLClient from './GraphiQL';
 import { initializeIcons } from '@fluentui/react/lib/Icons';
 import environment from './config';
@@ -37,8 +38,11 @@ const fetchMetadata = callback => {
 
 const getTitle = metadata => {
   const table = getURLLastPart();
+  console.log(window.location.href);
   let title = '';
-  if (table === '' || table === 'cases') {
+  if (window.location.pathname.startsWith('/case/')) {
+    title = `Case details: ${table}`;
+  } else if (table === '' || table === 'cases') {
     title = 'All Cases';
   } else if (table === 'rest') {
     title = 'REST API';
@@ -143,6 +147,9 @@ const App = props => {
           </div>
           <div className="content">
             <Switch>
+              <Route path="/case/:case_number" key="/case/:case_number">
+                <CaseRenderer apiName={apiName} />
+              </Route>
               <Route
                 path="/graphql"
                 key="/graphql"

@@ -69,10 +69,6 @@ copy_backend: $(BACKEND_DEPS)
 start_backend:
 	FLASK_ENV=development FLASK_APP=$(BACKEND_DIR)/app flask run
 
-.PHONY: start_prod_backend
-start_prod_backend:
-	FLASK_ENV=production FLASK_APP=$(BACKEND_DIR)/app flask run
-
 .PHONY: start_frontend
 start_frontend:
 	@echo "export default 'development';" > $(FRONTEND_DIR)/config.js

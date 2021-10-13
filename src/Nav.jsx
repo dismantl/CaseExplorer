@@ -2,6 +2,7 @@ import React from 'react';
 import { Nav, INavLinkGroup } from 'office-ui-fabric-react/lib/Nav';
 import { toTitleCase, getURLLastPart } from './utils';
 import CopFinder from './CopFinder';
+import CaseFinder from './CaseFinder';
 import apiName from './ApiName';
 import { mergeStyleSets, Text } from '@fluentui/react';
 import { FontIcon } from '@fluentui/react/lib/Icon';
@@ -36,6 +37,10 @@ let navLinkGroups: INavLinkGroup[] = [
       }
     ],
     isExpanded: true
+  },
+  {
+    name: 'Search By Case Number',
+    key: 'Search By Case Number'
   },
   {
     name: 'Search By BPD Officer',
@@ -84,6 +89,7 @@ export const genNavStructure = metadata => {
     currentTable === '' ||
     currentTable.substring(0, 3) === 'ody' ||
     window.location.pathname.split('/')[1] === 'bpd' ||
+    window.location.pathname.split('/')[1] === 'case' ||
     currentTable === 'graphql' ||
     currentTable === 'rest'
       ? false
@@ -114,13 +120,23 @@ export const genNavStructure = metadata => {
 
 const NavBar: React.FunctionComponent = props => {
   function _onRenderGroupHeader(group: INavLinkGroup): JSX.Element {
-    if (group.name !== 'Search By BPD Officer') return <h3>{group.name}</h3>;
-    return (
-      <>
-        <h3>{group.name}</h3>
-        <CopFinder apiName={apiName} />
-      </>
-    );
+    if (group.name === 'Search By BPD Officer') {
+      return (
+        <>
+          <h3>{group.name}</h3>
+          <CopFinder apiName={apiName} />
+        </>
+      );
+    } else if (group.name === 'Search By Case Number') {
+      return (
+        <>
+          <h3>{group.name}</h3>
+          <CaseFinder />
+        </>
+      );
+    } else {
+      return <h3>{group.name}</h3>;
+    }
   }
 
   function _onRenderLink(link) {

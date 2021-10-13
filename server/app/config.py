@@ -16,7 +16,8 @@ class BaseConfig(object):
     SECRET_KEY = os.environ.get('SECRET_KEY', 'changemeplzorelsehax')
     SEED = 666
 
-    BPDWATCH_DATABASE_URI = os.environ.get('BPDWATCH_DATABASE_URI')
+    BPDWATCH_DATABASE_URI = os.getenv('BPDWATCH_DATABASE_URI')
+    CASE_DETAILS_BUCKET = os.getenv('CASE_DETAILS_BUCKET')
 
     @staticmethod
     def init_app(app):

@@ -30,6 +30,11 @@ class RESTAPI:
         def label_by_seq_number(seq_number):
             return json.dumps(DataService.fetch_label_by_cop(seq_number))
 
+        @bp.route(f'/{root}/html/<string:case_number>')
+        def fetch_html(case_number):
+            obj = current_app.config.case_details_bucket.Object(case_number).get()
+            return json.dumps({'html': obj['Body'].read().decode('utf-8')})
+
         api = Api(bp, title='Case Explorer REST API', version='1.0')
         self.api = api
         self.api_schemas = schema_factory(api)
