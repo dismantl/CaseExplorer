@@ -326,7 +326,7 @@ def process_number_filter(col, model):
 def process_date_filter(col, model):
     op = model['type']
     date_from = model['dateFrom']
-    match = re.fullmatch(r'(\d\d\d\d)-(\d\d)-(\d\d)', date_from)
+    match = re.fullmatch(r'(\d\d\d\d)-(\d\d)-(\d\d) 00:00:00', date_from)
     if not match:
         raise Exception('Invalid date format ' + date_from)
     year = match.group(1)
@@ -338,76 +338,21 @@ def process_date_filter(col, model):
     elif op == 'notEqual':
         return col != date_from
     elif op == 'greaterThan':
-        return text('((substring({} from \'%/%/#"%#"\' for \'#\')::integer > {}) or (substring({} from \'%/%/#"%#"\' for \'#\')::integer = {} and substring({} from \'#"%#"/%/%\' for \'#\')::integer > {}) or (substring({} from \'%/%/#"%#"\' for \'#\')::integer = {} and substring({} from \'#"%#"/%/%\' for \'#\')::integer = {} and substring({} from \'%/#"%#"/%\' for \'#\')::integer > {}))'\
-                    .format(
-                        col.name,
-                        int(year),
-                        col.name,
-                        int(year),
-                        col.name,
-                        int(month),
-                        col.name,
-                        int(year),
-                        col.name,
-                        int(month),
-                        col.name,
-                        int(day)
-                    ))
+        return col > date_from
     elif op == 'lessThan':
-        return text('((substring({} from \'%/%/#"%#"\' for \'#\')::integer < {}) or (substring({} from \'%/%/#"%#"\' for \'#\')::integer = {} and substring({} from \'#"%#"/%/%\' for \'#\')::integer < {}) or (substring({} from \'%/%/#"%#"\' for \'#\')::integer = {} and substring({} from \'#"%#"/%/%\' for \'#\')::integer = {} and substring({} from \'%/#"%#"/%\' for \'#\')::integer < {}))'\
-                    .format(
-                        col.name,
-                        int(year),
-                        col.name,
-                        int(year),
-                        col.name,
-                        int(month),
-                        col.name,
-                        int(year),
-                        col.name,
-                        int(month),
-                        col.name,
-                        int(day)
-                    ))
+        return col < date_from
     elif op == 'inRange':
         date_to = model['dateTo']
-        match = re.fullmatch(r'(\d\d\d\d)-(\d\d)-(\d\d)', date_to)
+        match = re.fullmatch(r'(\d\d\d\d)-(\d\d)-(\d\d) 00:00:00', date_to)
         if not match:
             raise Exception('Invalid date format ' + date_to)
         to_year = match.group(1)
         to_month = match.group(2)
         to_day = match.group(3)
+        date_to = '{}/{}/{}'.format(to_month, to_day, to_year)
         return and_(
-            text('((substring({} from \'%/%/#"%#"\' for \'#\')::integer > {}) or (substring({} from \'%/%/#"%#"\' for \'#\')::integer = {} and substring({} from \'#"%#"/%/%\' for \'#\')::integer > {}) or (substring({} from \'%/%/#"%#"\' for \'#\')::integer = {} and substring({} from \'#"%#"/%/%\' for \'#\')::integer = {} and substring({} from \'%/#"%#"/%\' for \'#\')::integer >= {}))'\
-                        .format(
-                            col.name,
-                            int(year),
-                            col.name,
-                            int(year),
-                            col.name,
-                            int(month),
-                            col.name,
-                            int(year),
-                            col.name,
-                            int(month),
-                            col.name,
-                            int(day)
-                        )),
-            text('((substring({} from \'%/%/#"%#"\' for \'#\')::integer < {}) or (substring({} from \'%/%/#"%#"\' for \'#\')::integer = {} and substring({} from \'#"%#"/%/%\' for \'#\')::integer < {}) or (substring({} from \'%/%/#"%#"\' for \'#\')::integer = {} and substring({} from \'#"%#"/%/%\' for \'#\')::integer = {} and substring({} from \'%/#"%#"/%\' for \'#\')::integer <= {}))'\
-                        .format(
-                            col.name,
-                            int(to_year),
-                            col.name,
-                            int(to_year),
-                            col.name,
-                            int(to_month),
-                            col.name,
-                            int(to_year),
-                            col.name,
-                            int(to_month),
-                            col.name,
-                            int(to_day)
-                        ))
+            col >= date_from,
+            col <= date_to
         )
     raise Exception('Unknown date filter type ' + op)
 
