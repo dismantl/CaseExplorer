@@ -219,11 +219,19 @@
             {
               "Effect": "Allow",
               "Action": [
-                "s3:*"
+                "s3:ListBucket"
               ],
               "Resource": [
-                "arn:aws:s3:::mjcs-case-details/*",
                 "arn:aws:s3:::mjcs-case-details"
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:GetObject"
+              ],
+              "Resource": [
+                "arn:aws:s3:::mjcs-case-details/*"
               ]
             }
           ]
