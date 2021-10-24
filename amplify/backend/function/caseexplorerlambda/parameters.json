@@ -1,7 +1,5 @@
 {
     "VpcSecurityGroup": "sg-0cc01ac9995aae171",
-    "VpcSubnet1": "subnet-01fba1fb2247d2bab",
-    "VpcSubnet2": "subnet-069068444b16fc5bb",
-    "VpcRouteTable": "rtb-02107a74219ac0176",
-    "VpcId": "vpc-0eff3302a8d85ea21"
+    "VpcId": "vpc-0eff3302a8d85ea21",
+    "VpcInternetGatewayId": "igw-091aa09273a75f87f"
 }
