@@ -34,7 +34,8 @@ let navLinkGroups: INavLinkGroup[] = [
         collapseAriaLabel: 'Collapse section',
         links: [],
         isExpanded: false
-      }
+      },
+      { name: 'Bail Statistics', url: '/bail', key: 'Bail Statistics' }
     ],
     isExpanded: true
   },
@@ -90,6 +91,7 @@ export const genNavStructure = metadata => {
     currentTable.substring(0, 3) === 'ody' ||
     window.location.pathname.split('/')[1] === 'bpd' ||
     window.location.pathname.split('/')[1] === 'case' ||
+    window.location.pathname.split('/')[1] === 'bail' ||
     currentTable === 'graphql' ||
     currentTable === 'rest'
       ? false
