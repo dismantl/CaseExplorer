@@ -1423,6 +1423,33 @@ class Column(DialectKWArgs, SchemaItem, ColumnClause):
             Strings and text() will be converted into a
             :class:`.DefaultClause` object upon initialization.
 
+            This parameter can also accept complex combinations of contextually
+            valid SQLAlchemy expressions or constructs::
+
+                from sqlalchemy import create_engine
+                from sqlalchemy import Table, Column, MetaData, ARRAY, Text
+                from sqlalchemy.dialects.postgresql import array
+
+                engine = create_engine(
+                    'postgresql://scott:tiger@localhost/mydatabase'
+                )
+                metadata_obj = MetaData()
+                tbl = Table(
+                        "foo",
+                        metadata_obj,
+                        Column("bar",
+                               ARRAY(Text),
+                               server_default=array(["biz", "bang", "bash"])
+                               )
+                )
+                metadata_obj.create_all(engine)
+
+            The above results in a table created with the following SQL::
+
+                CREATE TABLE foo (
+                    bar TEXT[] DEFAULT ARRAY['biz', 'bang', 'bash']
+                )
+
             Use :class:`.FetchedValue` to indicate that an already-existing
             column will generate a default value on the database side which
             will be available to SQLAlchemy for post-fetch after inserts. This
@@ -4168,6 +4195,9 @@ class Index(DialectKWArgs, ColumnCollectionMixin, SchemaItem):
         :class:`.Index`, using the given :class:`.Connectable`
         for connectivity.
 
+        .. note:: the "bind" argument will be required in
+           SQLAlchemy 2.0.
+
         .. seealso::
 
             :meth:`_schema.MetaData.create_all`.
@@ -4182,6 +4212,9 @@ class Index(DialectKWArgs, ColumnCollectionMixin, SchemaItem):
         """Issue a ``DROP`` statement for this
         :class:`.Index`, using the given :class:`.Connectable`
         for connectivity.
+
+        .. note:: the "bind" argument will be required in
+           SQLAlchemy 2.0.
 
         .. seealso::
 

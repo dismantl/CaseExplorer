@@ -39,6 +39,8 @@ NO_ARG = util.symbol("NO_ARG")
 class Immutable(object):
     """mark a ClauseElement as 'immutable' when expressions are cloned."""
 
+    _is_immutable = True
+
     def unique_params(self, *optionaldict, **kwargs):
         raise NotImplementedError("Immutable objects do not support copying")
 
@@ -55,6 +57,8 @@ class Immutable(object):
 class SingletonConstant(Immutable):
     """Represent SQL constants like NULL, TRUE, FALSE"""
 
+    _is_singleton_constant = True
+
     def __new__(cls, *arg, **kw):
         return cls._singleton
 
@@ -62,14 +66,16 @@ class SingletonConstant(Immutable):
     def _create_singleton(cls):
         obj = object.__new__(cls)
         obj.__init__()
-        cls._singleton = obj
 
-    # don't proxy singletons.   this means that a SingletonConstant
-    # will never be a "corresponding column" in a statement; the constant
-    # can be named directly and as it is often/usually compared against using
-    # "IS", it can't be adapted to a subquery column in any case.
-    # see :ticket:`6259`.
-    proxy_set = frozenset()
+        # for a long time this was an empty frozenset, meaning
+        # a SingletonConstant would never be a "corresponding column" in
+        # a statement.  This referred to #6259.  However, in #7154 we see
+        # that we do in fact need "correspondence" to work when matching cols
+        # in result sets, so the non-correspondence was moved to a more
+        # specific level when we are actually adapting expressions for SQL
+        # render only.
+        obj.proxy_set = frozenset([obj])
+        cls._singleton = obj
 
 
 def _from_objects(*elements):
@@ -509,12 +515,20 @@ class CompileState(object):
     @classmethod
     def get_plugin_class(cls, statement):
         plugin_name = statement._propagate_attrs.get(
-            "compile_state_plugin", "default"
+            "compile_state_plugin", None
         )
+
+        if plugin_name:
+            key = (plugin_name, statement._effective_plugin_target)
+            if key in cls.plugins:
+                return cls.plugins[key]
+
+        # there's no case where we call upon get_plugin_class() and want
+        # to get None back, there should always be a default.  return that
+        # if there was no plugin-specific class  (e.g. Insert with "orm"
+        # plugin)
         try:
-            return cls.plugins[
-                (plugin_name, statement._effective_plugin_target)
-            ]
+            return cls.plugins[("default", statement._effective_plugin_target)]
         except KeyError:
             return None
 
@@ -1659,7 +1673,7 @@ def _entity_namespace(entity):
             raise
 
 
-def _entity_namespace_key(entity, key):
+def _entity_namespace_key(entity, key, default=NO_ARG):
     """Return an entry from an entity_namespace.
 
 
@@ -1670,7 +1684,10 @@ def _entity_namespace_key(entity, key):
 
     try:
         ns = _entity_namespace(entity)
-        return getattr(ns, key)
+        if default is not NO_ARG:
+            return getattr(ns, key, default)
+        else:
+            return getattr(ns, key)
     except AttributeError as err:
         util.raise_(
             exc.InvalidRequestError(

@@ -66,19 +66,9 @@ def setup_filters():
     # we are moving one at a time
     for msg in [
         #
-        # ORM configuration
-        #
-        r"Calling the mapper\(\) function directly outside of a "
-        "declarative registry",
-        r"The ``declarative_base\(\)`` function is now available ",
-        r"The ``has_inherited_table\(\)`` function is now available",
-        r"The ``bind`` argument to declarative_base is deprecated and will "
-        "be removed in SQLAlchemy 2.0.",
-        #
         # ORM Query
         #
         r"The Query\.get\(\) method",
-        r"The Query\.from_self\(\) method",
         r"The Query\.with_parent\(\) method",
         r"The Query\.with_parent\(\) method",
         r"The Query\.select_entity_from\(\) method",

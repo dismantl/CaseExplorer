@@ -265,6 +265,9 @@ def dependentRequired(validator, dependentRequired, instance, schema):
 
 
 def dependentSchemas(validator, dependentSchemas, instance, schema):
+    if not validator.is_type(instance, "object"):
+        return
+
     for property, dependency in dependentSchemas.items():
         if property not in instance:
             continue
@@ -452,4 +455,9 @@ def prefixItems(validator, prefixItems, instance, schema):
         return
 
     for (index, item), subschema in zip(enumerate(instance), prefixItems):
-        yield from validator.descend(item, subschema, schema_path=index)
+        yield from validator.descend(
+            instance=item,
+            schema=subschema,
+            schema_path=index,
+            path=index,
+        )

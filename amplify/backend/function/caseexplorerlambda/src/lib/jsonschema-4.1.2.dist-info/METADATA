@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: jsonschema
-Version: 4.1.0
+Version: 4.1.2
 Summary: An implementation of JSON Schema validation for Python
 Home-page: https://github.com/Julian/jsonschema
 Author: Julian Berman

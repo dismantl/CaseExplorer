@@ -1081,6 +1081,10 @@ class TIME(sqltypes.TIME):
 _MSTime = TIME
 
 
+class _BASETIMEIMPL(TIME):
+    __visit_name__ = "_BASETIMEIMPL"
+
+
 class _DateTimeBase(object):
     def bind_processor(self, dialect):
         def process(value):
@@ -1480,6 +1484,9 @@ class MSTypeCompiler(compiler.GenericTypeCompiler):
             return self.visit_DATETIME(type_, **kw)
         else:
             return self.visit_DATE(type_, **kw)
+
+    def visit__BASETIMEIMPL(self, type_, **kw):
+        return self.visit_time(type_, **kw)
 
     def visit_time(self, type_, **kw):
         if self.dialect.server_version_info < MS_2008_VERSION:
@@ -2608,9 +2615,13 @@ class MSDialect(default.DefaultDialect):
         sqltypes.JSON: JSON,
         sqltypes.JSON.JSONIndexType: JSONIndexType,
         sqltypes.JSON.JSONPathType: JSONPathType,
-        sqltypes.Time: TIME,
+        sqltypes.Time: _BASETIMEIMPL,
         sqltypes.Unicode: _MSUnicode,
         sqltypes.UnicodeText: _MSUnicodeText,
+        DATETIMEOFFSET: DATETIMEOFFSET,
+        DATETIME2: DATETIME2,
+        SMALLDATETIME: SMALLDATETIME,
+        DATETIME: DATETIME,
     }
 
     engine_config_types = default.DefaultDialect.engine_config_types.union(
@@ -2824,14 +2835,18 @@ class MSDialect(default.DefaultDialect):
                 )
             )
 
-            table_name = connection.execute(s.limit(1)).scalar()
-            if table_name:
-                # #6910: verify it's not a temp table from another session
-                obj_id = connection.execute(
-                    text("SELECT object_id(:table_name)"),
-                    {"table_name": "tempdb.dbo.[{}]".format(table_name)},
-                ).scalar()
-                return bool(obj_id)
+            # #7168: fetch all (not just first match) in case some other #temp
+            #        table with the same name happens to appear first
+            table_names = connection.execute(s).scalars().fetchall()
+            # #6910: verify it's not a temp table from another session
+            for table_name in table_names:
+                if bool(
+                    connection.scalar(
+                        text("SELECT object_id(:table_name)"),
+                        {"table_name": "tempdb.dbo.[{}]".format(table_name)},
+                    )
+                ):
+                    return True
             else:
                 return False
         else:
@@ -3249,33 +3264,122 @@ class MSDialect(default.DefaultDialect):
     def get_foreign_keys(
         self, connection, tablename, dbname, owner, schema, **kw
     ):
-        RR = ischema.ref_constraints
-        C = ischema.key_constraints.alias("C")
-        R = ischema.key_constraints.alias("R")
         # Foreign key constraints
         s = (
-            sql.select(
-                C.c.column_name,
-                R.c.table_schema,
-                R.c.table_name,
-                R.c.column_name,
-                RR.c.constraint_name,
-                RR.c.match_option,
-                RR.c.update_rule,
-                RR.c.delete_rule,
+            text(
+                """\
+WITH fk_info AS (
+    SELECT
+        ischema_ref_con.constraint_schema,
+        ischema_ref_con.constraint_name,
+        ischema_key_col.ordinal_position,
+        ischema_key_col.table_schema,
+        ischema_key_col.table_name,
+        ischema_ref_con.unique_constraint_schema,
+        ischema_ref_con.unique_constraint_name,
+        ischema_ref_con.match_option,
+        ischema_ref_con.update_rule,
+        ischema_ref_con.delete_rule,
+        ischema_key_col.column_name AS constrained_column
+    FROM
+        INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS ischema_ref_con
+        INNER JOIN
+        INFORMATION_SCHEMA.KEY_COLUMN_USAGE ischema_key_col ON
+            ischema_key_col.table_schema = ischema_ref_con.constraint_schema
+            AND ischema_key_col.constraint_name =
+            ischema_ref_con.constraint_name
+    WHERE ischema_key_col.table_name = :tablename
+        AND ischema_key_col.table_schema = :owner
+),
+constraint_info AS (
+    SELECT
+        ischema_key_col.constraint_schema,
+        ischema_key_col.constraint_name,
+        ischema_key_col.ordinal_position,
+        ischema_key_col.table_schema,
+        ischema_key_col.table_name,
+        ischema_key_col.column_name
+    FROM
+        INFORMATION_SCHEMA.KEY_COLUMN_USAGE ischema_key_col
+),
+index_info AS (
+    SELECT
+        sys.schemas.name AS index_schema,
+        sys.indexes.name AS index_name,
+        sys.index_columns.key_ordinal AS ordinal_position,
+        sys.schemas.name AS table_schema,
+        sys.objects.name AS table_name,
+        sys.columns.name AS column_name
+    FROM
+        sys.indexes
+        INNER JOIN
+        sys.objects ON
+            sys.objects.object_id = sys.indexes.object_id
+        INNER JOIN
+        sys.schemas ON
+            sys.schemas.schema_id = sys.objects.schema_id
+        INNER JOIN
+        sys.index_columns ON
+            sys.index_columns.object_id = sys.objects.object_id
+            AND sys.index_columns.index_id = sys.indexes.index_id
+        INNER JOIN
+        sys.columns ON
+            sys.columns.object_id = sys.indexes.object_id
+            AND sys.columns.column_id = sys.index_columns.column_id
+)
+    SELECT
+        fk_info.constraint_schema,
+        fk_info.constraint_name,
+        fk_info.ordinal_position,
+        fk_info.constrained_column,
+        constraint_info.table_schema AS referred_table_schema,
+        constraint_info.table_name AS referred_table_name,
+        constraint_info.column_name AS referred_column,
+        fk_info.match_option,
+        fk_info.update_rule,
+        fk_info.delete_rule
+    FROM
+        fk_info INNER JOIN constraint_info ON
+            constraint_info.constraint_schema =
+                fk_info.unique_constraint_schema
+            AND constraint_info.constraint_name =
+                fk_info.unique_constraint_name
+            AND constraint_info.ordinal_position = fk_info.ordinal_position
+    UNION
+    SELECT
+        fk_info.constraint_schema,
+        fk_info.constraint_name,
+        fk_info.ordinal_position,
+        fk_info.constrained_column,
+        index_info.table_schema AS referred_table_schema,
+        index_info.table_name AS referred_table_name,
+        index_info.column_name AS referred_column,
+        fk_info.match_option,
+        fk_info.update_rule,
+        fk_info.delete_rule
+    FROM
+        fk_info INNER JOIN index_info ON
+            index_info.index_schema = fk_info.unique_constraint_schema
+            AND index_info.index_name = fk_info.unique_constraint_name
+            AND index_info.ordinal_position = fk_info.ordinal_position
+
+    ORDER BY constraint_schema, constraint_name, ordinal_position
+"""
             )
-            .where(
-                sql.and_(
-                    C.c.table_name == tablename,
-                    C.c.table_schema == owner,
-                    RR.c.constraint_schema == C.c.table_schema,
-                    C.c.constraint_name == RR.c.constraint_name,
-                    R.c.constraint_name == RR.c.unique_constraint_name,
-                    R.c.constraint_schema == RR.c.unique_constraint_schema,
-                    C.c.ordinal_position == R.c.ordinal_position,
-                )
+            .bindparams(
+                sql.bindparam("tablename", tablename, ischema.CoerceUnicode()),
+                sql.bindparam("owner", owner, ischema.CoerceUnicode()),
             )
-            .order_by(RR.c.constraint_name, R.c.ordinal_position)
+            .columns(
+                constraint_schema=sqltypes.Unicode(),
+                constraint_name=sqltypes.Unicode(),
+                table_schema=sqltypes.Unicode(),
+                table_name=sqltypes.Unicode(),
+                constrained_column=sqltypes.Unicode(),
+                referred_table_schema=sqltypes.Unicode(),
+                referred_table_name=sqltypes.Unicode(),
+                referred_column=sqltypes.Unicode(),
+            )
         )
 
         # group rows by constraint ID, to handle multi-column FKs
@@ -3288,15 +3392,37 @@ class MSDialect(default.DefaultDialect):
                 "referred_schema": None,
                 "referred_table": None,
                 "referred_columns": [],
+                "options": {},
             }
 
         fkeys = util.defaultdict(fkey_rec)
 
         for r in connection.execute(s).fetchall():
-            scol, rschema, rtbl, rcol, rfknm, fkmatch, fkuprule, fkdelrule = r
+            (
+                _,  # constraint schema
+                rfknm,
+                _,  # ordinal position
+                scol,
+                rschema,
+                rtbl,
+                rcol,
+                # TODO: we support match=<keyword> for foreign keys so
+                # we can support this also, PG has match=FULL for example
+                # but this seems to not be a valid value for SQL Server
+                _,  # match rule
+                fkuprule,
+                fkdelrule,
+            ) = r
 
             rec = fkeys[rfknm]
             rec["name"] = rfknm
+
+            if fkuprule != "NO ACTION":
+                rec["options"]["onupdate"] = fkuprule
+
+            if fkdelrule != "NO ACTION":
+                rec["options"]["ondelete"] = fkdelrule
+
             if not rec["referred_table"]:
                 rec["referred_table"] = rtbl
                 if schema is not None or owner != rschema:

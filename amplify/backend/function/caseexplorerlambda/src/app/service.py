@@ -27,7 +27,7 @@ class DataService:
         result = fetch_rows_by_cop(seq_number, req)
         return {
             'rows': result['rows'],
-            'last_row': result['last_row']
+            'lastRow': result['last_row']
         }
 
 
@@ -51,7 +51,7 @@ class DataService:
         result = fetch_rows_from_model(orm_cls, req)
         return {
             'rows': result['rows'],
-            'last_row': result['last_row']
+            'lastRow': result['last_row']
         }
 
     @classmethod
@@ -60,7 +60,7 @@ class DataService:
         result = fetch_rows_from_model(orm_cls, req, eager=True)
         return {
             'rows': result['rows'],
-            'last_row': result['last_row']
+            'lastRow': result['last_row']
         }
     
     @classmethod

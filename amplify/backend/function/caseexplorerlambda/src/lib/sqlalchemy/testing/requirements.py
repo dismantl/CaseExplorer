@@ -589,7 +589,15 @@ class SuiteRequirements(Requirements):
 
     @property
     def table_reflection(self):
+        """target database has general support for table reflection"""
         return exclusions.open()
+
+    @property
+    def reflect_tables_no_columns(self):
+        """target database supports creation and reflection of tables with no
+        columns, or at least tables that seem to have no columns."""
+
+        return exclusions.closed()
 
     @property
     def comment_reflection(self):
@@ -1437,6 +1445,15 @@ class SuiteRequirements(Requirements):
     def fetch_offset_with_options(self):
         """backend supports the offset when using fetch first with percent
         or ties. basically this is "not mssql"
+        """
+        return exclusions.closed()
+
+    @property
+    def fetch_expression(self):
+        """backend supports fetch / offset with expression in them, like
+
+        SELECT * FROM some_table
+        OFFSET 1 + 1 ROWS FETCH FIRST 1 + 1 ROWS ONLY
         """
         return exclusions.closed()
 

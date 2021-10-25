@@ -287,7 +287,7 @@ def set_value(dct: typing.Dict[str, typing.Any], key: str, value: typing.Any):
 def callable_or_raise(obj):
     """Check that an object is callable, else raise a :exc:`TypeError`."""
     if not callable(obj):
-        raise TypeError("Object {!r} is not callable.".format(obj))
+        raise TypeError(f"Object {obj!r} is not callable.")
     return obj
 
 
@@ -323,3 +323,11 @@ def resolve_field_instance(cls_or_instance):
         if not isinstance(cls_or_instance, FieldABC):
             raise FieldInstanceResolutionError
         return cls_or_instance
+
+
+def timedelta_to_microseconds(value: dt.timedelta) -> int:
+    """Compute the total microseconds of a timedelta
+
+    https://github.com/python/cpython/blob/bb3e0c240bc60fe08d332ff5955d54197f79751c/Lib/datetime.py#L665-L667  # noqa: B950
+    """
+    return (value.days * (24 * 3600) + value.seconds) * 1000000 + value.microseconds

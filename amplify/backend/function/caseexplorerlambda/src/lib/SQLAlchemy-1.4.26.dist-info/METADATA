@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: SQLAlchemy
-Version: 1.4.25
+Version: 1.4.26
 Summary: Database Abstraction Library
 Home-page: https://www.sqlalchemy.org
 Author: Mike Bayer
@@ -21,6 +21,7 @@ Classifier: Programming Language :: Python :: 3.6
 Classifier: Programming Language :: Python :: 3.7
 Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
 Classifier: Programming Language :: Python :: Implementation :: CPython
 Classifier: Programming Language :: Python :: Implementation :: PyPy
 Classifier: Topic :: Database :: Front-Ends
@@ -39,7 +40,7 @@ Provides-Extra: asyncio
 Requires-Dist: greenlet (!=0.4.17) ; (python_version >= "3") and extra == 'asyncio'
 Provides-Extra: asyncmy
 Requires-Dist: greenlet (!=0.4.17) ; (python_version >= "3") and extra == 'asyncmy'
-Requires-Dist: asyncmy (>=0.2.0) ; (python_version >= "3") and extra == 'asyncmy'
+Requires-Dist: asyncmy (>=0.2.3) ; (python_version >= "3") and extra == 'asyncmy'
 Provides-Extra: mariadb_connector
 Requires-Dist: mariadb (>=1.0.1) ; (python_version >= "3") and extra == 'mariadb_connector'
 Provides-Extra: mssql

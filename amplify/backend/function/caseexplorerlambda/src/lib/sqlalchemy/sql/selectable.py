@@ -2049,8 +2049,9 @@ class CTE(
         AliasedReturnsRows._traverse_internals
         + [
             ("_cte_alias", InternalTraversal.dp_clauseelement),
-            ("_restates", InternalTraversal.dp_clauseelement_list),
+            ("_restates", InternalTraversal.dp_clauseelement),
             ("recursive", InternalTraversal.dp_boolean),
+            ("nesting", InternalTraversal.dp_boolean),
         ]
         + HasPrefixes._has_prefixes_traverse_internals
         + HasSuffixes._has_suffixes_traverse_internals
@@ -2075,13 +2076,14 @@ class CTE(
         recursive=False,
         nesting=False,
         _cte_alias=None,
-        _restates=(),
+        _restates=None,
         _prefixes=None,
         _suffixes=None,
     ):
         self.recursive = recursive
         self.nesting = nesting
         self._cte_alias = _cte_alias
+        # Keep recursivity reference with union/union_all
         self._restates = _restates
         if _prefixes:
             self._prefixes = _prefixes
@@ -2125,7 +2127,7 @@ class CTE(
             name=self.name,
             recursive=self.recursive,
             nesting=self.nesting,
-            _restates=self._restates + (self,),
+            _restates=self,
             _prefixes=self._prefixes,
             _suffixes=self._suffixes,
         )
@@ -2136,10 +2138,18 @@ class CTE(
             name=self.name,
             recursive=self.recursive,
             nesting=self.nesting,
-            _restates=self._restates + (self,),
+            _restates=self,
             _prefixes=self._prefixes,
             _suffixes=self._suffixes,
         )
+
+    def _get_reference_cte(self):
+        """
+        A recursive CTE is updated to attach the recursive part.
+        Updated CTEs should still refer to the original CTE.
+        This function returns this reference identifier.
+        """
+        return self._restates if self._restates is not None else self
 
 
 class HasCTE(roles.HasCTERole):
@@ -2622,7 +2632,7 @@ class TableClause(roles.DMLTableRole, Immutable, FromClause):
         """
 
         super(TableClause, self).__init__()
-        self.name = self.fullname = name
+        self.name = name
         self._columns = DedupeColumnCollection()
         self.primary_key = ColumnSet()
         self.foreign_keys = set()
@@ -2632,6 +2642,10 @@ class TableClause(roles.DMLTableRole, Immutable, FromClause):
         schema = kw.pop("schema", None)
         if schema is not None:
             self.schema = schema
+        if self.schema is not None:
+            self.fullname = "%s.%s" % (self.schema, self.name)
+        else:
+            self.fullname = self.name
         if kw:
             raise exc.ArgumentError("Unsupported argument(s): %s" % list(kw))
 
@@ -6062,6 +6076,14 @@ class Select(
         table_qualified = self._label_style is LABEL_STYLE_TABLENAME_PLUS_COL
         label_style_none = self._label_style is LABEL_STYLE_NONE
 
+        # a counter used for "dedupe" labels, which have double underscores
+        # in them and are never referred by name; they only act
+        # as positional placeholders.  they need only be unique within
+        # the single columns clause they're rendered within (required by
+        # some dbs such as mysql).  So their anon identity is tracked against
+        # a fixed counter rather than hash() identity.
+        dedupe_hash = 1
+
         for c in cols:
             repeated = False
 
@@ -6095,9 +6117,15 @@ class Select(
                             # here, "required_label_name" is sent as
                             # "None" and "fallback_label_name" is sent.
                             if table_qualified:
-                                fallback_label_name = c._dedupe_anon_tq_label
+                                fallback_label_name = (
+                                    c._dedupe_anon_tq_label_idx(dedupe_hash)
+                                )
+                                dedupe_hash += 1
                             else:
-                                fallback_label_name = c._dedupe_anon_label
+                                fallback_label_name = c._dedupe_anon_label_idx(
+                                    dedupe_hash
+                                )
+                                dedupe_hash += 1
                         else:
                             fallback_label_name = c._anon_name_label
                     else:
@@ -6138,11 +6166,13 @@ class Select(
                             if table_qualified:
                                 required_label_name = (
                                     fallback_label_name
-                                ) = c._dedupe_anon_tq_label
+                                ) = c._dedupe_anon_tq_label_idx(dedupe_hash)
+                                dedupe_hash += 1
                             else:
                                 required_label_name = (
                                     fallback_label_name
-                                ) = c._dedupe_anon_label
+                                ) = c._dedupe_anon_label_idx(dedupe_hash)
+                                dedupe_hash += 1
                             repeated = True
                         else:
                             names[required_label_name] = c
@@ -6152,11 +6182,13 @@ class Select(
                         if table_qualified:
                             required_label_name = (
                                 fallback_label_name
-                            ) = c._dedupe_anon_tq_label
+                            ) = c._dedupe_anon_tq_label_idx(dedupe_hash)
+                            dedupe_hash += 1
                         else:
                             required_label_name = (
                                 fallback_label_name
-                            ) = c._dedupe_anon_label
+                            ) = c._dedupe_anon_label_idx(dedupe_hash)
+                            dedupe_hash += 1
                         repeated = True
                 else:
                     names[effective_name] = c
