@@ -1,5 +1,5 @@
 # orm/__init__.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -109,6 +109,11 @@ def create_session(bind=None, **kwargs):
     :func:`sessionmaker`; ``autoflush`` and ``expire_on_commit`` are
     False, ``autocommit`` is True.  In this sense the session acts
     more like the "classic" SQLAlchemy 0.3 session with these.
+
+    .. deprecated:: 1.4  The "autocommit" parameter will be removed in
+       SQLAlchemy 2.0.  :func:`_orm.create_session` will return a
+       :class:`_orm.Session` that does not include "autocommit' behavior
+       in release 2.0.
 
     Usage::
 

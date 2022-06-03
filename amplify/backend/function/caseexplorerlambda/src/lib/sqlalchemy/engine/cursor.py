@@ -1,5 +1,5 @@
 # engine/cursor.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -1043,6 +1043,8 @@ class BufferedRowCursorFetchStrategy(CursorFetchStrategy):
         )
 
     def _buffer_rows(self, result, dbapi_cursor):
+        """this is currently used only by fetchone()."""
+
         size = self._bufsize
         try:
             if size < 1:
@@ -1095,9 +1097,14 @@ class BufferedRowCursorFetchStrategy(CursorFetchStrategy):
         lb = len(buf)
         if size > lb:
             try:
-                buf.extend(dbapi_cursor.fetchmany(size - lb))
+                new = dbapi_cursor.fetchmany(size - lb)
             except BaseException as e:
                 self.handle_exception(result, dbapi_cursor, e)
+            else:
+                if not new:
+                    result._soft_close()
+                else:
+                    buf.extend(new)
 
         result = buf[0:size]
         self._rowbuffer = collections.deque(buf[size:])
@@ -1348,7 +1355,6 @@ class BaseCursorResult(object):
 
 
         """
-
         if (not hard and self._soft_closed) or (hard and self.closed):
             return
 
@@ -1677,7 +1683,7 @@ class BaseCursorResult(object):
 
             :ref:`tutorial_update_delete_rowcount` - in the :ref:`unified_tutorial`
 
-        """  # noqa E501
+        """  # noqa: E501
 
         try:
             return self.context.rowcount
@@ -1780,6 +1786,7 @@ class CursorResult(BaseCursorResult, Result):
     _cursor_metadata = CursorResultMetaData
     _cursor_strategy_cls = CursorFetchStrategy
     _no_result_metadata = _NO_RESULT_METADATA
+    _is_cursor = True
 
     def _fetchiter_impl(self):
         fetchone = self.cursor_strategy.fetchone

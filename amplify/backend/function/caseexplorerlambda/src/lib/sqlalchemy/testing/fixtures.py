@@ -1,5 +1,5 @@
 # testing/fixtures.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -51,6 +51,13 @@ class TestBase(object):
         assert val, msg
 
     @config.fixture()
+    def nocache(self):
+        _cache = config.db._compiled_cache
+        config.db._compiled_cache = None
+        yield
+        config.db._compiled_cache = _cache
+
+    @config.fixture()
     def connection_no_trans(self):
         eng = getattr(self, "bind", None) or config.db
 
@@ -83,6 +90,10 @@ class TestBase(object):
         reg = registry(metadata=metadata)
         yield reg
         reg.dispose()
+
+    @config.fixture
+    def decl_base(self, registry):
+        return registry.generate_base()
 
     @config.fixture()
     def future_connection(self, future_engine, connection):
@@ -130,6 +141,10 @@ class TestBase(object):
             return testing_engine(**kw)
 
         return go
+
+    @config.fixture
+    def fixture_session(self):
+        return fixture_session()
 
     @config.fixture()
     def metadata(self, request):
@@ -432,6 +447,10 @@ class TablesTest(TestBase):
         elif self.run_create_tables == "each":
             drop_all_tables_from_metadata(self._tables_metadata, self.bind)
 
+        savepoints = getattr(config.requirements, "savepoints", False)
+        if savepoints:
+            savepoints = savepoints.enabled
+
         # no need to run deletes if tables are recreated on setup
         if (
             self.run_define_tables != "each"
@@ -449,7 +468,11 @@ class TablesTest(TestBase):
                     ]
                 ):
                     try:
-                        conn.execute(table.delete())
+                        if savepoints:
+                            with conn.begin_nested():
+                                conn.execute(table.delete())
+                        else:
+                            conn.execute(table.delete())
                     except sa.exc.DBAPIError as ex:
                         util.print_(
                             ("Error emptying table %s: %r" % (table, ex)),

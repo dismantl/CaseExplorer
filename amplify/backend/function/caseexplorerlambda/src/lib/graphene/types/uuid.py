@@ -1,31 +1,28 @@
 from __future__ import absolute_import
-import six
 from uuid import UUID as _UUID
 
-from graphql.language import ast
+from graphql.language.ast import StringValueNode
 
 from .scalars import Scalar
 
 
 class UUID(Scalar):
     """
-    Leverages the internal Python implmeentation of UUID (uuid.UUID) to provide native UUID objects
+    Leverages the internal Python implementation of UUID (uuid.UUID) to provide native UUID objects
     in fields, resolvers and input.
     """
 
     @staticmethod
     def serialize(uuid):
-        if isinstance(uuid, six.string_types):
+        if isinstance(uuid, str):
             uuid = _UUID(uuid)
 
-        assert isinstance(uuid, _UUID), "Expected UUID instance, received {}".format(
-            uuid
-        )
+        assert isinstance(uuid, _UUID), f"Expected UUID instance, received {uuid}"
         return str(uuid)
 
     @staticmethod
-    def parse_literal(node):
-        if isinstance(node, ast.StringValue):
+    def parse_literal(node, _variables=None):
+        if isinstance(node, StringValueNode):
             return _UUID(node.value)
 
     @staticmethod

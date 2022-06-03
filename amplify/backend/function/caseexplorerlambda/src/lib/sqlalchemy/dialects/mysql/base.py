@@ -1,5 +1,5 @@
 # mysql/base.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -983,6 +983,8 @@ from .enumerated import SET
 from .json import JSON
 from .json import JSONIndexType
 from .json import JSONPathType
+from .reserved_words import RESERVED_WORDS_MARIADB
+from .reserved_words import RESERVED_WORDS_MYSQL
 from .types import _FloatType
 from .types import _IntegerType
 from .types import _MatchType
@@ -1036,301 +1038,6 @@ from ...types import BOOLEAN
 from ...types import DATE
 from ...types import VARBINARY
 from ...util import topological
-
-
-RESERVED_WORDS = set(
-    [
-        "accessible",
-        "action",
-        "add",
-        "admin",
-        "all",
-        "alter",
-        "analyze",
-        "and",
-        "array",  # 8.0
-        "as",
-        "asc",
-        "asensitive",
-        "before",
-        "between",
-        "bigint",
-        "binary",
-        "blob",
-        "both",
-        "by",
-        "call",
-        "cascade",
-        "case",
-        "change",
-        "char",
-        "character",
-        "check",
-        "collate",
-        "column",
-        "columns",
-        "condition",
-        "constraint",
-        "continue",
-        "convert",
-        "create",
-        "cross",
-        "cube",
-        "cume_dist",
-        "current_date",
-        "current_time",
-        "current_timestamp",
-        "current_user",
-        "cursor",
-        "database",
-        "databases",
-        "day_hour",
-        "day_microsecond",
-        "day_minute",
-        "day_second",
-        "dec",
-        "decimal",
-        "declare",
-        "default",
-        "delayed",
-        "delete",
-        "desc",
-        "describe",
-        "deterministic",
-        "distinct",
-        "distinctrow",
-        "div",
-        "double",
-        "drop",
-        "dual",
-        "each",
-        "else",
-        "elseif",
-        "empty",
-        "enclosed",
-        "escaped",
-        "except",
-        "exists",
-        "exit",
-        "explain",
-        "false",
-        "fetch",
-        "fields",
-        "first_value",
-        "float",
-        "float4",
-        "float8",
-        "for",
-        "force",
-        "foreign",
-        "from",
-        "fulltext",
-        "function",
-        "general",
-        "generated",
-        "get",
-        "grant",
-        "group",
-        "grouping",
-        "groups",
-        "having",
-        "high_priority",
-        "hour_microsecond",
-        "hour_minute",
-        "hour_second",
-        "if",
-        "ignore",
-        "ignore_server_ids",
-        "in",
-        "index",
-        "infile",
-        "inner",
-        "inout",
-        "insensitive",
-        "insert",
-        "int",
-        "int1",
-        "int2",
-        "int3",
-        "int4",
-        "int8",
-        "integer",
-        "interval",
-        "into",
-        "io_after_gtids",
-        "io_before_gtids",
-        "is",
-        "iterate",
-        "join",
-        "json_table",
-        "key",
-        "keys",
-        "kill",
-        "last_value",
-        "lateral",
-        "leading",
-        "leave",
-        "left",
-        "level",
-        "like",
-        "limit",
-        "linear",
-        "linear",
-        "lines",
-        "load",
-        "localtime",
-        "localtimestamp",
-        "lock",
-        "long",
-        "longblob",
-        "longtext",
-        "loop",
-        "low_priority",
-        "master_bind",
-        "master_heartbeat_period",
-        "master_ssl_verify_server_cert",
-        "master_ssl_verify_server_cert",
-        "match",
-        "maxvalue",
-        "mediumblob",
-        "mediumint",
-        "mediumtext",
-        "member",  # 8.0
-        "middleint",
-        "minute_microsecond",
-        "minute_second",
-        "mod",
-        "mode",
-        "modifies",
-        "natural",
-        "no_write_to_binlog",
-        "not",
-        "nth_value",
-        "ntile",
-        "null",
-        "numeric",
-        "of",
-        "on",
-        "one_shot",
-        "optimize",
-        "optimizer_costs",
-        "option",
-        "optionally",
-        "or",
-        "order",
-        "out",
-        "outer",
-        "outfile",
-        "over",
-        "partition",
-        "percent_rank",
-        "persist",
-        "persist_only",
-        "precision",
-        "primary",
-        "privileges",
-        "procedure",
-        "purge",
-        "range",
-        "range",
-        "rank",
-        "read",
-        "read_only",
-        "read_only",
-        "read_write",
-        "read_write",  # 5.1
-        "reads",
-        "real",
-        "recursive",
-        "references",
-        "regexp",
-        "release",
-        "rename",
-        "repeat",
-        "replace",
-        "require",
-        "resignal",
-        "restrict",
-        "return",
-        "revoke",
-        "right",
-        "rlike",
-        "role",
-        "row",
-        "row_number",
-        "rows",
-        "schema",
-        "schemas",
-        "second_microsecond",
-        "select",
-        "sensitive",
-        "separator",
-        "set",
-        "show",
-        "signal",
-        "slow",  # 5.5
-        "smallint",
-        "soname",
-        "spatial",
-        "specific",
-        "sql",
-        "sql_after_gtids",
-        "sql_before_gtids",  # 5.6
-        "sql_big_result",
-        "sql_calc_found_rows",
-        "sql_small_result",
-        "sqlexception",
-        "sqlstate",
-        "sqlwarning",
-        "ssl",
-        "starting",
-        "status",
-        "stored",
-        "straight_join",
-        "system",
-        "table",
-        "tables",  # 4.1
-        "terminated",
-        "text",
-        "then",
-        "time",
-        "tinyblob",
-        "tinyint",
-        "tinytext",
-        "to",
-        "trailing",
-        "trigger",
-        "true",
-        "undo",
-        "union",
-        "unique",
-        "unlock",
-        "unsigned",
-        "update",
-        "usage",
-        "use",
-        "using",
-        "utc_date",
-        "utc_time",
-        "utc_timestamp",
-        "values",
-        "varbinary",
-        "varchar",
-        "varcharacter",
-        "varying",
-        "virtual",  # 5.7
-        "when",
-        "where",
-        "while",
-        "window",  # 8.0
-        "with",
-        "write",
-        "x509",
-        "xor",
-        "year_month",
-        "zerofill",  # 5.0
-    ]
-)
 
 AUTOCOMMIT_RE = re.compile(
     r"\s*(?:UPDATE|INSERT|CREATE|DELETE|DROP|ALTER|LOAD +DATA|REPLACE)",
@@ -1595,7 +1302,7 @@ class MySQLCompiler(compiler.SQLCompiler):
                         and obj.table is on_duplicate.inserted_alias
                     ):
                         obj = literal_column(
-                            "VALUES(" + self.preparer.quote(column.name) + ")"
+                            "VALUES(" + self.preparer.quote(obj.name) + ")"
                         )
                         return obj
                     else:
@@ -2586,8 +2293,7 @@ class MySQLTypeCompiler(compiler.GenericTypeCompiler):
 
 
 class MySQLIdentifierPreparer(compiler.IdentifierPreparer):
-
-    reserved_words = RESERVED_WORDS
+    reserved_words = RESERVED_WORDS_MYSQL
 
     def __init__(self, dialect, server_ansiquotes=False, **kw):
         if not server_ansiquotes:
@@ -2603,6 +2309,10 @@ class MySQLIdentifierPreparer(compiler.IdentifierPreparer):
         """Unilaterally identifier-quote any number of strings."""
 
         return tuple([self.quote_identifier(i) for i in ids if i is not None])
+
+
+class MariaDBIdentifierPreparer(MySQLIdentifierPreparer):
+    reserved_words = RESERVED_WORDS_MARIADB
 
 
 @log.class_logger
@@ -2834,6 +2544,11 @@ class MySQLDialect(default.DefaultDialect):
                 "MySQL version %s is not a MariaDB variant."
                 % (server_version_info,)
             )
+        if is_mariadb:
+            self.preparer = MariaDBIdentifierPreparer
+            # this would have been set by the default dialect already,
+            # so set it again
+            self.identifier_preparer = self.preparer(self)
         self.is_mariadb = is_mariadb
 
     def do_begin_twophase(self, connection, xid):
@@ -2863,16 +2578,22 @@ class MySQLDialect(default.DefaultDialect):
 
     def is_disconnect(self, e, connection, cursor):
         if isinstance(
-            e, (self.dbapi.OperationalError, self.dbapi.ProgrammingError)
+            e,
+            (
+                self.dbapi.OperationalError,
+                self.dbapi.ProgrammingError,
+                self.dbapi.InterfaceError,
+            ),
+        ) and self._extract_error_code(e) in (
+            1927,
+            2006,
+            2013,
+            2014,
+            2045,
+            2055,
+            4031,
         ):
-            return self._extract_error_code(e) in (
-                1927,
-                2006,
-                2013,
-                2014,
-                2045,
-                2055,
-            )
+            return True
         elif isinstance(
             e, (self.dbapi.InterfaceError, self.dbapi.InternalError)
         ):
@@ -2984,9 +2705,18 @@ class MySQLDialect(default.DefaultDialect):
         ]
 
     def initialize(self, connection):
+        # this is driver-based, does not need server version info
+        # and is fairly critical for even basic SQL operations
         self._connection_charset = self._detect_charset(connection)
+
+        # call super().initialize() because we need to have
+        # server_version_info set up.  in 1.4 under python 2 only this does the
+        # "check unicode returns" thing, which is the one area that some
+        # SQL gets compiled within initialize() currently
+        default.DefaultDialect.initialize(self, connection)
+
         self._detect_sql_mode(connection)
-        self._detect_ansiquotes(connection)
+        self._detect_ansiquotes(connection)  # depends on sql mode
         self._detect_casing(connection)
         if self._server_ansiquotes:
             # if ansiquotes == True, build a new IdentifierPreparer
@@ -2994,8 +2724,6 @@ class MySQLDialect(default.DefaultDialect):
             self.identifier_preparer = self.preparer(
                 self, server_ansiquotes=self._server_ansiquotes
             )
-
-        default.DefaultDialect.initialize(self, connection)
 
         self.supports_sequences = (
             self.is_mariadb and self.server_version_info >= (10, 3)
@@ -3382,6 +3110,23 @@ class MySQLDialect(default.DefaultDialect):
             sql = parser._describe_to_create(table_name, columns)
         return parser.parse(sql, charset)
 
+    def _fetch_setting(self, connection, setting_name):
+        charset = self._connection_charset
+
+        if self.server_version_info and self.server_version_info < (5, 6):
+            sql = "SHOW VARIABLES LIKE '%s'" % setting_name
+            fetch_col = 1
+        else:
+            sql = "SELECT @@%s" % setting_name
+            fetch_col = 0
+
+        show_var = connection.exec_driver_sql(sql)
+        row = self._compat_first(show_var, charset=charset)
+        if not row:
+            return None
+        else:
+            return row[fetch_col]
+
     def _detect_charset(self, connection):
         raise NotImplementedError()
 
@@ -3394,25 +3139,18 @@ class MySQLDialect(default.DefaultDialect):
         """
         # https://dev.mysql.com/doc/refman/en/identifier-case-sensitivity.html
 
-        charset = self._connection_charset
-        show_var = connection.execute(
-            sql.text("SHOW VARIABLES LIKE 'lower_case_table_names'")
-        )
-        row = self._compat_first(
-            show_var,
-            charset=charset,
-        )
-        if not row:
+        setting = self._fetch_setting(connection, "lower_case_table_names")
+        if setting is None:
             cs = 0
         else:
             # 4.0.15 returns OFF or ON according to [ticket:489]
             # 3.23 doesn't, 4.0.27 doesn't..
-            if row[1] == "OFF":
+            if setting == "OFF":
                 cs = 0
-            elif row[1] == "ON":
+            elif setting == "ON":
                 cs = 1
             else:
-                cs = int(row[1])
+                cs = int(setting)
         self._casing = cs
         return cs
 
@@ -3430,19 +3168,16 @@ class MySQLDialect(default.DefaultDialect):
         return collations
 
     def _detect_sql_mode(self, connection):
-        row = self._compat_first(
-            connection.exec_driver_sql("SHOW VARIABLES LIKE 'sql_mode'"),
-            charset=self._connection_charset,
-        )
+        setting = self._fetch_setting(connection, "sql_mode")
 
-        if not row:
+        if setting is None:
             util.warn(
                 "Could not retrieve SQL_MODE; please ensure the "
                 "MySQL user has permissions to SHOW VARIABLES"
             )
             self._sql_mode = ""
         else:
-            self._sql_mode = row[1] or ""
+            self._sql_mode = setting or ""
 
     def _detect_ansiquotes(self, connection):
         """Detect and adjust for the ANSI_QUOTES sql mode."""

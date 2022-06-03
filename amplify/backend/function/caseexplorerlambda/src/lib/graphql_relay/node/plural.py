@@ -1,35 +1,41 @@
-from collections import OrderedDict
+from typing import Any, Callable, List, Optional
 
-from promise import Promise
-
-from graphql.type import (
+from graphql import (
     GraphQLArgument,
+    GraphQLField,
+    GraphQLInputType,
+    GraphQLOutputType,
     GraphQLList,
     GraphQLNonNull,
-    GraphQLField
+    GraphQLResolveInfo,
+    get_nullable_type,
 )
+
+__all__ = ["plural_identifying_root_field"]
 
 
 def plural_identifying_root_field(
-        arg_name, input_type, output_type, resolve_single_input, description=None):
-    input_args = OrderedDict()
-    input_args[arg_name] = GraphQLArgument(
-        GraphQLNonNull(
-            GraphQLList(
-                GraphQLNonNull(input_type)
-            )
-        )
-    )
-
-    def resolver(_obj, info, **args):
+    arg_name: str,
+    input_type: GraphQLInputType,
+    output_type: GraphQLOutputType,
+    resolve_single_input: Callable[[GraphQLResolveInfo, str], Any],
+    description: Optional[str] = None,
+) -> GraphQLField:
+    def resolve(_obj: Any, info: GraphQLResolveInfo, **args: Any) -> List:
         inputs = args[arg_name]
-        return Promise.all([
-            resolve_single_input(info, input_) for input_ in inputs
-        ])
+        return [resolve_single_input(info, input_) for input_ in inputs]
 
     return GraphQLField(
         GraphQLList(output_type),
         description=description,
-        args=input_args,
-        resolver=resolver
+        args={
+            arg_name: GraphQLArgument(
+                GraphQLNonNull(
+                    GraphQLList(
+                        GraphQLNonNull(get_nullable_type(input_type))  # type: ignore
+                    )
+                )
+            )
+        },
+        resolve=resolve,
     )

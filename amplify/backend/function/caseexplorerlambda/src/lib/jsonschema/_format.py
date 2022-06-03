@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 from contextlib import suppress
 from uuid import UUID
 import datetime
 import ipaddress
 import re
+import typing
 
 from jsonschema.exceptions import FormatError
 
@@ -30,7 +33,13 @@ class FormatChecker(object):
             limit which formats will be used during validation.
     """
 
-    checkers = {}
+    checkers: dict[
+        str,
+        tuple[
+            typing.Callable[[typing.Any], bool],
+            Exception | tuple[Exception, ...],
+        ],
+    ] = {}
 
     def __init__(self, formats=None):
         if formats is None:
@@ -180,8 +189,7 @@ def _checks_drafts(
             )
 
         # Oy. This is bad global state, but relied upon for now, until
-        # deprecation. See https://github.com/Julian/jsonschema/issues/519
-        # and test_format_checkers_come_with_defaults
+        # deprecation. See #519 and test_format_checkers_come_with_defaults
         FormatChecker.cls_checks(
             draft202012 or draft201909 or draft7 or draft6 or draft4 or draft3,
             raises,

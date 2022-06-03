@@ -1,5 +1,5 @@
 # orm/mapper.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -37,6 +37,7 @@ from .interfaces import InspectionAttr
 from .interfaces import MapperProperty
 from .interfaces import ORMEntityColumnsClauseRole
 from .interfaces import ORMFromClauseRole
+from .interfaces import StrategizedProperty
 from .path_registry import PathRegistry
 from .. import event
 from .. import exc as sa_exc
@@ -91,35 +92,14 @@ class Mapper(
     sql_base.MemoizedHasCacheKey,
     InspectionAttr,
 ):
-    """Define the correlation of class attributes to database table
-    columns.
+    """Defines an association between a Python class and a database table or
+    other relational structure, so that ORM operations against the class may
+    proceed.
 
-    The :class:`_orm.Mapper` object is instantiated using the
-    :func:`~sqlalchemy.orm.mapper` function.    For information
+    The :class:`_orm.Mapper` object is instantiated using mapping methods
+    present on the :class:`_orm.registry` object.  For information
     about instantiating new :class:`_orm.Mapper` objects, see
-    that function's documentation.
-
-
-    When :func:`.mapper` is used
-    explicitly to link a user defined class with table
-    metadata, this is referred to as *classical mapping*.
-    Modern SQLAlchemy usage tends to favor the
-    :mod:`sqlalchemy.ext.declarative` extension for class
-    configuration, which
-    makes usage of :func:`.mapper` behind the scenes.
-
-    Given a particular class known to be mapped by the ORM,
-    the :class:`_orm.Mapper` which maintains it can be acquired
-    using the :func:`_sa.inspect` function::
-
-        from sqlalchemy import inspect
-
-        mapper = inspect(MyClass)
-
-    A class which was mapped by the :mod:`sqlalchemy.ext.declarative`
-    extension will also have its mapper available via the ``__mapper__``
-    attribute.
-
+    :ref:`orm_mapping_classes_toplevel`.
 
     """
 
@@ -1251,6 +1231,11 @@ class Mapper(
         if manager is not None:
             assert manager.class_ is self.class_
             if manager.is_mapped:
+                # changed in #7579:
+                # this message is defined in two places as of this change,
+                # also in decl_api -> _add_manager().  in 2.0, this codepath
+                # is removed as any calls to mapper() / Mapper without
+                # the registry setting up first will be rejected.
                 raise sa_exc.ArgumentError(
                     "Class '%s' already has a primary mapper defined. "
                     % self.class_
@@ -1391,17 +1376,17 @@ class Mapper(
             # that of the inheriting (unless concrete or explicit)
             self.primary_key = self.inherits.primary_key
         else:
-            # determine primary key from argument or persist_selectable pks -
-            # reduce to the minimal set of columns
+            # determine primary key from argument or persist_selectable pks
             if self._primary_key_argument:
-                primary_key = sql_util.reduce_columns(
-                    [
-                        self.persist_selectable.corresponding_column(c)
-                        for c in self._primary_key_argument
-                    ],
-                    ignore_nonexistent_tables=True,
-                )
+                primary_key = [
+                    self.persist_selectable.corresponding_column(c)
+                    for c in self._primary_key_argument
+                ]
             else:
+                # if heuristically determined PKs, reduce to the minimal set
+                # of columns by eliminating FK->PK pairs for a multi-table
+                # expression.   May over-reduce for some kinds of UNIONs
+                # / CTEs; use explicit PK argument for these special cases
                 primary_key = sql_util.reduce_columns(
                     self._pks_by_table[self.persist_selectable],
                     ignore_nonexistent_tables=True,
@@ -1430,19 +1415,14 @@ class Mapper(
         )
 
     def _configure_properties(self):
-        # Column and other ClauseElement objects which are mapped
 
-        # TODO: technically this should be a DedupeColumnCollection
-        # however DCC needs changes and more tests to fully cover
-        # storing columns under a separate key name
+        # TODO: consider using DedupeColumnCollection
         self.columns = self.c = sql_base.ColumnCollection()
 
         # object attribute names mapped to MapperProperty objects
         self._props = util.OrderedDict()
 
-        # table columns mapped to lists of MapperProperty objects
-        # using a list allows a single column to be defined as
-        # populating multiple object attributes
+        # table columns mapped to MapperProperty
         self._columntoproperty = _ColumnMapping(self)
 
         # load custom properties
@@ -1775,7 +1755,7 @@ class Mapper(
                 col.key = col._tq_key_label = key
 
             self.columns.add(col, key)
-            for col in prop.columns + prop._orig_columns:
+            for col in prop.columns:
                 for col in col.proxy_set:
                     self._columntoproperty[col] = prop
 
@@ -2111,9 +2091,9 @@ class Mapper(
     @HasMemoized.memoized_attribute
     def _single_table_criterion(self):
         if self.single and self.inherits and self.polymorphic_on is not None:
-            return self.polymorphic_on._annotate({"parentmapper": self}).in_(
-                m.polymorphic_identity for m in self.self_and_descendants
-            )
+            return self.polymorphic_on._annotate(
+                {"parententity": self, "parentmapper": self}
+            ).in_(m.polymorphic_identity for m in self.self_and_descendants)
         else:
             return None
 
@@ -3024,23 +3004,28 @@ class Mapper(
 
         allconds = []
 
+        start = False
+
+        # as of #7507, from the lowest base table on upwards,
+        # we include all intermediary tables.
+
+        for mapper in reversed(list(self.iterate_to_root())):
+            if mapper.local_table in tables:
+                start = True
+            elif not isinstance(mapper.local_table, expression.TableClause):
+                return None
+            if start and not mapper.single:
+                allconds.append(mapper.inherit_condition)
+                tables.add(mapper.local_table)
+
+        # only the bottom table needs its criteria to be altered to fit
+        # the primary key ident - the rest of the tables upwards to the
+        # descendant-most class should all be present and joined to each
+        # other.
         try:
-            start = False
-            for mapper in reversed(list(self.iterate_to_root())):
-                if mapper.local_table in tables:
-                    start = True
-                elif not isinstance(
-                    mapper.local_table, expression.TableClause
-                ):
-                    return None
-                if start and not mapper.single:
-                    allconds.append(
-                        visitors.cloned_traverse(
-                            mapper.inherit_condition,
-                            {},
-                            {"binary": visit_binary},
-                        )
-                    )
+            allconds[0] = visitors.cloned_traverse(
+                allconds[0], {}, {"binary": visit_binary}
+            )
         except _OptGetColumnsNotAvailable:
             return None
 
@@ -3100,8 +3085,11 @@ class Mapper(
 
         assert self.inherits
 
-        polymorphic_prop = self._columntoproperty[self.polymorphic_on]
-        keep_props = set([polymorphic_prop] + self._identity_key_props)
+        if self.polymorphic_on is not None:
+            polymorphic_prop = self._columntoproperty[self.polymorphic_on]
+            keep_props = set([polymorphic_prop] + self._identity_key_props)
+        else:
+            keep_props = set(self._identity_key_props)
 
         disable_opt = strategy_options.Load(entity)
         enable_opt = strategy_options.Load(entity)
@@ -3110,15 +3098,24 @@ class Mapper(
             if prop.parent is self or prop in keep_props:
                 # "enable" options, to turn on the properties that we want to
                 # load by default (subject to options from the query)
+                if not isinstance(prop, StrategizedProperty):
+                    continue
+
                 enable_opt.set_generic_strategy(
-                    (prop.key,), dict(prop.strategy_key)
+                    # convert string name to an attribute before passing
+                    # to loader strategy
+                    (getattr(entity.entity_namespace, prop.key),),
+                    dict(prop.strategy_key),
                 )
             else:
                 # "disable" options, to turn off the properties from the
                 # superclass that we *don't* want to load, applied after
                 # the options from the query to override them
                 disable_opt.set_generic_strategy(
-                    (prop.key,), {"do_nothing": True}
+                    # convert string name to an attribute before passing
+                    # to loader strategy
+                    (getattr(entity.entity_namespace, prop.key),),
+                    {"do_nothing": True},
                 )
 
         primary_key = [
@@ -3616,6 +3613,7 @@ class _ColumnMapping(dict):
     __slots__ = ("mapper",)
 
     def __init__(self, mapper):
+        # TODO: weakref would be a good idea here
         self.mapper = mapper
 
     def __missing__(self, column):

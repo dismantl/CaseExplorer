@@ -1,5 +1,5 @@
 # ext/asyncio/engine.py
-# Copyright (C) 2020-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2020-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -7,6 +7,7 @@
 from . import exc as async_exc
 from .base import ProxyComparable
 from .base import StartableContext
+from .result import _ensure_sync_result
 from .result import AsyncResult
 from ... import exc
 from ... import inspection
@@ -39,6 +40,29 @@ def create_async_engine(*arg, **kw):
     kw["future"] = True
     sync_engine = _create_engine(*arg, **kw)
     return AsyncEngine(sync_engine)
+
+
+def async_engine_from_config(configuration, prefix="sqlalchemy.", **kwargs):
+    """Create a new AsyncEngine instance using a configuration dictionary.
+
+    This function is analogous to the :func:`_sa.engine_from_config` function
+    in SQLAlchemy Core, except that the requested dialect must be an
+    asyncio-compatible dialect such as :ref:`dialect-postgresql-asyncpg`.
+    The argument signature of the function is identical to that
+    of :func:`_sa.engine_from_config`.
+
+    .. versionadded:: 1.4.29
+
+    """
+    options = {
+        key[len(prefix) :]: value
+        for key, value in configuration.items()
+        if key.startswith(prefix)
+    }
+    options["_coerce_config"] = True
+    options.update(kwargs)
+    url = options.pop("url")
+    return create_async_engine(url, **options)
 
 
 class AsyncConnectable:
@@ -357,15 +381,8 @@ class AsyncConnection(ProxyComparable, StartableContext, AsyncConnectable):
             execution_options,
             _require_await=True,
         )
-        if result.context._is_server_side:
-            raise async_exc.AsyncMethodRequired(
-                "Can't use the connection.exec_driver_sql() method with a "
-                "server-side cursor."
-                "Use the connection.stream() method for an async "
-                "streaming result set."
-            )
 
-        return result
+        return await _ensure_sync_result(result, self.exec_driver_sql)
 
     async def stream(
         self,
@@ -438,14 +455,7 @@ class AsyncConnection(ProxyComparable, StartableContext, AsyncConnectable):
             execution_options,
             _require_await=True,
         )
-        if result.context._is_server_side:
-            raise async_exc.AsyncMethodRequired(
-                "Can't use the connection.execute() method with a "
-                "server-side cursor."
-                "Use the connection.stream() method for an async "
-                "streaming result set."
-            )
-        return result
+        return await _ensure_sync_result(result, self.execute)
 
     async def scalar(
         self,

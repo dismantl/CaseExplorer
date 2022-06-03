@@ -1,5 +1,5 @@
 # engine/default.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -350,10 +350,23 @@ class DefaultDialect(interfaces.Dialect):
 
     @util.memoized_property
     def _supports_statement_cache(self):
-        return (
-            self.__class__.__dict__.get("supports_statement_cache", False)
-            is True
-        )
+        ssc = self.__class__.__dict__.get("supports_statement_cache", None)
+        if ssc is None:
+            util.warn(
+                "Dialect %s:%s will not make use of SQL compilation caching "
+                "as it does not set the 'supports_statement_cache' attribute "
+                "to ``True``.  This can have "
+                "significant performance implications including some "
+                "performance degradations in comparison to prior SQLAlchemy "
+                "versions.  Dialect maintainers should seek to set this "
+                "attribute to True after appropriate development and testing "
+                "for SQLAlchemy 1.4 caching support.   Alternatively, this "
+                "attribute may be set to False which will disable this "
+                "warning." % (self.name, self.driver),
+                code="cprf",
+            )
+
+        return bool(ssc)
 
     @util.memoized_property
     def _type_memos(self):
@@ -631,8 +644,10 @@ class DefaultDialect(interfaces.Dialect):
             if trans_objs:
                 if connection._is_future:
                     raise exc.InvalidRequestError(
-                        "This connection has already begun a transaction; "
-                        "%s may not be altered until transaction end"
+                        "This connection has already initialized a SQLAlchemy "
+                        "Transaction() object via begin() or autobegin; "
+                        "%s may not be altered unless rollback() or commit() "
+                        "is called first."
                         % (", ".join(name for name, obj in trans_objs))
                     )
                 else:
@@ -1064,21 +1079,44 @@ class DefaultExecutionContext(interfaces.ExecutionContext):
             if encode:
                 encoder = dialect._encoder
             for compiled_params in self.compiled_parameters:
+                escaped_bind_names = compiled.escaped_bind_names
 
                 if encode:
-                    param = {
-                        encoder(key)[0]: processors[key](compiled_params[key])
-                        if key in processors
-                        else compiled_params[key]
-                        for key in compiled_params
-                    }
+                    if escaped_bind_names:
+                        param = {
+                            encoder(escaped_bind_names.get(key, key))[
+                                0
+                            ]: processors[key](compiled_params[key])
+                            if key in processors
+                            else compiled_params[key]
+                            for key in compiled_params
+                        }
+                    else:
+                        param = {
+                            encoder(key)[0]: processors[key](
+                                compiled_params[key]
+                            )
+                            if key in processors
+                            else compiled_params[key]
+                            for key in compiled_params
+                        }
                 else:
-                    param = {
-                        key: processors[key](compiled_params[key])
-                        if key in processors
-                        else compiled_params[key]
-                        for key in compiled_params
-                    }
+                    if escaped_bind_names:
+                        param = {
+                            escaped_bind_names.get(key, key): processors[key](
+                                compiled_params[key]
+                            )
+                            if key in processors
+                            else compiled_params[key]
+                            for key in compiled_params
+                        }
+                    else:
+                        param = {
+                            key: processors[key](compiled_params[key])
+                            if key in processors
+                            else compiled_params[key]
+                            for key in compiled_params
+                        }
 
                 parameters.append(param)
 
@@ -1550,7 +1588,6 @@ class DefaultExecutionContext(interfaces.ExecutionContext):
         return self._setup_ins_pk_from_empty()
 
     def _setup_ins_pk_from_lastrowid(self):
-
         getter = self.compiled._inserted_primary_key_from_lastrowid_getter
 
         lastrowid = self.get_lastrowid()
@@ -1558,7 +1595,6 @@ class DefaultExecutionContext(interfaces.ExecutionContext):
 
     def _setup_ins_pk_from_empty(self):
         getter = self.compiled._inserted_primary_key_from_lastrowid_getter
-
         return [getter(None, param) for param in self.compiled_parameters]
 
     def _setup_ins_pk_from_implicit_returning(self, result, rows):
@@ -1827,7 +1863,7 @@ class DefaultExecutionContext(interfaces.ExecutionContext):
             return self._exec_default(column, column.onupdate, column.type)
 
     def _process_executemany_defaults(self):
-        key_getter = self.compiled._key_getters_for_crud_column[2]
+        key_getter = self.compiled._within_exec_param_key_getter
 
         scalar_defaults = {}
 
@@ -1865,7 +1901,7 @@ class DefaultExecutionContext(interfaces.ExecutionContext):
         del self.current_parameters
 
     def _process_executesingle_defaults(self):
-        key_getter = self.compiled._key_getters_for_crud_column[2]
+        key_getter = self.compiled._within_exec_param_key_getter
         self.current_parameters = (
             compiled_parameters
         ) = self.compiled_parameters[0]

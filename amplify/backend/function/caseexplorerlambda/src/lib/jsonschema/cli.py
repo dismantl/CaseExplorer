@@ -12,7 +12,7 @@ import traceback
 try:
     from importlib import metadata
 except ImportError:
-    import importlib_metadata as metadata
+    import importlib_metadata as metadata  # type: ignore
 
 import attr
 
@@ -157,7 +157,7 @@ parser.add_argument(
         one formatted object named 'error' for each ValidationError.
         Only provide this option when using --output=plain, which is the
         default. If this argument is unprovided and --output=plain is
-        used, a simple default representation will be used."
+        used, a simple default representation will be used.
     """,
 )
 parser.add_argument(

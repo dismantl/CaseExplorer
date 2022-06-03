@@ -26,6 +26,7 @@ from jsonschema.exceptions import (
     SchemaError,
     ValidationError,
 )
+from jsonschema.protocols import Validator
 from jsonschema.validators import (
     Draft3Validator,
     Draft4Validator,
@@ -45,6 +46,7 @@ def __getattr__(name):
             "removed in a future release. Use importlib.metadata directly "
             "to query for jsonschema's version.",
             DeprecationWarning,
+            stacklevel=2,
         )
 
         try:

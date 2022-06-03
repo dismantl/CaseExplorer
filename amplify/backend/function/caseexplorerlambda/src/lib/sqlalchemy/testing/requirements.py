@@ -1,5 +1,5 @@
 # testing/requirements.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -754,6 +754,29 @@ class SuiteRequirements(Requirements):
         return exclusions.open()
 
     @property
+    def datetime_timezone(self):
+        """target dialect supports representation of Python
+        datetime.datetime() with tzinfo with DateTime(timezone=True)."""
+
+        return exclusions.closed()
+
+    @property
+    def time_timezone(self):
+        """target dialect supports representation of Python
+        datetime.time() with tzinfo with Time(timezone=True)."""
+
+        return exclusions.closed()
+
+    @property
+    def datetime_implicit_bound(self):
+        """target dialect when given a datetime object will bind it such
+        that the database server knows the object is a datetime, and not
+        a plain string.
+
+        """
+        return exclusions.open()
+
+    @property
     def datetime_microseconds(self):
         """target dialect supports representation of Python
         datetime.datetime() with microsecond objects."""
@@ -766,6 +789,16 @@ class SuiteRequirements(Requirements):
         datetime.datetime() with microsecond objects but only
         if TIMESTAMP is used."""
         return exclusions.closed()
+
+    @property
+    def timestamp_microseconds_implicit_bound(self):
+        """target dialect when given a datetime object which also includes
+        a microseconds portion when using the TIMESTAMP data type
+        will bind it such that the database server knows
+        the object is a datetime with microseconds, and not a plain string.
+
+        """
+        return self.timestamp_microseconds
 
     @property
     def datetime_historic(self):
@@ -977,6 +1010,12 @@ class SuiteRequirements(Requirements):
         """A precision numeric type will return empty significant digits,
         i.e. a value such as 10.000 will come back in Decimal form with
         the .000 maintained."""
+
+        return exclusions.closed()
+
+    @property
+    def infinity_floats(self):
+        """The Float type can persist and load float('inf'), float('-inf')."""
 
         return exclusions.closed()
 
@@ -1257,6 +1296,12 @@ class SuiteRequirements(Requirements):
         return self.python37
 
     @property
+    def python38(self):
+        return exclusions.only_if(
+            lambda: util.py38, "Python 3.8 or above required"
+        )
+
+    @property
     def cpython(self):
         return exclusions.only_if(
             lambda: util.cpython, "cPython interpreter needed"
@@ -1338,10 +1383,14 @@ class SuiteRequirements(Requirements):
         return exclusions.closed()
 
     @property
+    def asyncio(self):
+        return self.greenlet
+
+    @property
     def greenlet(self):
         def go(config):
             try:
-                import greenlet  # noqa F401
+                import greenlet  # noqa: F401
             except ImportError:
                 return False
             else:

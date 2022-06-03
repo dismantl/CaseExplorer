@@ -1,4 +1,3 @@
-from collections import OrderedDict
 from functools import partial
 from inspect import isclass
 
@@ -19,11 +18,7 @@ def is_node(objecttype):
     if not issubclass(objecttype, ObjectType):
         return False
 
-    for i in objecttype._meta.interfaces:
-        if issubclass(i, Node):
-            return True
-
-    return False
+    return any(issubclass(i, Node) for i in objecttype._meta.interfaces)
 
 
 class GlobalID(Field):
@@ -38,7 +33,7 @@ class GlobalID(Field):
         parent_type_name = parent_type_name or info.parent_type.name
         return node.to_global_id(parent_type_name, type_id)  # root._meta.name
 
-    def get_resolver(self, parent_resolver):
+    def wrap_resolve(self, parent_resolver):
         return partial(
             self.id_resolver,
             parent_resolver,
@@ -48,20 +43,20 @@ class GlobalID(Field):
 
 
 class NodeField(Field):
-    def __init__(self, node, type=False, **kwargs):
+    def __init__(self, node, type_=False, **kwargs):
         assert issubclass(node, Node), "NodeField can only operate in Nodes"
         self.node_type = node
-        self.field_type = type
+        self.field_type = type_
 
         super(NodeField, self).__init__(
             # If we don's specify a type, the field type will be the node
             # interface
-            type or node,
+            type_ or node,
             id=ID(required=True, description="The ID of the object"),
-            **kwargs
+            **kwargs,
         )
 
-    def get_resolver(self, parent_resolver):
+    def wrap_resolve(self, parent_resolver):
         return partial(self.node_type.node_resolver, get_type(self.field_type))
 
 
@@ -72,9 +67,7 @@ class AbstractNode(Interface):
     @classmethod
     def __init_subclass_with_meta__(cls, **options):
         _meta = InterfaceOptions(cls)
-        _meta.fields = OrderedDict(
-            id=GlobalID(cls, description="The ID of the object.")
-        )
+        _meta.fields = {"id": GlobalID(cls, description="The ID of the object")}
         super(AbstractNode, cls).__init_subclass_with_meta__(_meta=_meta, **options)
 
 
@@ -93,18 +86,31 @@ class Node(AbstractNode):
     def get_node_from_global_id(cls, info, global_id, only_type=None):
         try:
             _type, _id = cls.from_global_id(global_id)
-            graphene_type = info.schema.get_type(_type).graphene_type
-        except Exception:
-            return None
+            if not _type:
+                raise ValueError("Invalid Global ID")
+        except Exception as e:
+            raise Exception(
+                f'Unable to parse global ID "{global_id}". '
+                'Make sure it is a base64 encoded string in the format: "TypeName:id". '
+                f"Exception message: {e}"
+            )
+
+        graphene_type = info.schema.get_type(_type)
+        if graphene_type is None:
+            raise Exception(f'Relay Node "{_type}" not found in schema')
+
+        graphene_type = graphene_type.graphene_type
 
         if only_type:
-            assert graphene_type == only_type, ("Must receive a {} id.").format(
-                only_type._meta.name
-            )
+            assert (
+                graphene_type == only_type
+            ), f"Must receive a {only_type._meta.name} id."
 
         # We make sure the ObjectType implements the "Node" interface
         if cls not in graphene_type._meta.interfaces:
-            return None
+            raise Exception(
+                f'ObjectType "{_type}" does not implement the "{cls}" interface.'
+            )
 
         get_node = getattr(graphene_type, "get_node", None)
         if get_node:
@@ -115,5 +121,5 @@ class Node(AbstractNode):
         return from_global_id(global_id)
 
     @classmethod
-    def to_global_id(cls, type, id):
-        return to_global_id(type, id)
+    def to_global_id(cls, type_, id):
+        return to_global_id(type_, id)

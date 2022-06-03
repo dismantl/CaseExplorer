@@ -1,5 +1,5 @@
 # orm/scoping.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -125,11 +125,11 @@ class scoped_session(ScopedSessionMixin):
 
     See :ref:`unitofwork_contextual` for a tutorial.
 
-    ..warning::
+    .. note::
 
-       When using :ref:`asyncio_toplevel` the async
-       version :class:`_asyncio.async_scoped_session` should be
-       used instead.
+       When using :ref:`asyncio_toplevel`, the async-compatible
+       :class:`_asyncio.async_scoped_session` class should be
+       used in place of :class:`.scoped_session`.
 
     """
 

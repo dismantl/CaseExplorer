@@ -1,4 +1,4 @@
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -260,7 +260,8 @@ class Load(Generative, LoaderOption):
         self._process(
             compile_state,
             compile_state._lead_mapper_entities,
-            not bool(compile_state.current_path),
+            not bool(compile_state.current_path)
+            and not compile_state.compile_options._for_refresh_state,
         )
 
     def _process(self, compile_state, mapper_entities, raiseerr):
@@ -301,6 +302,7 @@ class Load(Generative, LoaderOption):
                 )
 
         if isinstance(attr, util.string_types):
+
             default_token = attr.endswith(_DEFAULT_TOKEN)
             attr_str_name = attr
             if attr.endswith(_WILDCARD_TOKEN) or default_token:
@@ -328,7 +330,7 @@ class Load(Generative, LoaderOption):
                 "Using strings to indicate column or "
                 "relationship paths in loader options is deprecated "
                 "and will be removed in SQLAlchemy 2.0.  Please use "
-                "the class-bound attribute directly."
+                "the class-bound attribute directly.",
             )
             try:
                 # use getattr on the class to work around
@@ -918,6 +920,15 @@ class _UnboundLoad(Load):
                     return (_DEFAULT_TOKEN,)
                 # coerce fooload(".*") into "wildcard on default entity"
                 elif key.startswith("." + _WILDCARD_TOKEN):
+                    util.warn_deprecated(
+                        "The undocumented `.{WILDCARD}` format is deprecated "
+                        "and will be removed in a future version as it is "
+                        "believed to be unused. "
+                        "If you have been using this functionality, please "
+                        "comment on Issue #4390 on the SQLAlchemy project "
+                        "tracker.",
+                        version="1.4",
+                    )
                     key = key[1:]
                 return key.split(".")
             else:

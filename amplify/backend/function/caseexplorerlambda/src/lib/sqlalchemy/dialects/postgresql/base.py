@@ -1,5 +1,5 @@
 # postgresql/base.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -8,7 +8,7 @@
 r"""
 .. dialect:: postgresql
     :name: PostgreSQL
-    :full_support: 9.6, 10, 11, 12, 13
+    :full_support: 9.6, 10, 11, 12, 13, 14
     :normal_support: 9.6+
     :best_effort: 8+
 
@@ -273,20 +273,22 @@ be reverted when the DBAPI connection has a rollback.
 Remote-Schema Table Introspection and PostgreSQL search_path
 ------------------------------------------------------------
 
-**TL;DR;**: keep the ``search_path`` variable set to its default of ``public``,
-name schemas **other** than ``public`` explicitly within ``Table`` definitions.
+.. admonition:: Section Best Practices Summarized
 
-The PostgreSQL dialect can reflect tables from any schema.  The
-:paramref:`_schema.Table.schema` argument, or alternatively the
-:paramref:`.MetaData.reflect.schema` argument determines which schema will
-be searched for the table or tables.   The reflected :class:`_schema.Table`
-objects
-will in all cases retain this ``.schema`` attribute as was specified.
-However, with regards to tables which these :class:`_schema.Table`
-objects refer to
-via foreign key constraint, a decision must be made as to how the ``.schema``
-is represented in those remote tables, in the case where that remote
-schema name is also a member of the current
+    keep the ``search_path`` variable set to its default of ``public``, without
+    any other schema names. For other schema names, name these explicitly
+    within :class:`_schema.Table` definitions. Alternatively, the
+    ``postgresql_ignore_search_path`` option will cause all reflected
+    :class:`_schema.Table` objects to have a :attr:`_schema.Table.schema`
+    attribute set up.
+
+The PostgreSQL dialect can reflect tables from any schema, as outlined in
+:ref:`metadata_reflection_schemas`.
+
+With regards to tables which these :class:`_schema.Table`
+objects refer to via foreign key constraint, a decision must be made as to how
+the ``.schema`` is represented in those remote tables, in the case where that
+remote schema name is also a member of the current
 `PostgreSQL search path
 <https://www.postgresql.org/docs/current/static/ddl-schemas.html#DDL-SCHEMAS-PATH>`_.
 
@@ -349,8 +351,8 @@ reflection process as follows::
     >>> engine = create_engine("postgresql://scott:tiger@localhost/test")
     >>> with engine.connect() as conn:
     ...     conn.execute(text("SET search_path TO test_schema, public"))
-    ...     meta = MetaData()
-    ...     referring = Table('referring', meta,
+    ...     metadata_obj = MetaData()
+    ...     referring = Table('referring', metadata_obj,
     ...                       autoload_with=conn)
     ...
     <sqlalchemy.engine.result.CursorResult object at 0x101612ed0>
@@ -359,7 +361,7 @@ The above process would deliver to the :attr:`_schema.MetaData.tables`
 collection
 ``referred`` table named **without** the schema::
 
-    >>> meta.tables['referred'].schema is None
+    >>> metadata_obj.tables['referred'].schema is None
     True
 
 To alter the behavior of reflection such that the referred schema is
@@ -370,8 +372,8 @@ dialect-specific argument to both :class:`_schema.Table` as well as
 
     >>> with engine.connect() as conn:
     ...     conn.execute(text("SET search_path TO test_schema, public"))
-    ...     meta = MetaData()
-    ...     referring = Table('referring', meta,
+    ...     metadata_obj = MetaData()
+    ...     referring = Table('referring', metadata_obj,
     ...                       autoload_with=conn,
     ...                       postgresql_ignore_search_path=True)
     ...
@@ -379,7 +381,7 @@ dialect-specific argument to both :class:`_schema.Table` as well as
 
 We will now have ``test_schema.referred`` stored as schema-qualified::
 
-    >>> meta.tables['test_schema.referred'].schema
+    >>> metadata_obj.tables['test_schema.referred'].schema
     'test_schema'
 
 .. sidebar:: Best Practices for PostgreSQL Schema reflection
@@ -401,12 +403,10 @@ installation, this is the name ``public``.  So a table that refers to another
 which is in the ``public`` (i.e. default) schema will always have the
 ``.schema`` attribute set to ``None``.
 
-.. versionadded:: 0.9.2 Added the ``postgresql_ignore_search_path``
-   dialect-level option accepted by :class:`_schema.Table` and
-   :meth:`_schema.MetaData.reflect`.
-
-
 .. seealso::
+
+    :ref:`reflection_schema_qualified_interaction` - discussion of the issue
+    from a backend-agnostic perspective
 
     `The Schema Search Path
     <https://www.postgresql.org/docs/9.0/static/ddl-schemas.html#DDL-SCHEMAS-PATH>`_
@@ -1058,7 +1058,54 @@ dialect in conjunction with the :class:`_schema.Table` construct:
 .. seealso::
 
     `PostgreSQL CREATE TABLE options
-    <https://www.postgresql.org/docs/current/static/sql-createtable.html>`_
+    <https://www.postgresql.org/docs/current/static/sql-createtable.html>`_ -
+    in the PostgreSQL documentation.
+
+.. _postgresql_constraint_options:
+
+PostgreSQL Constraint Options
+-----------------------------
+
+The following option(s) are supported by the PostgreSQL dialect in conjunction
+with selected constraint constructs:
+
+* ``NOT VALID``:  This option applies towards CHECK and FOREIGN KEY constraints
+  when the constraint is being added to an existing table via ALTER TABLE,
+  and has the effect that existing rows are not scanned during the ALTER
+  operation against the constraint being added.
+
+  When using a SQL migration tool such as `Alembic <https://alembic.sqlalchemy.org>`_
+  that renders ALTER TABLE constructs, the ``postgresql_not_valid`` argument
+  may be specified as an additional keyword argument within the operation
+  that creates the constraint, as in the following Alembic example::
+
+        def update():
+            op.create_foreign_key(
+                "fk_user_address",
+                "address",
+                "user",
+                ["user_id"],
+                ["id"],
+                postgresql_not_valid=True
+            )
+
+  The keyword is ultimately accepted directly by the
+  :class:`_schema.CheckConstraint`, :class:`_schema.ForeignKeyConstraint`
+  and :class:`_schema.ForeignKey` constructs; when using a tool like
+  Alembic, dialect-specific keyword arguments are passed through to
+  these constructs from the migration operation directives::
+
+       CheckConstraint("some_field IS NOT NULL", postgresql_not_valid=True)
+
+       ForeignKeyConstraint(["some_id"], ["some_table.some_id"], postgresql_not_valid=True)
+
+  .. versionadded:: 1.4.32
+
+  .. seealso::
+
+      `PostgreSQL ALTER TABLE options
+      <https://www.postgresql.org/docs/current/static/sql-altertable.html>`_ -
+      in the PostgreSQL documentation.
 
 .. _postgresql_table_valued_overview:
 
@@ -1135,11 +1182,14 @@ Examples from PostgreSQL's reference documentation follow below:
 
     >>> from sqlalchemy import select, func
     >>> stmt = select(
-    ...     func.generate_series(4, 1, -1).table_valued("value", with_ordinality="ordinality")
+    ...     func.generate_series(4, 1, -1).
+    ...     table_valued("value", with_ordinality="ordinality").
+    ...     render_derived()
     ... )
     >>> print(stmt)
     SELECT anon_1.value, anon_1.ordinality
-    FROM generate_series(:generate_series_1, :generate_series_2, :generate_series_3) WITH ORDINALITY AS anon_1
+    FROM generate_series(:generate_series_1, :generate_series_2, :generate_series_3)
+    WITH ORDINALITY AS anon_1(value, ordinality)
 
 .. versionadded:: 1.4.0b2
 
@@ -1371,7 +1421,7 @@ E.g.::
     )
 
 
-"""  # noqa E501
+"""  # noqa: E501
 
 from collections import defaultdict
 import datetime as dt
@@ -1379,6 +1429,7 @@ import re
 from uuid import UUID as _python_UUID
 
 from . import array as _array
+from . import dml
 from . import hstore as _hstore
 from . import json as _json
 from . import ranges as _ranges
@@ -1408,7 +1459,6 @@ from ...types import REAL
 from ...types import SMALLINT
 from ...types import TEXT
 from ...types import VARCHAR
-
 
 IDX_USING = re.compile(r"^(?:btree|hash|gist|gin|[\w_]+)$", re.I)
 
@@ -1755,6 +1805,28 @@ class UUID(sqltypes.TypeEngine):
             return process
         else:
             return None
+
+    def literal_processor(self, dialect):
+        if self.as_uuid:
+
+            def process(value):
+                if value is not None:
+                    value = "'%s'::UUID" % value
+                return value
+
+            return process
+        else:
+
+            def process(value):
+                if value is not None:
+                    value = "'%s'" % value
+                return value
+
+            return process
+
+    @property
+    def python_type(self):
+        return _python_UUID if self.as_uuid else str
 
 
 PGUuid = UUID
@@ -2396,6 +2468,24 @@ class PGCompiler(compiler.SQLCompiler):
 
         return target_text
 
+    @util.memoized_property
+    def _is_safe_for_fast_insert_values_helper(self):
+        # don't allow fast executemany if _post_values_clause is
+        # present and is not an OnConflictDoNothing. what this means
+        # concretely is that the
+        # "fast insert executemany helper" won't be used, in other
+        # words we won't convert "executemany()" of many parameter
+        # sets into a single INSERT with many elements in VALUES.
+        # We can't apply that optimization safely if for example the
+        # statement includes a clause like "ON CONFLICT DO UPDATE"
+
+        return self.insert_single_values_expr is not None and (
+            self.statement._post_values_clause is None
+            or isinstance(
+                self.statement._post_values_clause, dml.OnConflictDoNothing
+            )
+        )
+
     def visit_on_conflict_do_nothing(self, on_conflict, **kw):
 
         target_text = self._on_conflict_target(on_conflict, **kw)
@@ -2440,7 +2530,7 @@ class PGCompiler(compiler.SQLCompiler):
                     value.type = c.type
             value_text = self.process(value.self_group(), use_schema=False)
 
-            key_text = self.preparer.quote(col_key)
+            key_text = self.preparer.quote(c.name)
             action_set_ops.append("%s = %s" % (key_text, value_text))
 
         # check for names that don't match columns
@@ -2568,6 +2658,10 @@ class PGDDLCompiler(compiler.DDLCompiler):
             colspec += " NULL"
         return colspec
 
+    def _define_constraint_validity(self, constraint):
+        not_valid = constraint.dialect_options["postgresql"]["not_valid"]
+        return " NOT VALID" if not_valid else ""
+
     def visit_check_constraint(self, constraint):
         if constraint._type_bound:
             typ = list(constraint.columns)[0].type
@@ -2582,7 +2676,16 @@ class PGDDLCompiler(compiler.DDLCompiler):
                     "create_constraint=False on this Enum datatype."
                 )
 
-        return super(PGDDLCompiler, self).visit_check_constraint(constraint)
+        text = super(PGDDLCompiler, self).visit_check_constraint(constraint)
+        text += self._define_constraint_validity(constraint)
+        return text
+
+    def visit_foreign_key_constraint(self, constraint):
+        text = super(PGDDLCompiler, self).visit_foreign_key_constraint(
+            constraint
+        )
+        text += self._define_constraint_validity(constraint)
+        return text
 
     def visit_drop_table_comment(self, drop):
         return "COMMENT ON TABLE %s IS NULL" % self.preparer.format_table(
@@ -3194,6 +3297,18 @@ class PGDialect(default.DefaultDialect):
                 "with_oids": None,
                 "on_commit": None,
                 "inherits": None,
+            },
+        ),
+        (
+            schema.CheckConstraint,
+            {
+                "not_valid": False,
+            },
+        ),
+        (
+            schema.ForeignKeyConstraint,
+            {
+                "not_valid": False,
             },
         ),
     ]
@@ -4277,6 +4392,8 @@ class PGDialect(default.DefaultDialect):
                 "column_names": [idx["cols"][i] for i in idx["key"]],
             }
             if self.server_version_info >= (11, 0):
+                # NOTE: this is legacy, this is part of dialect_options now
+                # as of #7382
                 entry["include_columns"] = [idx["cols"][i] for i in idx["inc"]]
             if "duplicates_constraint" in idx:
                 entry["duplicates_constraint"] = idx["duplicates_constraint"]
@@ -4285,6 +4402,10 @@ class PGDialect(default.DefaultDialect):
                     (idx["cols"][idx["key"][i]], value)
                     for i, value in idx["sorting"].items()
                 )
+            if "include_columns" in entry:
+                entry.setdefault("dialect_options", {})[
+                    "postgresql_include"
+                ] = entry["include_columns"]
             if "options" in idx:
                 entry.setdefault("dialect_options", {})[
                     "postgresql_with"

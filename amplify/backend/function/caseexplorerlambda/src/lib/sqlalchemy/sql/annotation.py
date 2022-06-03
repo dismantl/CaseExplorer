@@ -1,5 +1,5 @@
 # sql/annotation.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -238,7 +238,9 @@ class Annotated(object):
 annotated_classes = {}
 
 
-def _deep_annotate(element, annotations, exclude=None):
+def _deep_annotate(
+    element, annotations, exclude=None, detect_subquery_cols=False
+):
     """Deep copy the given ClauseElement, annotating each element
     with the given annotations dictionary.
 
@@ -252,6 +254,7 @@ def _deep_annotate(element, annotations, exclude=None):
     cloned_ids = {}
 
     def clone(elem, **kw):
+        kw["detect_subquery_cols"] = detect_subquery_cols
         id_ = id(elem)
 
         if id_ in cloned_ids:
@@ -262,9 +265,12 @@ def _deep_annotate(element, annotations, exclude=None):
             and hasattr(elem, "proxy_set")
             and elem.proxy_set.intersection(exclude)
         ):
-            newelem = elem._clone(**kw)
+            newelem = elem._clone(clone=clone, **kw)
         elif annotations != elem._annotations:
-            newelem = elem._annotate(annotations)
+            if detect_subquery_cols and elem._is_immutable:
+                newelem = elem._clone(clone=clone, **kw)._annotate(annotations)
+            else:
+                newelem = elem._annotate(annotations)
         else:
             newelem = elem
         newelem._copy_internals(clone=clone)

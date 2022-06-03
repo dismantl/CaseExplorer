@@ -1,5 +1,5 @@
 # mssql/base.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -31,11 +31,9 @@ SQL Server provides so-called "auto incrementing" behavior using the
 table. SQLAlchemy considers ``IDENTITY`` within its default "autoincrement"
 behavior for an integer primary key column, described at
 :paramref:`_schema.Column.autoincrement`.  This means that by default,
-the first
-integer primary key column in a :class:`_schema.Table`
-will be considered to be the
-identity column - unless it is associated with a :class:`.Sequence` - and will
-generate DDL as such::
+the first integer primary key column in a :class:`_schema.Table` will be
+considered to be the identity column - unless it is associated with a
+:class:`.Sequence` - and will generate DDL as such::
 
     from sqlalchemy import Table, MetaData, Column, Integer
 
@@ -169,6 +167,70 @@ The CREATE TABLE for the above :class:`_schema.Table` object would be:
    supports real sequences as a separate construct, :class:`.Sequence` will be
    functional in the normal way starting from SQLAlchemy version 1.4.
 
+
+Using IDENTITY with Non-Integer numeric types
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+SQL Server also allows ``IDENTITY`` to be used with ``NUMERIC`` columns.  To
+implement this pattern smoothly in SQLAlchemy, the primary datatype of the
+column should remain as ``Integer``, however the underlying implementation
+type deployed to the SQL Server database can be specified as ``Numeric`` using
+:meth:`.TypeEngine.with_variant`::
+
+    from sqlalchemy import Column
+    from sqlalchemy import Integer
+    from sqlalchemy import Numeric
+    from sqlalchemy import String
+    from sqlalchemy.ext.declarative import declarative_base
+
+    Base = declarative_base()
+
+    class TestTable(Base):
+        __tablename__ = "test"
+        id = Column(
+            Integer().with_variant(Numeric(10, 0), "mssql"),
+            primary_key=True,
+            autoincrement=True,
+        )
+        name = Column(String)
+
+In the above example, ``Integer().with_variant()`` provides clear usage
+information that accurately describes the intent of the code. The general
+restriction that ``autoincrement`` only applies to ``Integer`` is established
+at the metadata level and not at the per-dialect level.
+
+When using the above pattern, the primary key identifier that comes back from
+the insertion of a row, which is also the value that would be assigned to an
+ORM object such as ``TestTable`` above, will be an instance of ``Decimal()``
+and not ``int`` when using SQL Server. The numeric return type of the
+:class:`_types.Numeric` type can be changed to return floats by passing False
+to :paramref:`_types.Numeric.asdecimal`. To normalize the return type of the
+above ``Numeric(10, 0)`` to return Python ints (which also support "long"
+integer values in Python 3), use :class:`_types.TypeDecorator` as follows::
+
+    from sqlalchemy import TypeDecorator
+
+    class NumericAsInteger(TypeDecorator):
+        '''normalize floating point return values into ints'''
+
+        impl = Numeric(10, 0, asdecimal=False)
+        cache_ok = True
+
+        def process_result_value(self, value, dialect):
+            if value is not None:
+                value = int(value)
+            return value
+
+    class TestTable(Base):
+        __tablename__ = "test"
+        id = Column(
+            Integer().with_variant(NumericAsInteger, "mssql"),
+            primary_key=True,
+            autoincrement=True,
+        )
+        name = Column(String)
+
+
 INSERT behavior
 ^^^^^^^^^^^^^^^^
 
@@ -249,8 +311,7 @@ how SQLAlchemy handles this:
 
 
 
-This
-is an auxiliary use case suitable for testing and bulk insert scenarios.
+This is an auxiliary use case suitable for testing and bulk insert scenarios.
 
 SEQUENCE support
 ----------------
@@ -1224,9 +1285,10 @@ class NTEXT(sqltypes.UnicodeText):
 class VARBINARY(sqltypes.VARBINARY, sqltypes.LargeBinary):
     """The MSSQL VARBINARY type.
 
-    This type is present to support "deprecate_large_types" mode where
-    either ``VARBINARY(max)`` or IMAGE is rendered.   Otherwise, this type
-    object is redundant vs. :class:`_types.VARBINARY`.
+    This type adds additional features to the core :class:`_types.VARBINARY`
+    type, including "deprecate_large_types" mode where
+    either ``VARBINARY(max)`` or IMAGE is rendered, as well as the SQL
+    Server ``FILESTREAM`` option.
 
     .. versionadded:: 1.0.0
 
@@ -1234,11 +1296,32 @@ class VARBINARY(sqltypes.VARBINARY, sqltypes.LargeBinary):
 
         :ref:`mssql_large_type_deprecation`
 
-
-
     """
 
     __visit_name__ = "VARBINARY"
+
+    def __init__(self, length=None, filestream=False):
+        """
+        Construct a VARBINARY type.
+
+        :param length: optional, a length for the column for use in
+          DDL statements, for those binary types that accept a length,
+          such as the MySQL BLOB type.
+
+        :param filestream=False: if True, renders the ``FILESTREAM`` keyword
+          in the table definition. In this case ``length`` must be ``None``
+          or ``'max'``.
+
+          .. versionadded:: 1.4.31
+
+        """
+
+        self.filestream = filestream
+        if self.filestream and length not in (None, "max"):
+            raise ValueError(
+                "length must be None or 'max' when setting filestream"
+            )
+        super(VARBINARY, self).__init__(length=length)
 
 
 class IMAGE(sqltypes.LargeBinary):
@@ -1293,6 +1376,7 @@ class TryCast(sql.elements.Cast):
     __visit_name__ = "try_cast"
 
     stringify_dialect = "mssql"
+    inherit_cache = True
 
     def __init__(self, *arg, **kw):
         """Create a TRY_CAST expression.
@@ -1507,7 +1591,10 @@ class MSTypeCompiler(compiler.GenericTypeCompiler):
         return "XML"
 
     def visit_VARBINARY(self, type_, **kw):
-        return self._extend("VARBINARY", type_, length=type_.length or "max")
+        text = self._extend("VARBINARY", type_, length=type_.length or "max")
+        if getattr(type_, "filestream", False):
+            text += " FILESTREAM"
+        return text
 
     def visit_boolean(self, type_, **kw):
         return self.visit_BIT(type_)
@@ -1538,7 +1625,6 @@ class MSExecutionContext(default.DefaultExecutionContext):
     _select_lastrowid = False
     _lastrowid = None
     _rowcount = None
-    _result_strategy = None
 
     def _opt_encode(self, statement):
 
@@ -1669,14 +1755,6 @@ class MSExecutionContext(default.DefaultExecutionContext):
                 )
             except Exception:
                 pass
-
-    def get_result_cursor_strategy(self, result):
-        if self._result_strategy:
-            return self._result_strategy
-        else:
-            return super(MSExecutionContext, self).get_result_cursor_strategy(
-                result
-            )
 
     def fire_sequence(self, seq, type_):
         return self._execute_scalar(
@@ -2554,6 +2632,9 @@ def _schema_elements(schema):
     # test/dialect/mssql/test_compiler.py -> test_schema_many_tokens_*
     #
 
+    if schema.startswith("__[SCHEMA_"):
+        return None, schema
+
     push = []
     symbol = ""
     bracket = False
@@ -3005,6 +3086,12 @@ class MSDialect(default.DefaultDialect):
                     indexes[row["index_id"]]["column_names"].append(
                         row["name"]
                     )
+        for index_info in indexes.values():
+            # NOTE: "root level" include_columns is legacy, now part of
+            #       dialect_options (issue #7382)
+            index_info.setdefault("dialect_options", {})[
+                "mssql_include"
+            ] = index_info["include_columns"]
 
         return list(indexes.values())
 
@@ -3102,14 +3189,16 @@ class MSDialect(default.DefaultDialect):
             computed_cols,
             onclause=sql.and_(
                 computed_cols.c.object_id == func.object_id(full_name),
-                computed_cols.c.name == columns.c.column_name,
+                computed_cols.c.name
+                == columns.c.column_name.collate("DATABASE_DEFAULT"),
             ),
             isouter=True,
         ).join(
             identity_cols,
             onclause=sql.and_(
                 identity_cols.c.object_id == func.object_id(full_name),
-                identity_cols.c.name == columns.c.column_name,
+                identity_cols.c.name
+                == columns.c.column_name.collate("DATABASE_DEFAULT"),
             ),
             isouter=True,
         )
@@ -3363,7 +3452,8 @@ index_info AS (
             AND index_info.index_name = fk_info.unique_constraint_name
             AND index_info.ordinal_position = fk_info.ordinal_position
 
-    ORDER BY constraint_schema, constraint_name, ordinal_position
+    ORDER BY fk_info.constraint_schema, fk_info.constraint_name,
+        fk_info.ordinal_position
 """
             )
             .bindparams(

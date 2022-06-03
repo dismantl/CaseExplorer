@@ -1,7 +1,6 @@
 import mimetypes
 import sys
 import typing as t
-import warnings
 from collections import defaultdict
 from datetime import datetime
 from datetime import timedelta
@@ -39,6 +38,7 @@ from .urls import url_fix
 from .urls import url_parse
 from .urls import url_unparse
 from .urls import url_unquote
+from .utils import cached_property
 from .utils import get_content_type
 from .wrappers.request import Request
 from .wrappers.response import Response
@@ -67,6 +67,7 @@ def stream_encode_multipart(
     stream: t.IO[bytes] = BytesIO()
     total_length = 0
     on_disk = False
+    write_binary: t.Callable[[bytes], int]
 
     if use_tempfile:
 
@@ -306,6 +307,10 @@ class EnvironBuilder:
         ``Authorization`` header value. A ``(username, password)`` tuple
         is a shortcut for ``Basic`` authorization.
 
+    .. versionchanged:: 2.1
+        ``CONTENT_TYPE`` and ``CONTENT_LENGTH`` are not duplicated as
+        header keys in the environ.
+
     .. versionchanged:: 2.0
         ``REQUEST_URI`` and ``RAW_URI`` is the full raw URI including
         the query string, not only the path.
@@ -322,7 +327,7 @@ class EnvironBuilder:
 
     .. versionadded:: 0.15
         The environ has keys ``REQUEST_URI`` and ``RAW_URI`` containing
-        the path before perecent-decoding. This is not part of the WSGI
+        the path before percent-decoding. This is not part of the WSGI
         PEP, but many WSGI servers include it.
 
     .. versionchanged:: 0.6
@@ -788,14 +793,15 @@ class EnvironBuilder:
         )
 
         headers = self.headers.copy()
+        # Don't send these as headers, they're part of the environ.
+        headers.remove("Content-Type")
+        headers.remove("Content-Length")
 
         if content_type is not None:
             result["CONTENT_TYPE"] = content_type
-            headers.set("Content-Type", content_type)
 
         if content_length is not None:
             result["CONTENT_LENGTH"] = str(content_length)
-            headers.set("Content-Length", content_length)
 
         combined_headers = defaultdict(list)
 
@@ -838,6 +844,11 @@ class Client:
     If you want to request some subdomain of your application you may set
     `allow_subdomain_redirects` to `True` as if not no external redirects
     are allowed.
+
+    .. versionchanged:: 2.1
+        Removed deprecated behavior of treating the response as a
+        tuple. All data is available as properties on the returned
+        response object.
 
     .. versionchanged:: 2.0
         ``response_wrapper`` is always a subclass of
@@ -958,7 +969,9 @@ class Client:
         :meta private:
         """
         scheme, netloc, path, qs, anchor = url_parse(response.location)
-        builder = EnvironBuilder.from_environ(response.request.environ, query_string=qs)
+        builder = EnvironBuilder.from_environ(
+            response.request.environ, path=path, query_string=qs
+        )
 
         to_name_parts = netloc.split(":", 1)[0].split(".")
         from_name_parts = builder.server_name.split(".")
@@ -1013,7 +1026,6 @@ class Client:
     def open(
         self,
         *args: t.Any,
-        as_tuple: bool = False,
         buffered: bool = False,
         follow_redirects: bool = False,
         **kwargs: t.Any,
@@ -1031,6 +1043,9 @@ class Client:
             redirects until a non-redirect status is returned.
             :attr:`TestResponse.history` lists the intermediate
             responses.
+
+        .. versionchanged:: 2.1
+            Removed the ``as_tuple`` parameter.
 
         .. versionchanged:: 2.0
             ``as_tuple`` is deprecated and will be removed in Werkzeug
@@ -1077,7 +1092,10 @@ class Client:
         redirects = set()
         history: t.List["TestResponse"] = []
 
-        while follow_redirects and response.status_code in {
+        if not follow_redirects:
+            return response
+
+        while response.status_code in {
             301,
             302,
             303,
@@ -1104,24 +1122,12 @@ class Client:
             history.append(response)
             response = self.resolve_redirect(response, buffered=buffered)
         else:
-            # This is the final request after redirects, or not
-            # following redirects.
+            # This is the final request after redirects.
             response.history = tuple(history)
             # Close the input stream when closing the response, in case
             # the input is an open temporary file.
             response.call_on_close(request.input_stream.close)
-
-        if as_tuple:
-            warnings.warn(
-                "'as_tuple' is deprecated and will be removed in"
-                " Werkzeug 2.1. Access 'response.request.environ'"
-                " instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            return request.environ, response  # type: ignore
-
-        return response
+            return response
 
     def get(self, *args: t.Any, **kw: t.Any) -> "TestResponse":
         """Call :meth:`open` with ``method`` set to ``GET``."""
@@ -1273,6 +1279,13 @@ class TestResponse(Response):
     If the test request included large files, or if the application is
     serving a file, call :meth:`close` to close any open files and
     prevent Python showing a ``ResourceWarning``.
+
+    .. versionchanged:: 2.1
+        Removed deprecated behavior for treating the response instance
+        as a tuple.
+
+    .. versionadded:: 2.0
+        Test client methods always return instances of this class.
     """
 
     request: Request
@@ -1284,6 +1297,9 @@ class TestResponse(Response):
     """A list of intermediate responses. Populated when the test request
     is made with ``follow_redirects`` enabled.
     """
+
+    # Tell Pytest to ignore this, it's not a test class.
+    __test__ = False
 
     def __init__(
         self,
@@ -1299,28 +1315,11 @@ class TestResponse(Response):
         self.history = history
         self._compat_tuple = response, status, headers
 
-    def __iter__(self) -> t.Iterator:
-        warnings.warn(
-            (
-                "The test client no longer returns a tuple, it returns"
-                " a 'TestResponse'. Tuple unpacking is deprecated and"
-                " will be removed in Werkzeug 2.1. Access the"
-                " attributes 'data', 'status', and 'headers' instead."
-            ),
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return iter(self._compat_tuple)
+    @cached_property
+    def text(self) -> str:
+        """The response data as text. A shortcut for
+        ``response.get_data(as_text=True)``.
 
-    def __getitem__(self, item: int) -> t.Any:
-        warnings.warn(
-            (
-                "The test client no longer returns a tuple, it returns"
-                " a 'TestResponse'. Item indexing is deprecated and"
-                " will be removed in Werkzeug 2.1. Access the"
-                " attributes 'data', 'status', and 'headers' instead."
-            ),
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self._compat_tuple[item]
+        .. versionadded:: 2.1
+        """
+        return self.get_data(as_text=True)

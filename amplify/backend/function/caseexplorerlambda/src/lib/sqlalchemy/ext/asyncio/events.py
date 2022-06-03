@@ -1,5 +1,5 @@
 # ext/asyncio/events.py
-# Copyright (C) 2020-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2020-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -16,12 +16,16 @@ class AsyncConnectionEvents(engine_event.ConnectionEvents):
     _dispatch_target = AsyncConnectable
 
     @classmethod
-    def _listen(cls, event_key, retval=False):
+    def _no_async_engine_events(cls):
         raise NotImplementedError(
             "asynchronous events are not implemented at this time.  Apply "
             "synchronous listeners to the AsyncEngine.sync_engine or "
             "AsyncConnection.sync_connection attributes."
         )
+
+    @classmethod
+    def _listen(cls, event_key, retval=False):
+        cls._no_async_engine_events()
 
 
 class AsyncSessionEvents(orm_event.SessionEvents):
@@ -29,8 +33,12 @@ class AsyncSessionEvents(orm_event.SessionEvents):
     _dispatch_target = AsyncSession
 
     @classmethod
-    def _listen(cls, event_key, retval=False):
+    def _no_async_engine_events(cls):
         raise NotImplementedError(
             "asynchronous events are not implemented at this time.  Apply "
             "synchronous listeners to the AsyncSession.sync_session."
         )
+
+    @classmethod
+    def _listen(cls, event_key, retval=False):
+        cls._no_async_engine_events()

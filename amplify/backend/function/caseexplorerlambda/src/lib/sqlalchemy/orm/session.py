@@ -1,5 +1,5 @@
 # orm/session.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -939,6 +939,9 @@ class SessionTransaction(TransactionalContext):
     def _transaction_is_closed(self):
         return self._state is CLOSED
 
+    def _rollback_can_be_called(self):
+        return self._state not in (COMMITTED, CLOSED)
+
 
 class Session(_SessionClassMethods):
     """Manages persistence operations for ORM-mapped objects.
@@ -999,6 +1002,10 @@ class Session(_SessionClassMethods):
            with ``autocommit=False``. In this scenario, explicit calls to
            :meth:`~.Session.flush` are rarely needed; you usually only need to
            call :meth:`~.Session.commit` (which flushes) to finalize changes.
+
+           .. seealso::
+
+               :ref:`session_flushing` - additional background on autoflush
 
         :param bind: An optional :class:`_engine.Engine` or
            :class:`_engine.Connection` to
@@ -1394,8 +1401,22 @@ class Session(_SessionClassMethods):
     def commit(self):
         """Flush pending changes and commit the current transaction.
 
-        If no transaction is in progress, the method will first
-        "autobegin" a new transaction and commit.
+        When the COMMIT operation is complete, all objects are fully
+        :term:`expired`, erasing their internal contents, which will be
+        automatically re-loaded when the objects are next accessed. In the
+        interim, these objects are in an expired state and will not function if
+        they are :term:`detached` from the :class:`.Session`. Additionally,
+        this re-load operation is not supported when using asyncio-oriented
+        APIs. The :paramref:`.Session.expire_on_commit` parameter may be used
+        to disable this behavior.
+
+        When there is no transaction in place for the :class:`.Session`,
+        indicating that no operations were invoked on this :class:`.Session`
+        since the previous call to :meth:`.Session.commit`, the method will
+        begin and commit an internal-only "logical" transaction, that does not
+        normally affect the database unless pending flush changes were
+        detected, but will still invoke event handlers and object expiration
+        rules.
 
         If :term:`1.x-style` use is in effect and there are currently
         SAVEPOINTs in progress via :meth:`_orm.Session.begin_nested`,
@@ -1419,6 +1440,8 @@ class Session(_SessionClassMethods):
             :ref:`session_committing`
 
             :ref:`unitofwork_transaction`
+
+            :ref:`asyncio_orm_avoid_lazyloads`
 
         """
         if self._transaction is None:
@@ -2682,6 +2705,7 @@ class Session(_SessionClassMethods):
         populate_existing=False,
         with_for_update=None,
         identity_token=None,
+        execution_options=None,
     ):
         """Return an instance based on the given primary key identifier,
         or ``None`` if not found.
@@ -2762,6 +2786,19 @@ class Session(_SessionClassMethods):
           :meth:`_query.Query.with_for_update`.
           Supersedes the :paramref:`.Session.refresh.lockmode` parameter.
 
+        :param execution_options: optional dictionary of execution options,
+         which will be associated with the query execution if one is emitted.
+         This dictionary can provide a subset of the options that are
+         accepted by :meth:`_engine.Connection.execution_options`, and may
+         also provide additional options understood only in an ORM context.
+
+         .. versionadded:: 1.4.29
+
+         .. seealso::
+
+            :ref:`orm_queryguide_execution_options` - ORM-specific execution
+            options
+
         :return: The object instance, or ``None``.
 
         """
@@ -2773,6 +2810,7 @@ class Session(_SessionClassMethods):
             populate_existing=populate_existing,
             with_for_update=with_for_update,
             identity_token=identity_token,
+            execution_options=execution_options,
         )
 
     def _get_impl(
@@ -2793,6 +2831,11 @@ class Session(_SessionClassMethods):
 
         mapper = inspect(entity)
 
+        if not mapper or not mapper.is_mapper:
+            raise sa_exc.ArgumentError(
+                "Expected mapped class or mapper, got: %r" % entity
+            )
+
         is_dict = isinstance(primary_key_identity, dict)
         if not is_dict:
             primary_key_identity = util.to_list(
@@ -2802,8 +2845,8 @@ class Session(_SessionClassMethods):
         if len(primary_key_identity) != len(mapper.primary_key):
             raise sa_exc.InvalidRequestError(
                 "Incorrect number of values in identifier to formulate "
-                "primary key for query.get(); primary key columns are %s"
-                % ",".join("'%s'" % c for c in mapper.primary_key)
+                "primary key for session.get(); primary key columns "
+                "are %s" % ",".join("'%s'" % c for c in mapper.primary_key)
             )
 
         if is_dict:
@@ -2817,7 +2860,7 @@ class Session(_SessionClassMethods):
                 util.raise_(
                     sa_exc.InvalidRequestError(
                         "Incorrect names of values in identifier to formulate "
-                        "primary key for query.get(); primary key attribute "
+                        "primary key for session.get(); primary key attribute "
                         "names are %s"
                         % ",".join(
                             "'%s'" % prop.key
@@ -3579,14 +3622,24 @@ class Session(_SessionClassMethods):
 
         """
 
-        def key(state):
+        obj_states = (attributes.instance_state(obj) for obj in objects)
+
+        if not preserve_order:
+            # the purpose of this sort is just so that common mappers
+            # and persistence states are grouped together, so that groupby
+            # will return a single group for a particular type of mapper.
+            # it's not trying to be deterministic beyond that.
+            obj_states = sorted(
+                obj_states,
+                key=lambda state: (id(state.mapper), state.key is not None),
+            )
+
+        def grouping_key(state):
             return (state.mapper, state.key is not None)
 
-        obj_states = (attributes.instance_state(obj) for obj in objects)
-        if not preserve_order:
-            obj_states = sorted(obj_states, key=key)
-
-        for (mapper, isupdate), states in itertools.groupby(obj_states, key):
+        for (mapper, isupdate), states in itertools.groupby(
+            obj_states, grouping_key
+        ):
             self._bulk_save_mappings(
                 mapper,
                 states,

@@ -143,6 +143,7 @@ if t.TYPE_CHECKING:
     import typing_extensions as te
     from _typeshed.wsgi import WSGIApplication
     from _typeshed.wsgi import WSGIEnvironment
+    from .wrappers.request import Request
     from .wrappers.response import Response
 
 _rule_re = re.compile(
@@ -266,7 +267,7 @@ class RequestRedirect(HTTPException, RoutingException):
 
     def get_response(
         self,
-        environ: t.Optional["WSGIEnvironment"] = None,
+        environ: t.Optional[t.Union["WSGIEnvironment", "Request"]] = None,
         scope: t.Optional[dict] = None,
     ) -> "Response":
         return redirect(self.new_url, self.code)
@@ -545,10 +546,10 @@ def _prefix_names(src: str) -> ast.stmt:
 _CALL_CONVERTER_CODE_FMT = "self._converters[{elem!r}].to_url()"
 _IF_KWARGS_URL_ENCODE_CODE = """\
 if kwargs:
-    q = '?'
     params = self._encode_query_vars(kwargs)
+    q = "?" if params else ""
 else:
-    q = params = ''
+    q = params = ""
 """
 _IF_KWARGS_URL_ENCODE_AST = _prefix_names(_IF_KWARGS_URL_ENCODE_CODE)
 _URL_ENCODE_AST_NAMES = (_prefix_names("q"), _prefix_names("params"))
@@ -587,7 +588,7 @@ class Rule(RuleFactory):
                 Rule('/all/page/<int:page>', endpoint='all_entries')
             ])
 
-        If a user now visits ``http://example.com/all/page/1`` he will be
+        If a user now visits ``http://example.com/all/page/1`` they will be
         redirected to ``http://example.com/all/``.  If `redirect_defaults` is
         disabled on the `Map` instance this will only affect the URL
         generation.
@@ -664,6 +665,11 @@ class Rule(RuleFactory):
         If ``True``, this rule is only matches for WebSocket (``ws://``,
         ``wss://``) requests. By default, rules will only match for HTTP
         requests.
+
+    .. versionchanged:: 2.1
+        Percent-encoded newlines (``%0a``), which are decoded by WSGI
+        servers, are considered when routing instead of terminating the
+        match early.
 
     .. versionadded:: 1.0
         Added ``websocket``.
@@ -876,11 +882,9 @@ class Rule(RuleFactory):
             self._trace.append((False, "/"))
 
         self._build: t.Callable[..., t.Tuple[str, str]]
-        self._build = self._compile_builder(False).__get__(self, None)  # type: ignore
+        self._build = self._compile_builder(False).__get__(self, None)
         self._build_unknown: t.Callable[..., t.Tuple[str, str]]
-        self._build_unknown = self._compile_builder(True).__get__(  # type: ignore
-            self, None
-        )
+        self._build_unknown = self._compile_builder(True).__get__(self, None)
 
         if self.build_only:
             return
@@ -891,7 +895,9 @@ class Rule(RuleFactory):
         else:
             tail = ""
 
-        regex = f"^{''.join(regex_parts)}{tail}$"
+        # Use \Z instead of $ to avoid matching before a %0a decoded to
+        # a \n by WSGI.
+        regex = rf"^{''.join(regex_parts)}{tail}$\Z"
         self._regex = re.compile(regex)
 
     def match(
@@ -1610,7 +1616,7 @@ class Map:
 
     def bind_to_environ(
         self,
-        environ: "WSGIEnvironment",
+        environ: t.Union["WSGIEnvironment", "Request"],
         server_name: t.Optional[str] = None,
         subdomain: t.Optional[str] = None,
     ) -> "MapAdapter":
@@ -1655,15 +1661,15 @@ class Map:
         :param server_name: an optional server name hint (see above).
         :param subdomain: optionally the current subdomain (see above).
         """
-        environ = _get_environ(environ)
-        wsgi_server_name = get_host(environ).lower()
-        scheme = environ["wsgi.url_scheme"]
+        env = _get_environ(environ)
+        wsgi_server_name = get_host(env).lower()
+        scheme = env["wsgi.url_scheme"]
         upgrade = any(
             v.strip() == "upgrade"
-            for v in environ.get("HTTP_CONNECTION", "").lower().split(",")
+            for v in env.get("HTTP_CONNECTION", "").lower().split(",")
         )
 
-        if upgrade and environ.get("HTTP_UPGRADE", "").lower() == "websocket":
+        if upgrade and env.get("HTTP_UPGRADE", "").lower() == "websocket":
             scheme = "wss" if scheme == "https" else "ws"
 
         if server_name is None:
@@ -1698,7 +1704,7 @@ class Map:
                 subdomain = ".".join(filter(None, cur_server_name[:offset]))
 
         def _get_wsgi_string(name: str) -> t.Optional[str]:
-            val = environ.get(name)
+            val = env.get(name)
             if val is not None:
                 return _wsgi_decoding_dance(val, self.charset)
             return None
@@ -1712,7 +1718,7 @@ class Map:
             script_name,
             subdomain,
             scheme,
-            environ["REQUEST_METHOD"],
+            env["REQUEST_METHOD"],
             path_info,
             query_args=query_args,
         )
@@ -2283,29 +2289,14 @@ class MapAdapter:
         self.map.update()
 
         if values:
-            temp_values: t.Dict[str, t.Union[t.List[t.Any], t.Any]] = {}
-            always_list = isinstance(values, MultiDict)
-            key: str
-            value: t.Optional[t.Union[t.List[t.Any], t.Any]]
-
-            # For MultiDict, dict.items(values) is like values.lists()
-            # without the call or list coercion overhead.
-            for key, value in dict.items(values):  # type: ignore
-                if value is None:
-                    continue
-
-                if always_list or isinstance(value, (list, tuple)):
-                    value = [v for v in value if v is not None]
-
-                    if not value:
-                        continue
-
-                    if len(value) == 1:
-                        value = value[0]
-
-                temp_values[key] = value
-
-            values = temp_values
+            if isinstance(values, MultiDict):
+                values = {
+                    k: (v[0] if len(v) == 1 else v)
+                    for k, v in dict.items(values)
+                    if len(v) != 0
+                }
+            else:  # plain dict
+                values = {k: v for k, v in values.items() if v is not None}
         else:
             values = {}
 

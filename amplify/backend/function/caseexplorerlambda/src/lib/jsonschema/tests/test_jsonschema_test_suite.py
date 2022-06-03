@@ -64,6 +64,12 @@ def complex_email_validation(test):
     message = "Complex email validation is (intentionally) unsupported."
     return skip(
         message=message,
+        description="an invalid domain",
+    )(test) or skip(
+        message=message,
+        description="an invalid IPv4-address-literal",
+    )(test) or skip(
+        message=message,
         description="dot after local part is not valid",
     )(test) or skip(
         message=message,
@@ -252,14 +258,6 @@ TestDraft6 = DRAFT6.to_unittest_testcase(
         or missing_format(draft6_format_checker)(test)
         or complex_email_validation(test)
         or skip(
-            message=bug(371),
-            subject="ref",
-            case_description=(
-                "Location-independent identifier with "
-                "base URI change in subschema"
-            ),
-        )(test)
-        or skip(
             message=bug(),
             subject="refRemote",
             case_description="base URI change - change folder in subschema",
@@ -290,14 +288,6 @@ TestDraft7 = DRAFT7.to_unittest_testcase(
         or leap_second(test)
         or missing_format(draft7_format_checker)(test)
         or complex_email_validation(test)
-        or skip(
-            message=bug(371),
-            subject="ref",
-            case_description=(
-                "Location-independent identifier with "
-                "base URI change in subschema"
-            ),
-        )(test)
         or skip(
             message=bug(),
             subject="refRemote",
@@ -366,6 +356,10 @@ TestDraft201909 = DRAFT201909.to_unittest_testcase(
             case_description="same $anchor with different base uri",
         )(test)
         or skip(
+            message="Vocabulary support is not yet present.",
+            subject="vocabulary",
+        )(test)
+        or skip(
             message=bug(),
             subject="ref",
             case_description=(
@@ -412,6 +406,10 @@ TestDraft202012 = DRAFT202012.to_unittest_testcase(
             message="These tests depends on dynamicRef working.",
             subject="anchor",
             case_description="same $anchor with different base uri",
+        )(test)
+        or skip(
+            message="Vocabulary support is not yet present.",
+            subject="vocabulary",
         )(test)
         or skip(
             message=bug(),

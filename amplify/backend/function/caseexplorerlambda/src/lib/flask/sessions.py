@@ -131,6 +131,13 @@ class SessionInterface:
         app = Flask(__name__)
         app.session_interface = MySessionInterface()
 
+    Multiple requests with the same session may be sent and handled
+    concurrently. When implementing a new session interface, consider
+    whether reads or writes to the backing store must be synchronized.
+    There is no guarantee on the order in which the session for each
+    request is opened or saved, it will occur in the order that requests
+    begin and end processing.
+
     .. versionadded:: 0.8
     """
 
@@ -292,20 +299,25 @@ class SessionInterface:
     def open_session(
         self, app: "Flask", request: "Request"
     ) -> t.Optional[SessionMixin]:
-        """This method has to be implemented and must either return ``None``
-        in case the loading failed because of a configuration error or an
-        instance of a session object which implements a dictionary like
-        interface + the methods and attributes on :class:`SessionMixin`.
+        """This is called at the beginning of each request, after
+        pushing the request context, before matching the URL.
+
+        This must return an object which implements a dictionary-like
+        interface as well as the :class:`SessionMixin` interface.
+
+        This will return ``None`` to indicate that loading failed in
+        some way that is not immediately an error. The request
+        context will fall back to using :meth:`make_null_session`
+        in this case.
         """
         raise NotImplementedError()
 
     def save_session(
         self, app: "Flask", session: SessionMixin, response: "Response"
     ) -> None:
-        """This is called for actual sessions returned by :meth:`open_session`
-        at the end of the request.  This is still called during a request
-        context so if you absolutely need access to the request you can do
-        that.
+        """This is called at the end of each request, after generating
+        a response, before removing the request context. It is skipped
+        if :meth:`is_null_session` returns ``True``.
         """
         raise NotImplementedError()
 
@@ -371,13 +383,19 @@ class SecureCookieSessionInterface(SessionInterface):
         path = self.get_cookie_path(app)
         secure = self.get_cookie_secure(app)
         samesite = self.get_cookie_samesite(app)
+        httponly = self.get_cookie_httponly(app)
 
         # If the session is modified to be empty, remove the cookie.
         # If the session is empty, return without setting the cookie.
         if not session:
             if session.modified:
                 response.delete_cookie(
-                    name, domain=domain, path=path, secure=secure, samesite=samesite
+                    name,
+                    domain=domain,
+                    path=path,
+                    secure=secure,
+                    samesite=samesite,
+                    httponly=httponly,
                 )
 
             return
@@ -389,7 +407,6 @@ class SecureCookieSessionInterface(SessionInterface):
         if not self.should_set_cookie(app, session):
             return
 
-        httponly = self.get_cookie_httponly(app)
         expires = self.get_expiration_time(app, session)
         val = self.get_signing_serializer(app).dumps(dict(session))  # type: ignore
         response.set_cookie(

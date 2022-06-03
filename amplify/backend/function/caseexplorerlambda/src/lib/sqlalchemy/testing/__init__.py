@@ -1,5 +1,5 @@
 # testing/__init__.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -12,6 +12,8 @@ from .assertions import assert_raises
 from .assertions import assert_raises_context_ok
 from .assertions import assert_raises_message
 from .assertions import assert_raises_message_context_ok
+from .assertions import assert_warns
+from .assertions import assert_warns_message
 from .assertions import AssertsCompiledSQL
 from .assertions import AssertsExecutionResults
 from .assertions import ComparesTables

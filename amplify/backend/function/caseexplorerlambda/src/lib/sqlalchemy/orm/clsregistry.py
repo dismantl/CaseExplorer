@@ -1,5 +1,5 @@
 # ext/declarative/clsregistry.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -257,7 +257,7 @@ class _ModNS(object):
                 else:
                     assert isinstance(value, _MultipleClassMarker)
                     return value.attempt_get(self.__parent.path, key)
-        raise AttributeError(
+        raise NameError(
             "Module %r has no mapped classes "
             "registered under the name %r" % (self.__parent.name, key)
         )

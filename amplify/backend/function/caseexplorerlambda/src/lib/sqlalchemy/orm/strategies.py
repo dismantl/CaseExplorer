@@ -1,5 +1,5 @@
 # orm/strategies.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -27,6 +27,7 @@ from .base import _RAISE_FOR_STATE
 from .base import _SET_DEFERRED_EXPIRED
 from .context import _column_descriptions
 from .context import ORMCompileState
+from .context import ORMSelectCompileState
 from .context import QueryContext
 from .interfaces import LoaderStrategy
 from .interfaces import StrategizedProperty
@@ -382,7 +383,26 @@ class DeferredColumnLoader(LoaderStrategy):
         # dictionary.  Normally, the DeferredColumnLoader.setup_query()
         # sets up that data in the "memoized_populators" dictionary
         # and "create_row_processor()" here is never invoked.
-        if not self.is_class_level:
+
+        if (
+            context.refresh_state
+            and context.query._compile_options._only_load_props
+            and self.key in context.query._compile_options._only_load_props
+        ):
+            self.parent_property._get_strategy(
+                (("deferred", False), ("instrument", True))
+            ).create_row_processor(
+                context,
+                query_entity,
+                path,
+                loadopt,
+                mapper,
+                result,
+                adapter,
+                populators,
+            )
+
+        elif not self.is_class_level:
             if self.raiseload:
                 set_deferred_for_local_state = (
                     self.parent_property._raise_column_loader
@@ -797,7 +817,6 @@ class LazyLoader(AbstractRelationshipLoader, util.MemoizedSlots):
         )
 
     def _load_for_state(self, state, passive, loadopt=None, extra_criteria=()):
-
         if not state.key and (
             (
                 not self.parent_property.load_on_pending
@@ -955,7 +974,7 @@ class LazyLoader(AbstractRelationshipLoader, util.MemoizedSlots):
         if state.load_options or (loadopt and loadopt._extra_criteria):
             effective_path = state.load_path[self.parent_property]
 
-            opts = list(state.load_options)
+            opts = tuple(state.load_options)
 
             if loadopt and loadopt._extra_criteria:
                 use_get = False
@@ -1782,6 +1801,11 @@ class SubqueryLoader(PostLoader):
         # the subqueryloader does a similar check in setup_query() unlike
         # the other post loaders, however we have this here for consistency
         elif self._check_recursive_postload(context, path, self.join_depth):
+            return
+        elif not isinstance(context.compile_state, ORMSelectCompileState):
+            # issue 7505 - subqueryload() in 1.3 and previous would silently
+            # degrade for from_statement() without warning. this behavior
+            # is restored here
             return
 
         if not self.parent.class_manager[self.key].impl.supports_population:

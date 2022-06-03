@@ -1,9 +1,5 @@
 import json
-
-try:
-    from collections.abc import Mapping
-except ImportError:
-    from collections import Mapping
+from collections.abc import Mapping
 
 
 def to_key(value):

@@ -1,5 +1,5 @@
 # sql/sqltypes.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -587,41 +587,34 @@ class BigInteger(Integer):
 
 class Numeric(_LookupExpressionAdapter, TypeEngine):
 
-    """A type for fixed precision numbers, such as ``NUMERIC`` or ``DECIMAL``.
+    """Base for non-integer numeric types, such as
+    ``NUMERIC``, ``FLOAT``, ``DECIMAL``, and other variants.
 
-    This type returns Python ``decimal.Decimal`` objects by default, unless
-    the :paramref:`.Numeric.asdecimal` flag is set to False, in which case
-    they are coerced to Python ``float`` objects.
+    The :class:`.Numeric` datatype when used directly will render DDL
+    corresponding to precision numerics if available, such as
+    ``NUMERIC(precision, scale)``.  The :class:`.Float` subclass will
+    attempt to render a floating-point datatype such as ``FLOAT(precision)``.
+
+    :class:`.Numeric` returns Python ``decimal.Decimal`` objects by default,
+    based on the default value of ``True`` for the
+    :paramref:`.Numeric.asdecimal` parameter.  If this parameter is set to
+    False, returned values are coerced to Python ``float`` objects.
+
+    The :class:`.Float` subtype, being more specific to floating point,
+    defaults the :paramref:`.Float.asdecimal` flag to False so that the
+    default Python datatype is ``float``.
 
     .. note::
 
-        The :class:`.Numeric` type is designed to receive data from a database
-        type that is explicitly known to be a decimal type
-        (e.g. ``DECIMAL``, ``NUMERIC``, others) and not a floating point
-        type (e.g. ``FLOAT``, ``REAL``, others).
-        If the database column on the server is in fact a floating-point
-        type, such as ``FLOAT`` or ``REAL``, use the :class:`.Float`
-        type or a subclass, otherwise numeric coercion between
-        ``float``/``Decimal`` may or may not function as expected.
-
-    .. note::
-
-       The Python ``decimal.Decimal`` class is generally slow
-       performing; cPython 3.3 has now switched to use the `cdecimal
-       <https://pypi.org/project/cdecimal/>`_ library natively. For
-       older Python versions, the ``cdecimal`` library can be patched
-       into any application where it will replace the ``decimal``
-       library fully, however this needs to be applied globally and
-       before any other modules have been imported, as follows::
-
-           import sys
-           import cdecimal
-           sys.modules["decimal"] = cdecimal
-
-       Note that the ``cdecimal`` and ``decimal`` libraries are **not
-       compatible with each other**, so patching ``cdecimal`` at the
-       global level is the only way it can be used effectively with
-       various DBAPIs that hardcode to import the ``decimal`` library.
+        When using a :class:`.Numeric` datatype against a database type that
+        returns Python floating point values to the driver, the accuracy of the
+        decimal conversion indicated by :paramref:`.Numeric.asdecimal` may be
+        limited.   The behavior of specific numeric/floating point datatypes
+        is a product of the SQL datatype in use, the Python :term:`DBAPI`
+        in use, as well as strategies that may be present within
+        the SQLAlchemy dialect in use.   Users requiring specific precision/
+        scale are encouraged to experiment with the available datatypes
+        in order to determine the best results.
 
     """
 
@@ -660,8 +653,6 @@ class Numeric(_LookupExpressionAdapter, TypeEngine):
          :class:`.Numeric` as well as the MySQL float types, will use the
          value of ".scale" as the default for decimal_return_scale, if not
          otherwise specified.
-
-         .. versionadded:: 0.9.0
 
         When using the ``Numeric`` type, care should be taken to ensure
         that the asdecimal setting is appropriate for the DBAPI in use -
@@ -771,16 +762,6 @@ class Float(Numeric):
     :paramref:`.Float.asdecimal` flag is set to True, in which case they
     are coerced to ``decimal.Decimal`` objects.
 
-    .. note::
-
-        The :class:`.Float` type is designed to receive data from a database
-        type that is explicitly known to be a floating point type
-        (e.g. ``FLOAT``, ``REAL``, others)
-        and not a decimal type (e.g. ``DECIMAL``, ``NUMERIC``, others).
-        If the database column on the server is in fact a Numeric
-        type, such as ``DECIMAL`` or ``NUMERIC``, use the :class:`.Numeric`
-        type or a subclass, otherwise numeric coercion between
-        ``float``/``Decimal`` may or may not function as expected.
 
     """
 
@@ -867,6 +848,13 @@ class DateTime(_LookupExpressionAdapter, TypeEngine):
     def get_dbapi_type(self, dbapi):
         return dbapi.DATETIME
 
+    def _resolve_for_literal(self, value):
+        with_timezone = value.tzinfo is not None
+        if with_timezone and not self.timezone:
+            return DATETIME_TIMEZONE
+        else:
+            return self
+
     @property
     def python_type(self):
         return dt.datetime
@@ -936,6 +924,13 @@ class Time(_LookupExpressionAdapter, TypeEngine):
     @property
     def python_type(self):
         return dt.time
+
+    def _resolve_for_literal(self, value):
+        with_timezone = value.tzinfo is not None
+        if with_timezone and not self.timezone:
+            return TIME_TIMEZONE
+        else:
+            return self
 
     @util.memoized_property
     def _expression_adaptations(self):
@@ -1275,6 +1270,8 @@ class Enum(Emulated, String, SchemaType):
     a plain-string enumerated type::
 
         import enum
+        from sqlalchemy import Enum
+
         class MyEnum(enum.Enum):
             one = 1
             two = 2
@@ -1386,8 +1383,9 @@ class Enum(Emulated, String, SchemaType):
 
         :param native_enum: Use the database's native ENUM type when
            available. Defaults to True. When False, uses VARCHAR + check
-           constraint for all backends. The VARCHAR length can be controlled
-           with :paramref:`.Enum.length`
+           constraint for all backends. When False, the VARCHAR length can be
+           controlled with :paramref:`.Enum.length`; currently "length" is
+           ignored if native_enum=True.
 
         :param length: Allows specifying a custom length for the VARCHAR
            when :paramref:`.Enum.native_enum` is False. By default it uses the
@@ -1486,7 +1484,7 @@ class Enum(Emulated, String, SchemaType):
         self._sort_key_function = kw.pop("sort_key_function", NO_ARG)
         length_arg = kw.pop("length", NO_ARG)
         self._omit_aliases = kw.pop("omit_aliases", NO_ARG)
-
+        _disable_warnings = kw.pop("_disable_warnings", False)
         values, objects = self._parse_into_values(enums, kw)
         self._setup_for_values(values, objects, kw)
 
@@ -1506,17 +1504,27 @@ class Enum(Emulated, String, SchemaType):
             _expect_unicode = convert_unicode
 
         if self.enums:
-            length = max(len(x) for x in self.enums)
+            self._default_length = length = max(len(x) for x in self.enums)
         else:
-            length = 0
-        if not self.native_enum and length_arg is not NO_ARG:
-            if length_arg < length:
-                raise ValueError(
-                    "When provided, length must be larger or equal"
-                    " than the length of the longest enum value. %s < %s"
-                    % (length_arg, length)
-                )
-            length = length_arg
+            self._default_length = length = 0
+
+        if length_arg is not NO_ARG:
+            if self.native_enum:
+                if not _disable_warnings:
+                    util.warn(
+                        "Enum 'length' argument is currently ignored unless "
+                        "native_enum is specified as False, including for DDL "
+                        "that renders VARCHAR in any case.  This may change "
+                        "in a future release."
+                    )
+            else:
+                if not _disable_warnings and length_arg < length:
+                    raise ValueError(
+                        "When provided, length must be larger or equal"
+                        " than the length of the longest enum value. %s < %s"
+                        % (length_arg, length)
+                    )
+                length = length_arg
 
         self._valid_lookup[None] = self._object_lookup[None] = None
 
@@ -1658,7 +1666,11 @@ class Enum(Emulated, String, SchemaType):
     def __repr__(self):
         return util.generic_repr(
             self,
-            additional_kw=[("native_enum", True)],
+            additional_kw=[
+                ("native_enum", True),
+                ("create_constraint", False),
+                ("length", self._default_length),
+            ],
             to_inspect=[Enum, SchemaType],
         )
 
@@ -1672,12 +1684,15 @@ class Enum(Emulated, String, SchemaType):
                 "an `enums` attribute."
             )
 
-        return util.constructor_copy(self, self._generic_type_affinity, *args)
+        return util.constructor_copy(
+            self, self._generic_type_affinity, *args, _disable_warnings=True
+        )
 
     def adapt_to_emulated(self, impltype, **kw):
         kw.setdefault("_expect_unicode", self._expect_unicode)
         kw.setdefault("validate_strings", self.validate_strings)
         kw.setdefault("name", self.name)
+        kw["_disable_warnings"] = True
         kw.setdefault("schema", self.schema)
         kw.setdefault("inherit_schema", self.inherit_schema)
         kw.setdefault("metadata", self.metadata)
@@ -1692,6 +1707,7 @@ class Enum(Emulated, String, SchemaType):
 
     def adapt(self, impltype, **kw):
         kw["_enums"] = self._enums_argument
+        kw["_disable_warnings"] = True
         return super(Enum, self).adapt(impltype, **kw)
 
     def _should_create_constraint(self, compiler, **kw):
@@ -1956,10 +1972,10 @@ class Boolean(Emulated, TypeEngine, SchemaType):
     def _strict_as_bool(self, value):
         if value not in self._strict_bools:
             if not isinstance(value, int):
-                raise TypeError("Not a boolean value: %r" % value)
+                raise TypeError("Not a boolean value: %r" % (value,))
             else:
                 raise ValueError(
-                    "Value %r is not None, True, or False" % value
+                    "Value %r is not None, True, or False" % (value,)
                 )
         return value
 
@@ -2148,7 +2164,7 @@ class JSON(Indexable, TypeEngine):
         with engine.connect() as conn:
             conn.execute(
                 data_table.insert(),
-                data = {"key1": "value1", "key2": "value2"}
+                {"data": {"key1": "value1", "key2": "value2"}}
             )
 
     **JSON-Specific Expression Operators**
@@ -2244,20 +2260,22 @@ class JSON(Indexable, TypeEngine):
 
     **Support for JSON null vs. SQL NULL**
 
-    When working with NULL values, the :class:`_types.JSON`
-    type recommends the
+    When working with NULL values, the :class:`_types.JSON` type recommends the
     use of two specific constants in order to differentiate between a column
-    that evaluates to SQL NULL, e.g. no value, vs. the JSON-encoded string
-    of ``"null"``.   To insert or select against a value that is SQL NULL,
-    use the constant :func:`.null`::
+    that evaluates to SQL NULL, e.g. no value, vs. the JSON-encoded string of
+    ``"null"``. To insert or select against a value that is SQL NULL, use the
+    constant :func:`.null`. This symbol may be passed as a parameter value
+    specifically when using the :class:`_types.JSON` datatype, which contains
+    special logic that interprets this symbol to mean that the column value
+    should be SQL NULL as opposed to JSON ``"null"``::
 
         from sqlalchemy import null
-        conn.execute(table.insert(), json_value=null())
+        conn.execute(table.insert(), {"json_value": null()})
 
     To insert or select against a value that is JSON ``"null"``, use the
     constant :attr:`_types.JSON.NULL`::
 
-        conn.execute(table.insert(), json_value=JSON.NULL)
+        conn.execute(table.insert(), {"json_value": JSON.NULL})
 
     The :class:`_types.JSON` type supports a flag
     :paramref:`_types.JSON.none_as_null` which when set to True will result
@@ -2358,12 +2376,14 @@ class JSON(Indexable, TypeEngine):
         """Construct a :class:`_types.JSON` type.
 
         :param none_as_null=False: if True, persist the value ``None`` as a
-         SQL NULL value, not the JSON encoding of ``null``.   Note that
-         when this flag is False, the :func:`.null` construct can still
-         be used to persist a NULL value::
+         SQL NULL value, not the JSON encoding of ``null``. Note that when this
+         flag is False, the :func:`.null` construct can still be used to
+         persist a NULL value, which may be passed directly as a parameter
+         value that is specially interpreted by the :class:`_types.JSON` type
+         as SQL NULL::
 
              from sqlalchemy import null
-             conn.execute(table.insert(), data=null())
+             conn.execute(table.insert(), {"data": null()})
 
          .. note::
 
@@ -2689,7 +2709,7 @@ class ARRAY(SchemaEventTarget, Indexable, Concatenable, TypeEngine):
 
         connection.execute(
                 mytable.insert(),
-                data=[1,2,3]
+                {"data": [1,2,3]}
         )
 
     The :class:`_types.ARRAY` type can be constructed given a fixed number
@@ -2833,10 +2853,18 @@ class ARRAY(SchemaEventTarget, Indexable, Concatenable, TypeEngine):
             elements = util.preloaded.sql_elements
             operator = operator if operator else operators.eq
 
+            arr_type = self.type
+
             # send plain BinaryExpression so that negate remains at None,
             # leading to NOT expr for negation.
             return elements.BinaryExpression(
-                coercions.expect(roles.ExpressionElementRole, other),
+                coercions.expect(
+                    roles.BinaryElementRole,
+                    element=other,
+                    operator=operator,
+                    expr=self.expr,
+                    bindparam_type=arr_type.item_type,
+                ),
                 elements.CollectionAggregate._create_any(self.expr),
                 operator,
             )
@@ -2877,10 +2905,18 @@ class ARRAY(SchemaEventTarget, Indexable, Concatenable, TypeEngine):
             elements = util.preloaded.sql_elements
             operator = operator if operator else operators.eq
 
+            arr_type = self.type
+
             # send plain BinaryExpression so that negate remains at None,
             # leading to NOT expr for negation.
             return elements.BinaryExpression(
-                coercions.expect(roles.ExpressionElementRole, other),
+                coercions.expect(
+                    roles.BinaryElementRole,
+                    element=other,
+                    operator=operator,
+                    expr=self.expr,
+                    bindparam_type=arr_type.item_type,
+                ),
                 elements.CollectionAggregate._create_all(self.expr),
                 operator,
             )
@@ -2966,7 +3002,10 @@ class TupleType(TypeEngine):
 
     def __init__(self, *types):
         self._fully_typed = NULLTYPE not in types
-        self.types = types
+        self.types = [
+            item_type() if isinstance(item_type, type) else item_type
+            for item_type in types
+        ]
 
     def _resolve_values_to_types(self, value):
         if self._fully_typed:
@@ -3196,7 +3235,7 @@ class NullType(TypeEngine):
     def literal_processor(self, dialect):
         def process(value):
             raise exc.CompileError(
-                "Don't know how to render literal SQL value: %r" % value
+                "Don't know how to render literal SQL value: %r" % (value,)
             )
 
         return process
@@ -3251,6 +3290,8 @@ STRINGTYPE = String()
 INTEGERTYPE = Integer()
 MATCHTYPE = MatchType()
 TABLEVALUE = TableValueType()
+DATETIME_TIMEZONE = DateTime(timezone=True)
+TIME_TIMEZONE = Time(timezone=True)
 
 _type_map = {
     int: Integer(),
@@ -3289,11 +3330,11 @@ def _resolve_value_to_type(value):
             insp.__class__ in inspection._registrars
         ):
             raise exc.ArgumentError(
-                "Object %r is not legal as a SQL literal value" % value
+                "Object %r is not legal as a SQL literal value" % (value,)
             )
         return NULLTYPE
     else:
-        return _result_type
+        return _result_type._resolve_for_literal(value)
 
 
 # back-assign to type_api

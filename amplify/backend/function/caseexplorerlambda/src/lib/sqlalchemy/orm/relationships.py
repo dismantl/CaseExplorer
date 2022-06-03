@@ -1,5 +1,5 @@
 # orm/relationships.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -104,6 +104,8 @@ class RelationshipProperty(StrategizedProperty):
 
     strategy_wildcard_key = "relationship"
     inherit_cache = True
+
+    _links_to_entity = True
 
     _persistence_only = dict(
         passive_deletes=False,
@@ -365,20 +367,11 @@ class RelationshipProperty(StrategizedProperty):
                 :ref:`error_qzyx` - usage example
 
         :param bake_queries=True:
-          Enable :ref:`lambda caching <engine_lambda_caching>` for loader
-          strategies, if applicable, which adds a performance gain to the
-          construction of SQL constructs used by loader strategies, in addition
-          to the usual SQL statement caching used throughout SQLAlchemy. This
-          parameter currently applies only to the "lazy" and "selectin" loader
-          strategies. There is generally no reason to set this parameter to
-          False.
+          Legacy parameter, not used.
 
-          .. versionchanged:: 1.4  Relationship loaders no longer use the
-             previous "baked query" system of query caching.   The "lazy"
-             and "selectin" loaders make use of the "lambda cache" system
-             for the construction of SQL constructs,
-             as well as the usual SQL caching system that is throughout
-             SQLAlchemy as of the 1.4 series.
+          .. versionchanged:: 1.4.23 the "lambda caching" system is no longer
+             used by loader strategies and the ``bake_queries`` parameter
+             has no effect.
 
         :param cascade:
           A comma-separated list of cascade rules which determines how
@@ -1159,7 +1152,13 @@ class RelationshipProperty(StrategizedProperty):
             :func:`_orm.relationship`.
 
             """
-            return self.property.entity
+            # this is a relatively recent change made for
+            # 1.4.27 as part of #7244.
+            # TODO: shouldn't _of_type be inspected up front when received?
+            if self._of_type is not None:
+                return inspect(self._of_type)
+            else:
+                return self.property.entity
 
         @util.memoized_property
         def mapper(self):

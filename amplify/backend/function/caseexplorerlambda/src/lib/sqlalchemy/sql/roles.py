@@ -1,5 +1,5 @@
 # sql/roles.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -34,6 +34,11 @@ class AllowsLambdaRole(object):
 
 class HasCacheKeyRole(SQLRole):
     _role_name = "Cacheable Core or ORM object"
+
+
+class ExecutableOptionRole(SQLRole):
+    __slots__ = ()
+    _role_name = "ExecutionOption Core or ORM object"
 
 
 class LiteralValueRole(SQLRole):

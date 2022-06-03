@@ -1,5 +1,5 @@
 # engine/base.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -133,6 +133,9 @@ class Connection(Connectable):
         if fmt:
             message = fmt(message)
 
+        if log.STACKLEVEL:
+            kw["stacklevel"] = 1 + log.STACKLEVEL_OFFSET
+
         self.engine.logger.info(message, *arg, **kw)
 
     def _log_debug(self, message, *arg, **kw):
@@ -140,6 +143,9 @@ class Connection(Connectable):
 
         if fmt:
             message = fmt(message)
+
+        if log.STACKLEVEL:
+            kw["stacklevel"] = 1 + log.STACKLEVEL_OFFSET
 
         self.engine.logger.debug(message, *arg, **kw)
 
@@ -764,7 +770,10 @@ class Connection(Connectable):
         else:
             if self._is_future:
                 raise exc.InvalidRequestError(
-                    "a transaction is already begun for this connection"
+                    "This connection has already initialized a SQLAlchemy "
+                    "Transaction() object via begin() or autobegin; can't "
+                    "call begin() here unless rollback() or commit() "
+                    "is called first."
                 )
             else:
                 return MarkerTransaction(self)
@@ -896,10 +905,15 @@ class Connection(Connectable):
             and self._nested_transaction.is_active
         )
 
-    def _is_autocommit(self):
-        return (
-            self._execution_options.get("isolation_level", None)
-            == "AUTOCOMMIT"
+    def _is_autocommit_isolation(self):
+        opt_iso = self._execution_options.get("isolation_level", None)
+        return bool(
+            opt_iso == "AUTOCOMMIT"
+            or (
+                opt_iso is None
+                and getattr(self.engine.dialect, "isolation_level", None)
+                == "AUTOCOMMIT"
+            )
         )
 
     def get_transaction(self):
@@ -930,7 +944,13 @@ class Connection(Connectable):
         assert not self.__branch_from
 
         if self._echo:
-            self._log_info("BEGIN (implicit)")
+            if self._is_autocommit_isolation():
+                self._log_info(
+                    "BEGIN (implicit; DBAPI should not BEGIN due to "
+                    "autocommit mode)"
+                )
+            else:
+                self._log_info("BEGIN (implicit)")
 
         self.__in_begin = True
 
@@ -952,7 +972,7 @@ class Connection(Connectable):
 
         if self._still_open_and_dbapi_connection_is_valid:
             if self._echo:
-                if self._is_autocommit():
+                if self._is_autocommit_isolation():
                     self._log_info(
                         "ROLLBACK using DBAPI connection.rollback(), "
                         "DBAPI should ignore due to autocommit mode"
@@ -971,7 +991,7 @@ class Connection(Connectable):
         # if a connection has this set as the isolation level, we can skip
         # the "autocommit" warning as the operation will do "autocommit"
         # in any case
-        if autocommit and not self._is_autocommit():
+        if autocommit and not self._is_autocommit_isolation():
             util.warn_deprecated_20(
                 "The current statement is being autocommitted using "
                 "implicit autocommit, which will be removed in "
@@ -984,7 +1004,7 @@ class Connection(Connectable):
             self.dispatch.commit(self)
 
         if self._echo:
-            if self._is_autocommit():
+            if self._is_autocommit_isolation():
                 self._log_info(
                     "COMMIT using DBAPI connection.commit(), "
                     "DBAPI should ignore due to autocommit mode"
@@ -2368,6 +2388,13 @@ class Transaction(TransactionalContext):
     def _transaction_is_closed(self):
         return not self._deactivated_from_connection
 
+    def _rollback_can_be_called(self):
+        # for RootTransaction / NestedTransaction, it's safe to call
+        # rollback() even if the transaction is deactive and no warnings
+        # will be emitted.  tested in
+        # test_transaction.py -> test_no_rollback_in_deactive(?:_savepoint)?
+        return True
+
 
 class MarkerTransaction(Transaction):
     """A 'marker' transaction that is used for nested begin() calls.
@@ -2921,32 +2948,45 @@ class Engine(Connectable, log.Identified):
     def __repr__(self):
         return "Engine(%r)" % (self.url,)
 
-    def dispose(self):
+    def dispose(self, close=True):
         """Dispose of the connection pool used by this
         :class:`_engine.Engine`.
 
-        This has the effect of fully closing all **currently checked in**
-        database connections.  Connections that are still checked out
-        will **not** be closed, however they will no longer be associated
-        with this :class:`_engine.Engine`,
-        so when they are closed individually,
-        eventually the :class:`_pool.Pool` which they are associated with will
-        be garbage collected and they will be closed out fully, if
-        not already closed on checkin.
+        A new connection pool is created immediately after the old one has been
+        disposed. The previous connection pool is disposed either actively, by
+        closing out all currently checked-in connections in that pool, or
+        passively, by losing references to it but otherwise not closing any
+        connections. The latter strategy is more appropriate for an initializer
+        in a forked Python process.
 
-        A new connection pool is created immediately after the old one has
-        been disposed.   This new pool, like all SQLAlchemy connection pools,
-        does not make any actual connections to the database until one is
-        first requested, so as long as the :class:`_engine.Engine`
-        isn't used again,
-        no new connections will be made.
+        :param close: if left at its default of ``True``, has the
+         effect of fully closing all **currently checked in**
+         database connections.  Connections that are still checked out
+         will **not** be closed, however they will no longer be associated
+         with this :class:`_engine.Engine`,
+         so when they are closed individually, eventually the
+         :class:`_pool.Pool` which they are associated with will
+         be garbage collected and they will be closed out fully, if
+         not already closed on checkin.
+
+         If set to ``False``, the previous connection pool is de-referenced,
+         and otherwise not touched in any way.
+
+        .. versionadded:: 1.4.33  Added the :paramref:`.Engine.dispose.close`
+            parameter to allow the replacement of a connection pool in a child
+            process without interfering with the connections used by the parent
+            process.
+
 
         .. seealso::
 
             :ref:`engine_disposal`
 
+            :ref:`pooling_multiprocessing`
+
         """
-        self.pool.dispose()
+        if close:
+            self.pool.dispose()
         self.pool = self.pool.recreate()
         self.dispatch.engine_disposed(self)
 

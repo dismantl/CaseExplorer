@@ -1,5 +1,5 @@
 # orm/interfaces.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -119,6 +119,15 @@ class MapperProperty(
     mapper property.
 
     """
+
+    @property
+    def _links_to_entity(self):
+        """True if this MapperProperty refers to a mapped entity.
+
+        Should only be True for RelationshipProperty, False for all others.
+
+        """
+        raise NotImplementedError()
 
     def _memoized_attr_info(self):
         """Info dictionary associated with the object, allowing user-defined
@@ -466,7 +475,8 @@ class PropComparator(operators.ColumnOperators):
 
     def of_type(self, class_):
         r"""Redefine this object in terms of a polymorphic subclass,
-        :func:`.with_polymorphic` construct, or :func:`.aliased` construct.
+        :func:`_orm.with_polymorphic` construct, or :func:`_orm.aliased`
+        construct.
 
         Returns a new PropComparator from which further criterion can be
         evaluated.
@@ -480,6 +490,8 @@ class PropComparator(operators.ColumnOperators):
             against this specific subclass.
 
         .. seealso::
+
+            :ref:`queryguide_join_onclause` - in the :ref:`queryguide_toplevel`
 
             :ref:`inheritance_of_type`
 
@@ -743,14 +755,53 @@ class ORMOption(ExecutableOption):
     _is_strategy_option = False
 
 
-class LoaderOption(ORMOption):
+class CompileStateOption(HasCacheKey, ORMOption):
+    """base for :class:`.ORMOption` classes that affect the compilation of
+    a SQL query and therefore need to be part of the cache key.
+
+    .. note::  :class:`.CompileStateOption` is generally non-public and
+       should not be used as a base class for user-defined options; instead,
+       use :class:`.UserDefinedOption`, which is easier to use as it does not
+       interact with ORM compilation internals or caching.
+
+    :class:`.CompileStateOption` defines an internal attribute
+    ``_is_compile_state=True`` which has the effect of the ORM compilation
+    routines for SELECT and other statements will call upon these options when
+    a SQL string is being compiled. As such, these classes implement
+    :class:`.HasCacheKey` and need to provide robust ``_cache_key_traversal``
+    structures.
+
+    The :class:`.CompileStateOption` class is used to implement the ORM
+    :class:`.LoaderOption` and :class:`.CriteriaOption` classes.
+
+    .. versionadded:: 1.4.28
+
+
+    """
+
+    _is_compile_state = True
+
+    def process_compile_state(self, compile_state):
+        """Apply a modification to a given :class:`.CompileState`."""
+
+    def process_compile_state_replaced_entities(
+        self, compile_state, mapper_entities
+    ):
+        """Apply a modification to a given :class:`.CompileState`,
+        given entities that were replaced by with_only_columns() or
+        with_entities().
+
+        .. versionadded:: 1.4.19
+
+        """
+
+
+class LoaderOption(CompileStateOption):
     """Describe a loader modification to an ORM statement at compilation time.
 
     .. versionadded:: 1.4
 
     """
-
-    _is_compile_state = True
 
     def process_compile_state_replaced_entities(
         self, compile_state, mapper_entities
@@ -768,7 +819,7 @@ class LoaderOption(ORMOption):
         """Apply a modification to a given :class:`.CompileState`."""
 
 
-class CriteriaOption(ORMOption):
+class CriteriaOption(CompileStateOption):
     """Describe a WHERE criteria modification to an ORM statement at
     compilation time.
 
@@ -776,7 +827,6 @@ class CriteriaOption(ORMOption):
 
     """
 
-    _is_compile_state = True
     _is_criteria_option = True
 
     def process_compile_state(self, compile_state):

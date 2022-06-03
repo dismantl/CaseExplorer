@@ -376,43 +376,39 @@ def parse_dict_header(value: str, cls: t.Type[dict] = dict) -> t.Dict[str, str]:
     return result
 
 
-@typing.overload
 def parse_options_header(
-    value: t.Optional[str], multiple: "te.Literal[False]" = False
+    value: t.Optional[str], multiple: "te.Literal[None]" = None
 ) -> t.Tuple[str, t.Dict[str, str]]:
-    ...
-
-
-@typing.overload
-def parse_options_header(
-    value: t.Optional[str], multiple: "te.Literal[True]"
-) -> t.Tuple[t.Any, ...]:
-    ...
-
-
-def parse_options_header(
-    value: t.Optional[str], multiple: bool = False
-) -> t.Union[t.Tuple[str, t.Dict[str, str]], t.Tuple[t.Any, ...]]:
-    """Parse a ``Content-Type`` like header into a tuple with the content
-    type and the options:
+    """Parse a ``Content-Type``-like header into a tuple with the
+    value and any options:
 
     >>> parse_options_header('text/html; charset=utf8')
     ('text/html', {'charset': 'utf8'})
 
-    This should not be used to parse ``Cache-Control`` like headers that use
-    a slightly different format.  For these headers use the
-    :func:`parse_dict_header` function.
+    This should is not for ``Cache-Control``-like headers, which use a
+    different format. For those, use :func:`parse_dict_header`.
+
+    :param value: The header value to parse.
+
+    .. versionchanged:: 2.1
+        The ``multiple`` parameter is deprecated and will be removed in
+        Werkzeug 2.2.
 
     .. versionchanged:: 0.15
         :rfc:`2231` parameter continuations are handled.
 
     .. versionadded:: 0.5
-
-    :param value: the header to parse.
-    :param multiple: Whether try to parse and return multiple MIME types
-    :return: (mimetype, options) or (mimetype, options, mimetype, options, …)
-             if multiple=True
     """
+    if multiple is not None:
+        import warnings
+
+        warnings.warn(
+            "The 'multiple' parameter of 'parse_options_header' is"
+            " deprecated and will be removed in Werkzeug 2.2.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
     if not value:
         return "", {}
 
@@ -445,24 +441,29 @@ def parse_options_header(
                     encoding = continued_encoding
                 continued_encoding = encoding
             option = unquote_header_value(option)
+
             if option_value is not None:
                 option_value = unquote_header_value(option_value, option == "filename")
+
                 if encoding is not None:
                     option_value = _unquote(option_value).decode(encoding)
+
             if count:
                 # Continuations append to the existing value. For
                 # simplicity, this ignores the possibility of
                 # out-of-order indices, which shouldn't happen anyway.
-                options[option] = options.get(option, "") + option_value
+                if option_value is not None:
+                    options[option] = options.get(option, "") + option_value
             else:
-                options[option] = option_value
+                options[option] = option_value  # type: ignore[assignment]
+
             rest = rest[optmatch.end() :]
         result.append(options)
-        if multiple is False:
-            return tuple(result)
+        if not multiple:
+            return tuple(result)  # type: ignore[return-value]
         value = rest
 
-    return tuple(result) if result else ("", {})
+    return tuple(result) if result else ("", {})  # type: ignore[return-value]
 
 
 _TAnyAccept = t.TypeVar("_TAnyAccept", bound="ds.Accept")
@@ -945,24 +946,6 @@ def parse_date(value: t.Optional[str]) -> t.Optional[datetime]:
         return dt.replace(tzinfo=timezone.utc)
 
     return dt
-
-
-def cookie_date(
-    expires: t.Optional[t.Union[datetime, date, int, float, struct_time]] = None
-) -> str:
-    """Format a datetime object or timestamp into an :rfc:`2822` date
-    string for ``Set-Cookie expires``.
-
-    .. deprecated:: 2.0
-        Will be removed in Werkzeug 2.1. Use :func:`http_date` instead.
-    """
-    warnings.warn(
-        "'cookie_date' is deprecated and will be removed in Werkzeug"
-        " 2.1. Use 'http_date' instead.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    return http_date(expires)
 
 
 def http_date(

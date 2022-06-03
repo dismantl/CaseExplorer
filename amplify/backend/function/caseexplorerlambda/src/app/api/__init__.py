@@ -3,8 +3,10 @@ from ..service import DataService
 from ..utils import get_case_model_list, get_root_model_list, snake_to_title
 from ..officer import Officer
 from .api_factory import api_factory
-from flask import Blueprint, current_app
-from flask_restx import Api
+from .interface import QueryParams
+from flask import Blueprint, current_app, request
+from flask_restx import Api, Namespace, Resource
+from flask_accepts import accepts
 import json
 
 class RESTAPI:
@@ -53,5 +55,13 @@ class RESTAPI:
             sub_api = api_factory(self.api_schemas, model, desc)
             self.cases_api = sub_api
             api.add_namespace(sub_api, path=f'/{root}')
+
+        bail_namespace = Namespace('bail_stats')
+        @bail_namespace.route('/bail_stats')
+        class BailStatsResource(Resource):
+            @accepts(schema=QueryParams, api=bail_namespace)
+            def post(self):
+                return DataService.fetch_bail_rows(request.parsed_obj)
+        api.add_namespace(bail_namespace, path=f'/{root}')
 
         app.register_blueprint(bp)

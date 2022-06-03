@@ -1,5 +1,5 @@
 # mysql/enumerated.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -252,3 +252,12 @@ class SET(_StringType):
     def adapt(self, impltype, **kw):
         kw["retrieve_as_bitwise"] = self.retrieve_as_bitwise
         return util.constructor_copy(self, impltype, *self.values, **kw)
+
+    def __repr__(self):
+        return util.generic_repr(
+            self,
+            to_inspect=[SET, _StringType],
+            additional_kw=[
+                ("retrieve_as_bitwise", False),
+            ],
+        )

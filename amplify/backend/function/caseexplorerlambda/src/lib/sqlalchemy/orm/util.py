@@ -1,5 +1,5 @@
 # orm/util.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -415,7 +415,7 @@ class ORMAdapter(sql_util.ColumnAdapter):
 
     def _include_fn(self, elem):
         entity = elem._annotations.get("parentmapper", None)
-        return not entity or entity.isa(self.mapper)
+        return not entity or entity.common_parent(self.mapper)
 
 
 class AliasedClass(object):
@@ -494,11 +494,20 @@ class AliasedClass(object):
         insp = inspection.inspect(mapped_class_or_ac)
         mapper = insp.mapper
 
+        nest_adapters = False
+
         if alias is None:
-            alias = mapper._with_polymorphic_selectable._anonymous_fromclause(
-                name=name,
-                flat=flat,
-            )
+            if insp.is_aliased_class and insp.selectable._is_subquery:
+                alias = insp.selectable.alias()
+            else:
+                alias = (
+                    mapper._with_polymorphic_selectable._anonymous_fromclause(
+                        name=name,
+                        flat=flat,
+                    )
+                )
+        elif insp.is_aliased_class:
+            nest_adapters = True
 
         self._aliased_insp = AliasedInsp(
             self,
@@ -515,6 +524,7 @@ class AliasedClass(object):
             use_mapper_path,
             adapt_on_names,
             represents_outer_join,
+            nest_adapters,
         )
 
         self.__name__ = "AliasedClass_%s" % mapper.class_.__name__
@@ -651,6 +661,7 @@ class AliasedInsp(
         _use_mapper_path,
         adapt_on_names,
         represents_outer_join,
+        nest_adapters,
     ):
 
         mapped_class_or_ac = inspected.entity
@@ -666,6 +677,7 @@ class AliasedInsp(
         self._base_alias = weakref.ref(_base_alias or self)
         self._use_mapper_path = _use_mapper_path
         self.represents_outer_join = represents_outer_join
+        self._nest_adapters = nest_adapters
 
         if with_polymorphic_mappers:
             self._is_with_polymorphic = True
@@ -696,12 +708,14 @@ class AliasedInsp(
             # make sure the adapter doesn't try to grab other tables that
             # are not even the thing we are mapping, such as embedded
             # selectables in subqueries or CTEs.  See issue #6060
-            adapt_from_selectables=[
-                m.selectable for m in self.with_polymorphic_mappers
-            ],
+            adapt_from_selectables={
+                m.selectable
+                for m in self.with_polymorphic_mappers
+                if not adapt_on_names
+            },
         )
 
-        if inspected.is_aliased_class:
+        if nest_adapters:
             self._adapter = inspected._adapter.wrap(self._adapter)
 
         self._adapt_on_names = adapt_on_names
@@ -772,6 +786,7 @@ class AliasedInsp(
             "base_alias": self._base_alias(),
             "use_mapper_path": self._use_mapper_path,
             "represents_outer_join": self.represents_outer_join,
+            "nest_adapters": self._nest_adapters,
         }
 
     def __setstate__(self, state):
@@ -786,6 +801,7 @@ class AliasedInsp(
             state["use_mapper_path"],
             state["adapt_on_names"],
             state["represents_outer_join"],
+            state["nest_adapters"],
         )
 
     def _adapt_element(self, elem, key=None):
@@ -1149,11 +1165,24 @@ class LoaderCriteriaOption(CriteriaOption):
                 else:
                     stack.extend(subclass.__subclasses__())
 
+    def _should_include(self, compile_state):
+        if (
+            compile_state.select_statement._annotations.get(
+                "for_loader_criteria", None
+            )
+            is self
+        ):
+            return False
+        return True
+
     def _resolve_where_criteria(self, ext_info):
         if self.deferred_where_criteria:
-            return self.where_criteria._resolve_with_args(ext_info.entity)
+            crit = self.where_criteria._resolve_with_args(ext_info.entity)
         else:
-            return self.where_criteria
+            crit = self.where_criteria
+        return sql_util._deep_annotate(
+            crit, {"for_loader_criteria": self}, detect_subquery_cols=True
+        )
 
     def process_compile_state_replaced_entities(
         self, compile_state, mapper_entities
@@ -1173,8 +1202,7 @@ class LoaderCriteriaOption(CriteriaOption):
                 "Please migrate code to use the with_polymorphic() standalone "
                 "function before using with_loader_criteria()."
             )
-        if not compile_state.compile_options._for_refresh_state:
-            self.get_global_criteria(compile_state.global_attributes)
+        self.get_global_criteria(compile_state.global_attributes)
 
     def get_global_criteria(self, attributes):
         for mp in self._all_mappers():
@@ -1311,6 +1339,7 @@ def with_polymorphic(
     flat=False,
     polymorphic_on=None,
     aliased=False,
+    adapt_on_names=False,
     innerjoin=False,
     _use_mapper_path=False,
     _existing_alias=None,
@@ -1359,6 +1388,14 @@ def with_polymorphic(
         result in their table being appended directly to the FROM clause
         which will usually lead to incorrect results.
 
+        When left at its default value of ``False``, the polymorphic
+        selectable assigned to the base mapper is used for selecting rows.
+        However, it may also be passed as ``None``, which will bypass the
+        configured polymorphic selectable and instead construct an ad-hoc
+        selectable for the target classes given; for joined table inheritance
+        this will be a join that includes all target mappers and their
+        subclasses.
+
     :param polymorphic_on: a column to be used as the "discriminator"
         column for the given selectable. If not given, the polymorphic_on
         attribute of the base classes' mapper will be used, if any. This
@@ -1367,6 +1404,15 @@ def with_polymorphic(
 
     :param innerjoin: if True, an INNER JOIN will be used.  This should
        only be specified if querying for one specific subtype only
+
+    :param adapt_on_names: Passes through the
+      :paramref:`_orm.aliased.adapt_on_names`
+      parameter to the aliased object.  This may be useful in situations where
+      the given selectable is not directly related to the existing mapped
+      selectable.
+
+      .. versionadded:: 1.4.33
+
     """
     primary_mapper = _class_to_mapper(base)
 
@@ -1394,6 +1440,7 @@ def with_polymorphic(
     return AliasedClass(
         base,
         selectable,
+        adapt_on_names=adapt_on_names,
         with_polymorphic_mappers=mappers,
         with_polymorphic_discriminator=polymorphic_on,
         use_mapper_path=_use_mapper_path,
@@ -1762,30 +1809,35 @@ def join(
     left and right selectables may be not only core selectable
     objects such as :class:`_schema.Table`, but also mapped classes or
     :class:`.AliasedClass` instances.   The "on" clause can
-    be a SQL expression, or an attribute or string name
+    be a SQL expression or an ORM mapped attribute
     referencing a configured :func:`_orm.relationship`.
+
+    .. deprecated:: 1.4 using a string relationship name for the "onclause"
+       is deprecated and will be removed in 2.0; the onclause may be only
+       an ORM-mapped relationship attribute or a SQL expression construct.
 
     :func:`_orm.join` is not commonly needed in modern usage,
     as its functionality is encapsulated within that of the
-    :meth:`_query.Query.join` method, which features a
+    :meth:`_sql.Select.join` and :meth:`_query.Query.join`
+    methods. which feature a
     significant amount of automation beyond :func:`_orm.join`
-    by itself.  Explicit usage of :func:`_orm.join`
-    with :class:`_query.Query` involves usage of the
-    :meth:`_query.Query.select_from` method, as in::
+    by itself.  Explicit use of :func:`_orm.join`
+    with ORM-enabled SELECT statements involves use of the
+    :meth:`_sql.Select.select_from` method, as in::
 
         from sqlalchemy.orm import join
-        session.query(User).\
+        stmt = select(User).\
             select_from(join(User, Address, User.addresses)).\
             filter(Address.email_address=='foo@bar.com')
 
     In modern SQLAlchemy the above join can be written more
     succinctly as::
 
-        session.query(User).\
+        stmt = select(User).\
                 join(User.addresses).\
                 filter(Address.email_address=='foo@bar.com')
 
-    See :meth:`_query.Query.join` for information on modern usage
+    See :ref:`orm_queryguide_joins` for information on modern usage
     of ORM level joins.
 
     .. deprecated:: 0.8
@@ -1816,7 +1868,7 @@ def with_parent(instance, prop, from_entity=None):
 
     E.g.::
 
-        stmt = select(Address).where(with_parent(some_user, Address.user))
+        stmt = select(Address).where(with_parent(some_user, User.addresses))
 
 
     The SQL rendered is the same as that rendered when a lazy loader

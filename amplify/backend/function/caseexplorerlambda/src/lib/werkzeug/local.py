@@ -1,9 +1,8 @@
 import copy
 import math
 import operator
-import sys
 import typing as t
-import warnings
+from contextvars import ContextVar
 from functools import partial
 from functools import update_wrapper
 
@@ -15,79 +14,6 @@ if t.TYPE_CHECKING:
     from _typeshed.wsgi import WSGIEnvironment
 
 F = t.TypeVar("F", bound=t.Callable[..., t.Any])
-
-try:
-    from greenlet import getcurrent as _get_ident
-except ImportError:
-    from threading import get_ident as _get_ident
-
-
-def get_ident() -> int:
-    warnings.warn(
-        "'get_ident' is deprecated and will be removed in Werkzeug"
-        " 2.1. Use 'greenlet.getcurrent' or 'threading.get_ident' for"
-        " previous behavior.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    return _get_ident()  # type: ignore
-
-
-class _CannotUseContextVar(Exception):
-    pass
-
-
-try:
-    from contextvars import ContextVar
-
-    if "gevent" in sys.modules or "eventlet" in sys.modules:
-        # Both use greenlet, so first check it has patched
-        # ContextVars, Greenlet <0.4.17 does not.
-        import greenlet
-
-        greenlet_patched = getattr(greenlet, "GREENLET_USE_CONTEXT_VARS", False)
-
-        if not greenlet_patched:
-            # If Gevent is used, check it has patched ContextVars,
-            # <20.5 does not.
-            try:
-                from gevent.monkey import is_object_patched
-            except ImportError:
-                # Gevent isn't used, but Greenlet is and hasn't patched
-                raise _CannotUseContextVar() from None
-            else:
-                if is_object_patched("threading", "local") and not is_object_patched(
-                    "contextvars", "ContextVar"
-                ):
-                    raise _CannotUseContextVar()
-
-    def __release_local__(storage: t.Any) -> None:
-        # Can remove when support for non-stdlib ContextVars is
-        # removed, see "Fake" version below.
-        storage.set({})
-
-
-except (ImportError, _CannotUseContextVar):
-
-    class ContextVar:  # type: ignore
-        """A fake ContextVar based on the previous greenlet/threading
-        ident function. Used on Python 3.6, eventlet, and old versions
-        of gevent.
-        """
-
-        def __init__(self, _name: str) -> None:
-            self.storage: t.Dict[int, t.Dict[str, t.Any]] = {}
-
-        def get(self, default: t.Dict[str, t.Any]) -> t.Dict[str, t.Any]:
-            return self.storage.get(_get_ident(), default)
-
-        def set(self, value: t.Dict[str, t.Any]) -> None:
-            self.storage[_get_ident()] = value
-
-    def __release_local__(storage: t.Any) -> None:
-        # Special version to ensure that the storage is cleaned up on
-        # release.
-        storage.storage.pop(_get_ident(), None)
 
 
 def release_local(local: t.Union["Local", "LocalStack"]) -> None:
@@ -119,34 +45,6 @@ class Local:
     def __init__(self) -> None:
         object.__setattr__(self, "_storage", ContextVar("local_storage"))
 
-    @property
-    def __storage__(self) -> t.Dict[str, t.Any]:
-        warnings.warn(
-            "'__storage__' is deprecated and will be removed in Werkzeug 2.1.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self._storage.get({})  # type: ignore
-
-    @property
-    def __ident_func__(self) -> t.Callable[[], int]:
-        warnings.warn(
-            "'__ident_func__' is deprecated and will be removed in"
-            " Werkzeug 2.1. It should not be used in Python 3.7+.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return _get_ident  # type: ignore
-
-    @__ident_func__.setter
-    def __ident_func__(self, func: t.Callable[[], int]) -> None:
-        warnings.warn(
-            "'__ident_func__' is deprecated and will be removed in"
-            " Werkzeug 2.1. Setting it no longer has any effect.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
     def __iter__(self) -> t.Iterator[t.Tuple[int, t.Any]]:
         return iter(self._storage.get({}).items())
 
@@ -155,7 +53,7 @@ class Local:
         return LocalProxy(self, proxy)
 
     def __release_local__(self) -> None:
-        __release_local__(self._storage)
+        self._storage.set({})
 
     def __getattr__(self, name: str) -> t.Any:
         values = self._storage.get({})
@@ -211,14 +109,6 @@ class LocalStack:
     def __release_local__(self) -> None:
         self._local.__release_local__()
 
-    @property
-    def __ident_func__(self) -> t.Callable[[], int]:
-        return self._local.__ident_func__
-
-    @__ident_func__.setter
-    def __ident_func__(self, value: t.Callable[[], int]) -> None:
-        object.__setattr__(self._local, "__ident_func__", value)
-
     def __call__(self) -> "LocalProxy":
         def _lookup() -> t.Any:
             rv = self.top
@@ -233,7 +123,7 @@ class LocalStack:
         rv = getattr(self._local, "stack", []).copy()
         rv.append(obj)
         self._local.stack = rv
-        return rv  # type: ignore
+        return rv
 
     def pop(self) -> t.Any:
         """Removes the topmost item from the stack, will return the
@@ -279,9 +169,7 @@ class LocalManager:
     """
 
     def __init__(
-        self,
-        locals: t.Optional[t.Iterable[t.Union[Local, LocalStack]]] = None,
-        ident_func: None = None,
+        self, locals: t.Optional[t.Iterable[t.Union[Local, LocalStack]]] = None
     ) -> None:
         if locals is None:
             self.locals = []
@@ -289,53 +177,6 @@ class LocalManager:
             self.locals = [locals]
         else:
             self.locals = list(locals)
-
-        if ident_func is not None:
-            warnings.warn(
-                "'ident_func' is deprecated and will be removed in"
-                " Werkzeug 2.1. Setting it no longer has any effect.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-
-    @property
-    def ident_func(self) -> t.Callable[[], int]:
-        warnings.warn(
-            "'ident_func' is deprecated and will be removed in Werkzeug 2.1.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return _get_ident  # type: ignore
-
-    @ident_func.setter
-    def ident_func(self, func: t.Callable[[], int]) -> None:
-        warnings.warn(
-            "'ident_func' is deprecated and will be removedin Werkzeug"
-            " 2.1. Setting it no longer has any effect.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
-    def get_ident(self) -> int:
-        """Return the context identifier the local objects use internally for
-        this context.  You cannot override this method to change the behavior
-        but use it to link other context local objects (such as SQLAlchemy's
-        scoped sessions) to the Werkzeug locals.
-
-        .. deprecated:: 2.0
-            Will be removed in Werkzeug 2.1.
-
-        .. versionchanged:: 0.7
-           You can pass a different ident function to the local manager that
-           will then be propagated to all the locals passed to the
-           constructor.
-        """
-        warnings.warn(
-            "'get_ident' is deprecated and will be removed in Werkzeug 2.1.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.ident_func()
 
     def cleanup(self) -> None:
         """Manually clean up the data in the locals for this context.  Call
@@ -382,19 +223,23 @@ class _ProxyLookup:
     :param f: The built-in function this attribute is accessed through.
         Instead of looking up the special method, the function call
         is redone on the object.
-    :param fallback: Call this method if the proxy is unbound instead of
-        raising a :exc:`RuntimeError`.
-    :param class_value: Value to return when accessed from the class.
-        Used for ``__doc__`` so building docs still works.
+    :param fallback: Return this function if the proxy is unbound
+        instead of raising a :exc:`RuntimeError`.
+    :param is_attr: This proxied name is an attribute, not a function.
+        Call the fallback immediately to get the value.
+    :param class_value: Value to return when accessed from the
+        ``LocalProxy`` class directly. Used for ``__doc__`` so building
+        docs still works.
     """
 
-    __slots__ = ("bind_f", "fallback", "class_value", "name")
+    __slots__ = ("bind_f", "fallback", "is_attr", "class_value", "name")
 
     def __init__(
         self,
         f: t.Optional[t.Callable] = None,
         fallback: t.Optional[t.Callable] = None,
         class_value: t.Optional[t.Any] = None,
+        is_attr: bool = False,
     ) -> None:
         bind_f: t.Optional[t.Callable[["LocalProxy", t.Any], t.Callable]]
 
@@ -417,6 +262,7 @@ class _ProxyLookup:
         self.bind_f = bind_f
         self.fallback = fallback
         self.class_value = class_value
+        self.is_attr = is_attr
 
     def __set_name__(self, owner: "LocalProxy", name: str) -> None:
         self.name = name
@@ -434,7 +280,14 @@ class _ProxyLookup:
             if self.fallback is None:
                 raise
 
-            return self.fallback.__get__(instance, owner)  # type: ignore
+            fallback = self.fallback.__get__(instance, owner)
+
+            if self.is_attr:
+                # __class__ and __doc__ are attributes, not methods.
+                # Call the fallback to get the value.
+                return fallback()
+
+            return fallback
 
         if self.bind_f is not None:
             return self.bind_f(instance, obj)
@@ -560,7 +413,7 @@ class LocalProxy:
             raise RuntimeError(f"no object bound to {name}") from None
 
     __doc__ = _ProxyLookup(  # type: ignore
-        class_value=__doc__, fallback=lambda self: type(self).__doc__
+        class_value=__doc__, fallback=lambda self: type(self).__doc__, is_attr=True
     )
     # __del__ should only delete the proxy
     __repr__ = _ProxyLookup(  # type: ignore
@@ -592,7 +445,9 @@ class LocalProxy:
     # __weakref__ (__getattr__)
     # __init_subclass__ (proxying metaclass not supported)
     # __prepare__ (metaclass)
-    __class__ = _ProxyLookup(fallback=lambda self: type(self))  # type: ignore
+    __class__ = _ProxyLookup(
+        fallback=lambda self: type(self), is_attr=True
+    )  # type: ignore
     __instancecheck__ = _ProxyLookup(lambda self, other: isinstance(other, self))
     __subclasscheck__ = _ProxyLookup(lambda self, other: issubclass(other, self))
     # __class_getitem__ triggered through __getitem__

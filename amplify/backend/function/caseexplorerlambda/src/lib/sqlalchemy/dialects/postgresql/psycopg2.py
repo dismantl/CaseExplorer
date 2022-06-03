@@ -1,5 +1,5 @@
 # postgresql/psycopg2.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -835,15 +835,17 @@ class PGDialect_psycopg2(PGDialect):
 
     def do_ping(self, dbapi_connection):
         cursor = None
+        before_autocommit = dbapi_connection.autocommit
         try:
-            dbapi_connection.autocommit = True
+            if not before_autocommit:
+                dbapi_connection.autocommit = True
             cursor = dbapi_connection.cursor()
             try:
                 cursor.execute(self._dialect_specific_select_one)
             finally:
                 cursor.close()
-                if not dbapi_connection.closed:
-                    dbapi_connection.autocommit = False
+                if not before_autocommit and not dbapi_connection.closed:
+                    dbapi_connection.autocommit = before_autocommit
         except self.dbapi.Error as err:
             if self.is_disconnect(err, dbapi_connection, cursor):
                 return False
@@ -927,7 +929,7 @@ class PGDialect_psycopg2(PGDialect):
             self.executemany_mode & EXECUTEMANY_VALUES
             and context
             and context.isinsert
-            and context.compiled.insert_single_values_expr
+            and context.compiled._is_safe_for_fast_insert_values_helper
         ):
             executemany_values = (
                 "(%s)" % context.compiled.insert_single_values_expr

@@ -1097,6 +1097,12 @@
                     },
                     "type": "array"
                 },
+                "dstraf": {
+                    "items": {
+                        "$ref": "#/definitions/DSTRAF"
+                    },
+                    "type": "array"
+                },
                 "dv": {
                     "items": {
                         "$ref": "#/definitions/DV"
@@ -1160,12 +1166,6 @@
                 "odytraf": {
                     "items": {
                         "$ref": "#/definitions/ODYTRAF"
-                    },
-                    "type": "array"
-                },
-                "pg": {
-                    "items": {
-                        "$ref": "#/definitions/PG"
                     },
                     "type": "array"
                 },
@@ -12802,7 +12802,7 @@
                 },
                 "pivotCols": {
                     "items": {
-                        "$ref": "#/definitions/ValueColumn"
+                        "$ref": "#/definitions/RowGroupColumn"
                     },
                     "type": "array"
                 },
@@ -12812,7 +12812,7 @@
                 },
                 "rowGroupCols": {
                     "items": {
-                        "$ref": "#/definitions/ValueColumn"
+                        "$ref": "#/definitions/RowGroupColumn"
                     },
                     "type": "array"
                 },
@@ -12833,6 +12833,23 @@
                     "type": "array"
                 }
             },
+            "type": "object"
+        },
+        "RowGroupColumn": {
+            "properties": {
+                "displayName": {
+                    "type": "string"
+                },
+                "field": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "field"
+            ],
             "type": "object"
         },
         "SortColumn": {
@@ -12877,6 +12894,29 @@
         "version": "1.0"
     },
     "paths": {
+        "/api/v1/bail_stats": {
+            "post": {
+                "operationId": "post_bail_stats_resource",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "tags": [
+                    "bail_stats"
+                ]
+            }
+        },
         "/api/v1/bpd/seq/{seq_number}": {
             "parameters": [
                 {
@@ -33033,40 +33073,148 @@
             "name": "CASES"
         },
         {
-            "description": "Baltimore City Criminal Cases",
-            "name": "DSK8"
+            "description": "Domestic Violence Cases",
+            "name": "DV"
         },
         {
-            "description": "Baltimore City Criminal Cases: Charges",
-            "name": "DSK8_CHARGES"
+            "description": "Domestic Violence Cases: Defendants",
+            "name": "DV_DEFENDANTS"
         },
         {
-            "description": "Baltimore City Criminal Cases: Bail And Bond",
-            "name": "DSK8_BAIL_AND_BOND"
+            "description": "Domestic Violence Cases: Defendant Attorneys",
+            "name": "DV_DEFENDANT_ATTORNEYS"
         },
         {
-            "description": "Baltimore City Criminal Cases: Bondsman",
-            "name": "DSK8_BONDSMAN"
+            "description": "Domestic Violence Cases: Hearings",
+            "name": "DV_HEARINGS"
         },
         {
-            "description": "Baltimore City Criminal Cases: Defendants",
-            "name": "DSK8_DEFENDANTS"
+            "description": "Domestic Violence Cases: Events",
+            "name": "DV_EVENTS"
         },
         {
-            "description": "Baltimore City Criminal Cases: Defendant Aliases",
-            "name": "DSK8_DEFENDANT_ALIASES"
+            "description": "MDEC Criminal Cases",
+            "name": "ODYCRIM"
         },
         {
-            "description": "Baltimore City Criminal Cases: Related Persons",
-            "name": "DSK8_RELATED_PERSONS"
+            "description": "MDEC Criminal Cases: Reference Numbers",
+            "name": "ODYCRIM_REFERENCE_NUMBERS"
         },
         {
-            "description": "Baltimore City Criminal Cases: Events",
-            "name": "DSK8_EVENTS"
+            "description": "MDEC Criminal Cases: Defendants",
+            "name": "ODYCRIM_DEFENDANTS"
         },
         {
-            "description": "Baltimore City Criminal Cases: Trials",
-            "name": "DSK8_TRIALS"
+            "description": "MDEC Criminal Cases: Involved Parties",
+            "name": "ODYCRIM_INVOLVED_PARTIES"
+        },
+        {
+            "description": "MDEC Criminal Cases: Aliases",
+            "name": "ODYCRIM_ALIASES"
+        },
+        {
+            "description": "MDEC Criminal Cases: Attorneys",
+            "name": "ODYCRIM_ATTORNEYS"
+        },
+        {
+            "description": "MDEC Criminal Cases: Court Schedule",
+            "name": "ODYCRIM_COURT_SCHEDULE"
+        },
+        {
+            "description": "MDEC Criminal Cases: Charges",
+            "name": "ODYCRIM_CHARGES"
+        },
+        {
+            "description": "MDEC Criminal Cases: Probation",
+            "name": "ODYCRIM_PROBATION"
+        },
+        {
+            "description": "MDEC Criminal Cases: Restitutions",
+            "name": "ODYCRIM_RESTITUTIONS"
+        },
+        {
+            "description": "MDEC Criminal Cases: Sex Offender Registrations",
+            "name": "ODYCRIM_SEX_OFFENDER_REGISTRATIONS"
+        },
+        {
+            "description": "MDEC Criminal Cases: Warrants",
+            "name": "ODYCRIM_WARRANTS"
+        },
+        {
+            "description": "MDEC Criminal Cases: Bail Bonds",
+            "name": "ODYCRIM_BAIL_BONDS"
+        },
+        {
+            "description": "MDEC Criminal Cases: Bond Settings",
+            "name": "ODYCRIM_BOND_SETTINGS"
+        },
+        {
+            "description": "MDEC Criminal Cases: Documents",
+            "name": "ODYCRIM_DOCUMENTS"
+        },
+        {
+            "description": "MDEC Criminal Cases: Services",
+            "name": "ODYCRIM_SERVICES"
+        },
+        {
+            "description": "Circuit Court Criminal Cases",
+            "name": "K"
+        },
+        {
+            "description": "Circuit Court Criminal Cases: Defendants",
+            "name": "K_DEFENDANTS"
+        },
+        {
+            "description": "Circuit Court Criminal Cases: Related Persons",
+            "name": "K_RELATED_PERSONS"
+        },
+        {
+            "description": "Circuit Court Criminal Cases: Party Alias",
+            "name": "K_PARTY_ALIAS"
+        },
+        {
+            "description": "Circuit Court Criminal Cases: Party Addresses",
+            "name": "K_PARTY_ADDRESSES"
+        },
+        {
+            "description": "Circuit Court Criminal Cases: Attorneys",
+            "name": "K_ATTORNEYS"
+        },
+        {
+            "description": "Circuit Court Criminal Cases: Charges",
+            "name": "K_CHARGES"
+        },
+        {
+            "description": "Circuit Court Criminal Cases: Court Schedule",
+            "name": "K_COURT_SCHEDULE"
+        },
+        {
+            "description": "Circuit Court Criminal Cases: Documents",
+            "name": "K_DOCUMENTS"
+        },
+        {
+            "description": "Circuit Court Criminal Cases: Judgments",
+            "name": "K_JUDGMENTS"
+        },
+        {
+            "description": "Circuit Court Criminal Cases: Judgment Modifications",
+            "name": "K_JUDGMENT_MODIFICATIONS"
+        },
+        {
+            "description": "Circuit Court Criminal Cases: Judgments Against",
+            "name": "K_JUDGMENTS_AGAINST"
+        },
+        {
+            "description": "Circuit Court Criminal Cases: Judgments In Favor",
+            "name": "K_JUDGMENTS_IN_FAVOR"
+        },
+        {
+            "description": "Circuit Court Criminal Cases: Support Orders",
+            "name": "K_SUPPORT_ORDERS"
+        },
+        {
+            "description": "Circuit Court Criminal Cases: Sentencing Net Tools",
+            "name": "K_SENTENCING_NET_TOOLS"
         },
         {
             "description": "District Court Civil Cases",
@@ -33097,184 +33245,32 @@
             "name": "DSCIVIL_TRIALS"
         },
         {
-            "description": "MDEC Civil Citations",
-            "name": "ODYCVCIT"
+            "description": "District Court Traffic Cases",
+            "name": "DSTRAF"
         },
         {
-            "description": "MDEC Civil Citations: Reference Numbers",
-            "name": "ODYCVCIT_REFERENCE_NUMBERS"
+            "description": "District Court Traffic Cases: Charges",
+            "name": "DSTRAF_CHARGES"
         },
         {
-            "description": "MDEC Civil Citations: Defendants",
-            "name": "ODYCVCIT_DEFENDANTS"
+            "description": "District Court Traffic Cases: Dispositions",
+            "name": "DSTRAF_DISPOSITIONS"
         },
         {
-            "description": "MDEC Civil Citations: Involved Parties",
-            "name": "ODYCVCIT_INVOLVED_PARTIES"
+            "description": "District Court Traffic Cases: Defendants",
+            "name": "DSTRAF_DEFENDANTS"
         },
         {
-            "description": "MDEC Civil Citations: Aliases",
-            "name": "ODYCVCIT_ALIASES"
+            "description": "District Court Traffic Cases: Related Persons",
+            "name": "DSTRAF_RELATED_PERSONS"
         },
         {
-            "description": "MDEC Civil Citations: Attorneys",
-            "name": "ODYCVCIT_ATTORNEYS"
+            "description": "District Court Traffic Cases: Events",
+            "name": "DSTRAF_EVENTS"
         },
         {
-            "description": "MDEC Civil Citations: Court Schedule",
-            "name": "ODYCVCIT_COURT_SCHEDULE"
-        },
-        {
-            "description": "MDEC Civil Citations: Charges",
-            "name": "ODYCVCIT_CHARGES"
-        },
-        {
-            "description": "MDEC Civil Citations: Probation",
-            "name": "ODYCVCIT_PROBATION"
-        },
-        {
-            "description": "MDEC Civil Citations: Restitutions",
-            "name": "ODYCVCIT_RESTITUTIONS"
-        },
-        {
-            "description": "MDEC Civil Citations: Warrants",
-            "name": "ODYCVCIT_WARRANTS"
-        },
-        {
-            "description": "MDEC Civil Citations: Bail Bonds",
-            "name": "ODYCVCIT_BAIL_BONDS"
-        },
-        {
-            "description": "MDEC Civil Citations: Bond Settings",
-            "name": "ODYCVCIT_BOND_SETTINGS"
-        },
-        {
-            "description": "MDEC Civil Citations: Documents",
-            "name": "ODYCVCIT_DOCUMENTS"
-        },
-        {
-            "description": "MDEC Civil Citations: Services",
-            "name": "ODYCVCIT_SERVICES"
-        },
-        {
-            "description": "Montgomery County Criminal Cases",
-            "name": "MCCR"
-        },
-        {
-            "description": "Montgomery County Criminal Cases: Tracking Numbers",
-            "name": "MCCR_TRACKING_NUMBERS"
-        },
-        {
-            "description": "Montgomery County Criminal Cases: District Court Numbers",
-            "name": "MCCR_DISTRICT_COURT_NUMBERS"
-        },
-        {
-            "description": "Montgomery County Criminal Cases: Charges",
-            "name": "MCCR_CHARGES"
-        },
-        {
-            "description": "Montgomery County Criminal Cases: Judgments",
-            "name": "MCCR_JUDGMENTS"
-        },
-        {
-            "description": "Montgomery County Criminal Cases: Defendants",
-            "name": "MCCR_DEFENDANTS"
-        },
-        {
-            "description": "Montgomery County Criminal Cases: Aliases",
-            "name": "MCCR_ALIASES"
-        },
-        {
-            "description": "Montgomery County Criminal Cases: Attorneys",
-            "name": "MCCR_ATTORNEYS"
-        },
-        {
-            "description": "Montgomery County Criminal Cases: Probation Officers",
-            "name": "MCCR_PROBATION_OFFICERS"
-        },
-        {
-            "description": "Montgomery County Criminal Cases: Dwi Monitors",
-            "name": "MCCR_DWI_MONITORS"
-        },
-        {
-            "description": "Montgomery County Criminal Cases: Court Schedule",
-            "name": "MCCR_COURT_SCHEDULE"
-        },
-        {
-            "description": "Montgomery County Criminal Cases: Dockets",
-            "name": "MCCR_DOCKETS"
-        },
-        {
-            "description": "Montgomery County Criminal Cases: Audio Media",
-            "name": "MCCR_AUDIO_MEDIA"
-        },
-        {
-            "description": "Montgomery County Criminal Cases: Bail Bonds",
-            "name": "MCCR_BAIL_BONDS"
-        },
-        {
-            "description": "Montgomery County Criminal Cases: Bond Remitters",
-            "name": "MCCR_BOND_REMITTERS"
-        },
-        {
-            "description": "Circuit Court Civil Cases",
-            "name": "CC"
-        },
-        {
-            "description": "Circuit Court Civil Cases: District Case Numbers",
-            "name": "CC_DISTRICT_CASE_NUMBERS"
-        },
-        {
-            "description": "Circuit Court Civil Cases: Plaintiffs",
-            "name": "CC_PLAINTIFFS"
-        },
-        {
-            "description": "Circuit Court Civil Cases: Defendants",
-            "name": "CC_DEFENDANTS"
-        },
-        {
-            "description": "Circuit Court Civil Cases: Related Persons",
-            "name": "CC_RELATED_PERSONS"
-        },
-        {
-            "description": "Circuit Court Civil Cases: Party Alias",
-            "name": "CC_PARTY_ALIAS"
-        },
-        {
-            "description": "Circuit Court Civil Cases: Party Addresses",
-            "name": "CC_PARTY_ADDRESSES"
-        },
-        {
-            "description": "Circuit Court Civil Cases: Attorneys",
-            "name": "CC_ATTORNEYS"
-        },
-        {
-            "description": "Circuit Court Civil Cases: Court Schedule",
-            "name": "CC_COURT_SCHEDULE"
-        },
-        {
-            "description": "Circuit Court Civil Cases: Documents",
-            "name": "CC_DOCUMENTS"
-        },
-        {
-            "description": "Circuit Court Civil Cases: Judgments",
-            "name": "CC_JUDGMENTS"
-        },
-        {
-            "description": "Circuit Court Civil Cases: Judgment Modifications",
-            "name": "CC_JUDGMENT_MODIFICATIONS"
-        },
-        {
-            "description": "Circuit Court Civil Cases: Judgments Against",
-            "name": "CC_JUDGMENTS_AGAINST"
-        },
-        {
-            "description": "Circuit Court Civil Cases: Judgments In Favor",
-            "name": "CC_JUDGMENTS_IN_FAVOR"
-        },
-        {
-            "description": "Circuit Court Civil Cases: Support Orders",
-            "name": "CC_SUPPORT_ORDERS"
+            "description": "District Court Traffic Cases: Trials",
+            "name": "DSTRAF_TRIALS"
         },
         {
             "description": "MDEC Civil Cases",
@@ -33349,338 +33345,6 @@
             "name": "ODYCIVIL_SERVICES"
         },
         {
-            "description": "Domestic Violence Cases",
-            "name": "DV"
-        },
-        {
-            "description": "Domestic Violence Cases: Defendants",
-            "name": "DV_DEFENDANTS"
-        },
-        {
-            "description": "Domestic Violence Cases: Defendant Attorneys",
-            "name": "DV_DEFENDANT_ATTORNEYS"
-        },
-        {
-            "description": "Domestic Violence Cases: Hearings",
-            "name": "DV_HEARINGS"
-        },
-        {
-            "description": "Domestic Violence Cases: Events",
-            "name": "DV_EVENTS"
-        },
-        {
-            "description": "District Court Criminal Cases",
-            "name": "DSCR"
-        },
-        {
-            "description": "District Court Criminal Cases: Charges",
-            "name": "DSCR_CHARGES"
-        },
-        {
-            "description": "District Court Criminal Cases: Defendants",
-            "name": "DSCR_DEFENDANTS"
-        },
-        {
-            "description": "District Court Criminal Cases: Defendant Aliases",
-            "name": "DSCR_DEFENDANT_ALIASES"
-        },
-        {
-            "description": "District Court Criminal Cases: Related Persons",
-            "name": "DSCR_RELATED_PERSONS"
-        },
-        {
-            "description": "District Court Criminal Cases: Events",
-            "name": "DSCR_EVENTS"
-        },
-        {
-            "description": "District Court Criminal Cases: Trials",
-            "name": "DSCR_TRIALS"
-        },
-        {
-            "description": "District Court Criminal Cases: Bail Events",
-            "name": "DSCR_BAIL_EVENTS"
-        },
-        {
-            "description": "MDEC Traffic Cases",
-            "name": "ODYTRAF"
-        },
-        {
-            "description": "MDEC Traffic Cases: Reference Numbers",
-            "name": "ODYTRAF_REFERENCE_NUMBERS"
-        },
-        {
-            "description": "MDEC Traffic Cases: Defendants",
-            "name": "ODYTRAF_DEFENDANTS"
-        },
-        {
-            "description": "MDEC Traffic Cases: Involved Parties",
-            "name": "ODYTRAF_INVOLVED_PARTIES"
-        },
-        {
-            "description": "MDEC Traffic Cases: Aliases",
-            "name": "ODYTRAF_ALIASES"
-        },
-        {
-            "description": "MDEC Traffic Cases: Attorneys",
-            "name": "ODYTRAF_ATTORNEYS"
-        },
-        {
-            "description": "MDEC Traffic Cases: Court Schedule",
-            "name": "ODYTRAF_COURT_SCHEDULE"
-        },
-        {
-            "description": "MDEC Traffic Cases: Charges",
-            "name": "ODYTRAF_CHARGES"
-        },
-        {
-            "description": "MDEC Traffic Cases: Warrants",
-            "name": "ODYTRAF_WARRANTS"
-        },
-        {
-            "description": "MDEC Traffic Cases: Bail Bonds",
-            "name": "ODYTRAF_BAIL_BONDS"
-        },
-        {
-            "description": "MDEC Traffic Cases: Bond Settings",
-            "name": "ODYTRAF_BOND_SETTINGS"
-        },
-        {
-            "description": "MDEC Traffic Cases: Documents",
-            "name": "ODYTRAF_DOCUMENTS"
-        },
-        {
-            "description": "MDEC Traffic Cases: Services",
-            "name": "ODYTRAF_SERVICES"
-        },
-        {
-            "description": "MDEC Criminal Cases",
-            "name": "ODYCRIM"
-        },
-        {
-            "description": "MDEC Criminal Cases: Reference Numbers",
-            "name": "ODYCRIM_REFERENCE_NUMBERS"
-        },
-        {
-            "description": "MDEC Criminal Cases: Defendants",
-            "name": "ODYCRIM_DEFENDANTS"
-        },
-        {
-            "description": "MDEC Criminal Cases: Involved Parties",
-            "name": "ODYCRIM_INVOLVED_PARTIES"
-        },
-        {
-            "description": "MDEC Criminal Cases: Aliases",
-            "name": "ODYCRIM_ALIASES"
-        },
-        {
-            "description": "MDEC Criminal Cases: Attorneys",
-            "name": "ODYCRIM_ATTORNEYS"
-        },
-        {
-            "description": "MDEC Criminal Cases: Court Schedule",
-            "name": "ODYCRIM_COURT_SCHEDULE"
-        },
-        {
-            "description": "MDEC Criminal Cases: Charges",
-            "name": "ODYCRIM_CHARGES"
-        },
-        {
-            "description": "MDEC Criminal Cases: Probation",
-            "name": "ODYCRIM_PROBATION"
-        },
-        {
-            "description": "MDEC Criminal Cases: Restitutions",
-            "name": "ODYCRIM_RESTITUTIONS"
-        },
-        {
-            "description": "MDEC Criminal Cases: Sex Offender Registrations",
-            "name": "ODYCRIM_SEX_OFFENDER_REGISTRATIONS"
-        },
-        {
-            "description": "MDEC Criminal Cases: Warrants",
-            "name": "ODYCRIM_WARRANTS"
-        },
-        {
-            "description": "MDEC Criminal Cases: Bail Bonds",
-            "name": "ODYCRIM_BAIL_BONDS"
-        },
-        {
-            "description": "MDEC Criminal Cases: Bond Settings",
-            "name": "ODYCRIM_BOND_SETTINGS"
-        },
-        {
-            "description": "MDEC Criminal Cases: Documents",
-            "name": "ODYCRIM_DOCUMENTS"
-        },
-        {
-            "description": "MDEC Criminal Cases: Services",
-            "name": "ODYCRIM_SERVICES"
-        },
-        {
-            "description": "Prince George's County Circuit Court Criminal Cases",
-            "name": "PG"
-        },
-        {
-            "description": "Prince George's County Circuit Court Criminal Cases: Charges",
-            "name": "PG_CHARGES"
-        },
-        {
-            "description": "Prince George's County Circuit Court Criminal Cases: Plaintiffs",
-            "name": "PG_PLAINTIFFS"
-        },
-        {
-            "description": "Prince George's County Circuit Court Criminal Cases: Defendants",
-            "name": "PG_DEFENDANTS"
-        },
-        {
-            "description": "Prince George's County Circuit Court Criminal Cases: Defendant Aliases",
-            "name": "PG_DEFENDANT_ALIASES"
-        },
-        {
-            "description": "Prince George's County Circuit Court Criminal Cases: Attorneys",
-            "name": "PG_ATTORNEYS"
-        },
-        {
-            "description": "Prince George's County Circuit Court Criminal Cases: Other Parties",
-            "name": "PG_OTHER_PARTIES"
-        },
-        {
-            "description": "Prince George's County Circuit Court Criminal Cases: Court Schedule",
-            "name": "PG_COURT_SCHEDULE"
-        },
-        {
-            "description": "Prince George's County Circuit Court Criminal Cases: Dockets",
-            "name": "PG_DOCKETS"
-        },
-        {
-            "description": "District Court Civil Citations",
-            "name": "DSCP"
-        },
-        {
-            "description": "District Court Civil Citations: Charges",
-            "name": "DSCP_CHARGES"
-        },
-        {
-            "description": "District Court Civil Citations: Defendants",
-            "name": "DSCP_DEFENDANTS"
-        },
-        {
-            "description": "District Court Civil Citations: Defendant Aliases",
-            "name": "DSCP_DEFENDANT_ALIASES"
-        },
-        {
-            "description": "District Court Civil Citations: Related Persons",
-            "name": "DSCP_RELATED_PERSONS"
-        },
-        {
-            "description": "District Court Civil Citations: Events",
-            "name": "DSCP_EVENTS"
-        },
-        {
-            "description": "District Court Civil Citations: Trials",
-            "name": "DSCP_TRIALS"
-        },
-        {
-            "description": "District Court Civil Citations: Bail Events",
-            "name": "DSCP_BAIL_EVENTS"
-        },
-        {
-            "description": "Circuit Court Criminal Cases",
-            "name": "K"
-        },
-        {
-            "description": "Circuit Court Criminal Cases: Defendants",
-            "name": "K_DEFENDANTS"
-        },
-        {
-            "description": "Circuit Court Criminal Cases: Related Persons",
-            "name": "K_RELATED_PERSONS"
-        },
-        {
-            "description": "Circuit Court Criminal Cases: Party Alias",
-            "name": "K_PARTY_ALIAS"
-        },
-        {
-            "description": "Circuit Court Criminal Cases: Party Addresses",
-            "name": "K_PARTY_ADDRESSES"
-        },
-        {
-            "description": "Circuit Court Criminal Cases: Attorneys",
-            "name": "K_ATTORNEYS"
-        },
-        {
-            "description": "Circuit Court Criminal Cases: Charges",
-            "name": "K_CHARGES"
-        },
-        {
-            "description": "Circuit Court Criminal Cases: Court Schedule",
-            "name": "K_COURT_SCHEDULE"
-        },
-        {
-            "description": "Circuit Court Criminal Cases: Documents",
-            "name": "K_DOCUMENTS"
-        },
-        {
-            "description": "Circuit Court Criminal Cases: Judgments",
-            "name": "K_JUDGMENTS"
-        },
-        {
-            "description": "Circuit Court Criminal Cases: Judgment Modifications",
-            "name": "K_JUDGMENT_MODIFICATIONS"
-        },
-        {
-            "description": "Circuit Court Criminal Cases: Judgments Against",
-            "name": "K_JUDGMENTS_AGAINST"
-        },
-        {
-            "description": "Circuit Court Criminal Cases: Judgments In Favor",
-            "name": "K_JUDGMENTS_IN_FAVOR"
-        },
-        {
-            "description": "Circuit Court Criminal Cases: Support Orders",
-            "name": "K_SUPPORT_ORDERS"
-        },
-        {
-            "description": "Circuit Court Criminal Cases: Sentencing Net Tools",
-            "name": "K_SENTENCING_NET_TOOLS"
-        },
-        {
-            "description": "Prince George's County Circuit Court Civil Cases",
-            "name": "PGV"
-        },
-        {
-            "description": "Prince George's County Circuit Court Civil Cases: Plaintiffs",
-            "name": "PGV_PLAINTIFFS"
-        },
-        {
-            "description": "Prince George's County Circuit Court Civil Cases: Defendants",
-            "name": "PGV_DEFENDANTS"
-        },
-        {
-            "description": "Prince George's County Circuit Court Civil Cases: Defendant Aliases",
-            "name": "PGV_DEFENDANT_ALIASES"
-        },
-        {
-            "description": "Prince George's County Circuit Court Civil Cases: Attorneys",
-            "name": "PGV_ATTORNEYS"
-        },
-        {
-            "description": "Prince George's County Circuit Court Civil Cases: Other Parties",
-            "name": "PGV_OTHER_PARTIES"
-        },
-        {
-            "description": "Prince George's County Circuit Court Civil Cases: Judgments",
-            "name": "PGV_JUDGMENTS"
-        },
-        {
-            "description": "Prince George's County Circuit Court Civil Cases: Court Schedule",
-            "name": "PGV_COURT_SCHEDULE"
-        },
-        {
-            "description": "Prince George's County Circuit Court Civil Cases: Dockets",
-            "name": "PGV_DOCKETS"
-        },
-        {
             "description": "Montgomery County Civil Cases",
             "name": "MCCI"
         },
@@ -33737,32 +33401,411 @@
             "name": "MCCI_AUDIO_MEDIA"
         },
         {
-            "description": "District Court Traffic Cases",
-            "name": "DSTRAF"
+            "description": "Prince George's County Circuit Court Civil Cases",
+            "name": "PGV"
         },
         {
-            "description": "District Court Traffic Cases: Charges",
-            "name": "DSTRAF_CHARGES"
+            "description": "Prince George's County Circuit Court Civil Cases: Plaintiffs",
+            "name": "PGV_PLAINTIFFS"
         },
         {
-            "description": "District Court Traffic Cases: Dispositions",
-            "name": "DSTRAF_DISPOSITIONS"
+            "description": "Prince George's County Circuit Court Civil Cases: Defendants",
+            "name": "PGV_DEFENDANTS"
         },
         {
-            "description": "District Court Traffic Cases: Defendants",
-            "name": "DSTRAF_DEFENDANTS"
+            "description": "Prince George's County Circuit Court Civil Cases: Defendant Aliases",
+            "name": "PGV_DEFENDANT_ALIASES"
         },
         {
-            "description": "District Court Traffic Cases: Related Persons",
-            "name": "DSTRAF_RELATED_PERSONS"
+            "description": "Prince George's County Circuit Court Civil Cases: Attorneys",
+            "name": "PGV_ATTORNEYS"
         },
         {
-            "description": "District Court Traffic Cases: Events",
-            "name": "DSTRAF_EVENTS"
+            "description": "Prince George's County Circuit Court Civil Cases: Other Parties",
+            "name": "PGV_OTHER_PARTIES"
         },
         {
-            "description": "District Court Traffic Cases: Trials",
-            "name": "DSTRAF_TRIALS"
+            "description": "Prince George's County Circuit Court Civil Cases: Judgments",
+            "name": "PGV_JUDGMENTS"
+        },
+        {
+            "description": "Prince George's County Circuit Court Civil Cases: Court Schedule",
+            "name": "PGV_COURT_SCHEDULE"
+        },
+        {
+            "description": "Prince George's County Circuit Court Civil Cases: Dockets",
+            "name": "PGV_DOCKETS"
+        },
+        {
+            "description": "MDEC Civil Citations",
+            "name": "ODYCVCIT"
+        },
+        {
+            "description": "MDEC Civil Citations: Reference Numbers",
+            "name": "ODYCVCIT_REFERENCE_NUMBERS"
+        },
+        {
+            "description": "MDEC Civil Citations: Defendants",
+            "name": "ODYCVCIT_DEFENDANTS"
+        },
+        {
+            "description": "MDEC Civil Citations: Involved Parties",
+            "name": "ODYCVCIT_INVOLVED_PARTIES"
+        },
+        {
+            "description": "MDEC Civil Citations: Aliases",
+            "name": "ODYCVCIT_ALIASES"
+        },
+        {
+            "description": "MDEC Civil Citations: Attorneys",
+            "name": "ODYCVCIT_ATTORNEYS"
+        },
+        {
+            "description": "MDEC Civil Citations: Court Schedule",
+            "name": "ODYCVCIT_COURT_SCHEDULE"
+        },
+        {
+            "description": "MDEC Civil Citations: Charges",
+            "name": "ODYCVCIT_CHARGES"
+        },
+        {
+            "description": "MDEC Civil Citations: Probation",
+            "name": "ODYCVCIT_PROBATION"
+        },
+        {
+            "description": "MDEC Civil Citations: Restitutions",
+            "name": "ODYCVCIT_RESTITUTIONS"
+        },
+        {
+            "description": "MDEC Civil Citations: Warrants",
+            "name": "ODYCVCIT_WARRANTS"
+        },
+        {
+            "description": "MDEC Civil Citations: Bail Bonds",
+            "name": "ODYCVCIT_BAIL_BONDS"
+        },
+        {
+            "description": "MDEC Civil Citations: Bond Settings",
+            "name": "ODYCVCIT_BOND_SETTINGS"
+        },
+        {
+            "description": "MDEC Civil Citations: Documents",
+            "name": "ODYCVCIT_DOCUMENTS"
+        },
+        {
+            "description": "MDEC Civil Citations: Services",
+            "name": "ODYCVCIT_SERVICES"
+        },
+        {
+            "description": "Baltimore City Criminal Cases",
+            "name": "DSK8"
+        },
+        {
+            "description": "Baltimore City Criminal Cases: Charges",
+            "name": "DSK8_CHARGES"
+        },
+        {
+            "description": "Baltimore City Criminal Cases: Bail And Bond",
+            "name": "DSK8_BAIL_AND_BOND"
+        },
+        {
+            "description": "Baltimore City Criminal Cases: Bondsman",
+            "name": "DSK8_BONDSMAN"
+        },
+        {
+            "description": "Baltimore City Criminal Cases: Defendants",
+            "name": "DSK8_DEFENDANTS"
+        },
+        {
+            "description": "Baltimore City Criminal Cases: Defendant Aliases",
+            "name": "DSK8_DEFENDANT_ALIASES"
+        },
+        {
+            "description": "Baltimore City Criminal Cases: Related Persons",
+            "name": "DSK8_RELATED_PERSONS"
+        },
+        {
+            "description": "Baltimore City Criminal Cases: Events",
+            "name": "DSK8_EVENTS"
+        },
+        {
+            "description": "Baltimore City Criminal Cases: Trials",
+            "name": "DSK8_TRIALS"
+        },
+        {
+            "description": "MDEC Traffic Cases",
+            "name": "ODYTRAF"
+        },
+        {
+            "description": "MDEC Traffic Cases: Reference Numbers",
+            "name": "ODYTRAF_REFERENCE_NUMBERS"
+        },
+        {
+            "description": "MDEC Traffic Cases: Defendants",
+            "name": "ODYTRAF_DEFENDANTS"
+        },
+        {
+            "description": "MDEC Traffic Cases: Involved Parties",
+            "name": "ODYTRAF_INVOLVED_PARTIES"
+        },
+        {
+            "description": "MDEC Traffic Cases: Aliases",
+            "name": "ODYTRAF_ALIASES"
+        },
+        {
+            "description": "MDEC Traffic Cases: Attorneys",
+            "name": "ODYTRAF_ATTORNEYS"
+        },
+        {
+            "description": "MDEC Traffic Cases: Court Schedule",
+            "name": "ODYTRAF_COURT_SCHEDULE"
+        },
+        {
+            "description": "MDEC Traffic Cases: Charges",
+            "name": "ODYTRAF_CHARGES"
+        },
+        {
+            "description": "MDEC Traffic Cases: Warrants",
+            "name": "ODYTRAF_WARRANTS"
+        },
+        {
+            "description": "MDEC Traffic Cases: Bail Bonds",
+            "name": "ODYTRAF_BAIL_BONDS"
+        },
+        {
+            "description": "MDEC Traffic Cases: Bond Settings",
+            "name": "ODYTRAF_BOND_SETTINGS"
+        },
+        {
+            "description": "MDEC Traffic Cases: Documents",
+            "name": "ODYTRAF_DOCUMENTS"
+        },
+        {
+            "description": "MDEC Traffic Cases: Services",
+            "name": "ODYTRAF_SERVICES"
+        },
+        {
+            "description": "District Court Criminal Cases",
+            "name": "DSCR"
+        },
+        {
+            "description": "District Court Criminal Cases: Charges",
+            "name": "DSCR_CHARGES"
+        },
+        {
+            "description": "District Court Criminal Cases: Defendants",
+            "name": "DSCR_DEFENDANTS"
+        },
+        {
+            "description": "District Court Criminal Cases: Defendant Aliases",
+            "name": "DSCR_DEFENDANT_ALIASES"
+        },
+        {
+            "description": "District Court Criminal Cases: Related Persons",
+            "name": "DSCR_RELATED_PERSONS"
+        },
+        {
+            "description": "District Court Criminal Cases: Events",
+            "name": "DSCR_EVENTS"
+        },
+        {
+            "description": "District Court Criminal Cases: Trials",
+            "name": "DSCR_TRIALS"
+        },
+        {
+            "description": "District Court Criminal Cases: Bail Events",
+            "name": "DSCR_BAIL_EVENTS"
+        },
+        {
+            "description": "Circuit Court Civil Cases",
+            "name": "CC"
+        },
+        {
+            "description": "Circuit Court Civil Cases: District Case Numbers",
+            "name": "CC_DISTRICT_CASE_NUMBERS"
+        },
+        {
+            "description": "Circuit Court Civil Cases: Plaintiffs",
+            "name": "CC_PLAINTIFFS"
+        },
+        {
+            "description": "Circuit Court Civil Cases: Defendants",
+            "name": "CC_DEFENDANTS"
+        },
+        {
+            "description": "Circuit Court Civil Cases: Related Persons",
+            "name": "CC_RELATED_PERSONS"
+        },
+        {
+            "description": "Circuit Court Civil Cases: Party Alias",
+            "name": "CC_PARTY_ALIAS"
+        },
+        {
+            "description": "Circuit Court Civil Cases: Party Addresses",
+            "name": "CC_PARTY_ADDRESSES"
+        },
+        {
+            "description": "Circuit Court Civil Cases: Attorneys",
+            "name": "CC_ATTORNEYS"
+        },
+        {
+            "description": "Circuit Court Civil Cases: Court Schedule",
+            "name": "CC_COURT_SCHEDULE"
+        },
+        {
+            "description": "Circuit Court Civil Cases: Documents",
+            "name": "CC_DOCUMENTS"
+        },
+        {
+            "description": "Circuit Court Civil Cases: Judgments",
+            "name": "CC_JUDGMENTS"
+        },
+        {
+            "description": "Circuit Court Civil Cases: Judgment Modifications",
+            "name": "CC_JUDGMENT_MODIFICATIONS"
+        },
+        {
+            "description": "Circuit Court Civil Cases: Judgments Against",
+            "name": "CC_JUDGMENTS_AGAINST"
+        },
+        {
+            "description": "Circuit Court Civil Cases: Judgments In Favor",
+            "name": "CC_JUDGMENTS_IN_FAVOR"
+        },
+        {
+            "description": "Circuit Court Civil Cases: Support Orders",
+            "name": "CC_SUPPORT_ORDERS"
+        },
+        {
+            "description": "Montgomery County Criminal Cases",
+            "name": "MCCR"
+        },
+        {
+            "description": "Montgomery County Criminal Cases: Tracking Numbers",
+            "name": "MCCR_TRACKING_NUMBERS"
+        },
+        {
+            "description": "Montgomery County Criminal Cases: District Court Numbers",
+            "name": "MCCR_DISTRICT_COURT_NUMBERS"
+        },
+        {
+            "description": "Montgomery County Criminal Cases: Charges",
+            "name": "MCCR_CHARGES"
+        },
+        {
+            "description": "Montgomery County Criminal Cases: Judgments",
+            "name": "MCCR_JUDGMENTS"
+        },
+        {
+            "description": "Montgomery County Criminal Cases: Defendants",
+            "name": "MCCR_DEFENDANTS"
+        },
+        {
+            "description": "Montgomery County Criminal Cases: Aliases",
+            "name": "MCCR_ALIASES"
+        },
+        {
+            "description": "Montgomery County Criminal Cases: Attorneys",
+            "name": "MCCR_ATTORNEYS"
+        },
+        {
+            "description": "Montgomery County Criminal Cases: Probation Officers",
+            "name": "MCCR_PROBATION_OFFICERS"
+        },
+        {
+            "description": "Montgomery County Criminal Cases: Dwi Monitors",
+            "name": "MCCR_DWI_MONITORS"
+        },
+        {
+            "description": "Montgomery County Criminal Cases: Court Schedule",
+            "name": "MCCR_COURT_SCHEDULE"
+        },
+        {
+            "description": "Montgomery County Criminal Cases: Dockets",
+            "name": "MCCR_DOCKETS"
+        },
+        {
+            "description": "Montgomery County Criminal Cases: Audio Media",
+            "name": "MCCR_AUDIO_MEDIA"
+        },
+        {
+            "description": "Montgomery County Criminal Cases: Bail Bonds",
+            "name": "MCCR_BAIL_BONDS"
+        },
+        {
+            "description": "Montgomery County Criminal Cases: Bond Remitters",
+            "name": "MCCR_BOND_REMITTERS"
+        },
+        {
+            "description": "District Court Civil Citations",
+            "name": "DSCP"
+        },
+        {
+            "description": "District Court Civil Citations: Charges",
+            "name": "DSCP_CHARGES"
+        },
+        {
+            "description": "District Court Civil Citations: Defendants",
+            "name": "DSCP_DEFENDANTS"
+        },
+        {
+            "description": "District Court Civil Citations: Defendant Aliases",
+            "name": "DSCP_DEFENDANT_ALIASES"
+        },
+        {
+            "description": "District Court Civil Citations: Related Persons",
+            "name": "DSCP_RELATED_PERSONS"
+        },
+        {
+            "description": "District Court Civil Citations: Events",
+            "name": "DSCP_EVENTS"
+        },
+        {
+            "description": "District Court Civil Citations: Trials",
+            "name": "DSCP_TRIALS"
+        },
+        {
+            "description": "District Court Civil Citations: Bail Events",
+            "name": "DSCP_BAIL_EVENTS"
+        },
+        {
+            "description": "Prince George's County Circuit Court Criminal Cases",
+            "name": "PG"
+        },
+        {
+            "description": "Prince George's County Circuit Court Criminal Cases: Charges",
+            "name": "PG_CHARGES"
+        },
+        {
+            "description": "Prince George's County Circuit Court Criminal Cases: Plaintiffs",
+            "name": "PG_PLAINTIFFS"
+        },
+        {
+            "description": "Prince George's County Circuit Court Criminal Cases: Defendants",
+            "name": "PG_DEFENDANTS"
+        },
+        {
+            "description": "Prince George's County Circuit Court Criminal Cases: Defendant Aliases",
+            "name": "PG_DEFENDANT_ALIASES"
+        },
+        {
+            "description": "Prince George's County Circuit Court Criminal Cases: Attorneys",
+            "name": "PG_ATTORNEYS"
+        },
+        {
+            "description": "Prince George's County Circuit Court Criminal Cases: Other Parties",
+            "name": "PG_OTHER_PARTIES"
+        },
+        {
+            "description": "Prince George's County Circuit Court Criminal Cases: Court Schedule",
+            "name": "PG_COURT_SCHEDULE"
+        },
+        {
+            "description": "Prince George's County Circuit Court Criminal Cases: Dockets",
+            "name": "PG_DOCKETS"
+        },
+        {
+            "name": "bail_stats"
         }
     ]
 }

@@ -1,5 +1,5 @@
 # ext/declarative/api.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -54,6 +54,10 @@ def has_inherited_table(cls):
 
 class DeclarativeMeta(type):
     def __init__(cls, classname, bases, dict_, **kw):
+        # use cls.__dict__, which can be modified by an
+        # __init_subclass__() method (#7900)
+        dict_ = cls.__dict__
+
         # early-consume registry from the initial declarative base,
         # assign privately to not conflict with subclass attributes named
         # "registry"
@@ -200,7 +204,7 @@ class declared_attr(interfaces._MappedAttribute, property):
         :ref:`orm_declarative_dataclasses_mixin` - illustrates special forms
         for use with Python dataclasses
 
-    """  # noqa E501
+    """  # noqa: E501
 
     def __init__(self, fget, cascading=False):
         super(declared_attr, self).__init__(fget)
@@ -228,7 +232,8 @@ class declared_attr(interfaces._MappedAttribute, property):
 
         # here, we are inside of the declarative scan.  use the registry
         # that is tracking the values of these attributes.
-        declarative_scan = manager.declarative_scan
+        declarative_scan = manager.declarative_scan()
+        assert declarative_scan is not None
         reg = declarative_scan.declared_attr_reg
 
         if desc in reg:
@@ -644,7 +649,11 @@ class registry(object):
 
     def _add_manager(self, manager):
         self._managers[manager] = True
-        assert manager.registry is None
+        if manager.registry is not None and manager.is_mapped:
+            raise exc.ArgumentError(
+                "Class '%s' already has a primary mapper defined. "
+                % manager.class_
+            )
         manager.registry = self
 
     def configure(self, cascade=False):
@@ -809,6 +818,14 @@ class registry(object):
         class_dict["__abstract__"] = True
         if mapper:
             class_dict["__mapper_cls__"] = mapper
+
+        if hasattr(cls, "__class_getitem__"):
+
+            def __class_getitem__(cls, key):
+                # allow generic classes in py3.9+
+                return cls
+
+            class_dict["__class_getitem__"] = __class_getitem__
 
         return metaclass(name, bases, class_dict)
 

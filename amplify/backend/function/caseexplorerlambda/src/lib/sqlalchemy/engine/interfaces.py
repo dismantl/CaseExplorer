@@ -1,5 +1,5 @@
 # engine/interfaces.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -10,6 +10,7 @@
 from .. import util
 from ..sql.compiler import Compiled  # noqa
 from ..sql.compiler import TypeCompiler  # noqa
+from ..util.concurrency import await_only
 
 
 class Dialect(object):
@@ -1417,10 +1418,6 @@ class ExecutionContext(object):
            set.  This replaces the practice of setting out parameters within
            the now-removed ``get_result_proxy()`` method.
 
-        .. seealso::
-
-            :meth:`.ExecutionContext.get_result_cursor_strategy`
-
         """
         raise NotImplementedError()
 
@@ -1432,69 +1429,6 @@ class ExecutionContext(object):
         datamembers should be available after this method completes.
         """
 
-        raise NotImplementedError()
-
-    def get_result_cursor_strategy(self, result):
-        """Return a result cursor strategy for a given result object.
-
-        This method is implemented by the :class:`.DefaultDialect` and is
-        only needed by implementing dialects in the case where some special
-        steps regarding the cursor must be taken, such as manufacturing
-        fake results from some other element of the cursor, or pre-buffering
-        the cursor's results.
-
-        A simplified version of the default implementation is::
-
-            from sqlalchemy.engine.result import DefaultCursorFetchStrategy
-
-            class MyExecutionContext(DefaultExecutionContext):
-                def get_result_cursor_strategy(self, result):
-                    return DefaultCursorFetchStrategy.create(result)
-
-        Above, the :class:`.DefaultCursorFetchStrategy` will be applied
-        to the result object.   For results that are pre-buffered from a
-        cursor that might be closed, an implementation might be::
-
-
-            from sqlalchemy.engine.result import (
-                FullyBufferedCursorFetchStrategy
-            )
-
-            class MyExecutionContext(DefaultExecutionContext):
-                _pre_buffered_result = None
-
-                def pre_exec(self):
-                    if self.special_condition_prebuffer_cursor():
-                        self._pre_buffered_result = (
-                            self.cursor.description,
-                            self.cursor.fetchall()
-                        )
-
-                def get_result_cursor_strategy(self, result):
-                    if self._pre_buffered_result:
-                        description, cursor_buffer = self._pre_buffered_result
-                        return (
-                            FullyBufferedCursorFetchStrategy.
-                                create_from_buffer(
-                                    result, description, cursor_buffer
-                            )
-                        )
-                    else:
-                        return DefaultCursorFetchStrategy.create(result)
-
-        This method replaces the previous not-quite-documented
-        ``get_result_proxy()`` method.
-
-        .. versionadded:: 1.4  - result objects now interpret cursor results
-           based on a pluggable "strategy" object, which is delivered
-           by the :class:`.ExecutionContext` via the
-           :meth:`.ExecutionContext.get_result_cursor_strategy` method.
-
-        .. seealso::
-
-            :meth:`.ExecutionContext.get_out_parameter_values`
-
-        """
         raise NotImplementedError()
 
     def handle_dbapi_exception(self, e):
@@ -1751,6 +1685,35 @@ class AdaptedConnection(object):
     def driver_connection(self):
         """The connection object as returned by the driver after a connect."""
         return self._connection
+
+    def run_async(self, fn):
+        """Run the awaitable returned by the given function, which is passed
+        the raw asyncio driver connection.
+
+        This is used to invoke awaitable-only methods on the driver connection
+        within the context of a "synchronous" method, like a connection
+        pool event handler.
+
+        E.g.::
+
+            engine = create_async_engine(...)
+
+            @event.listens_for(engine.sync_engine, "connect")
+            def register_custom_types(dbapi_connection, ...):
+                dbapi_connection.run_async(
+                    lambda connection: connection.set_type_codec(
+                        'MyCustomType', encoder, decoder, ...
+                    )
+                )
+
+        .. versionadded:: 1.4.30
+
+        .. seealso::
+
+            :ref:`asyncio_events_run_async`
+
+        """
+        return await_only(fn(self._connection))
 
     def __repr__(self):
         return "<AdaptedConnection %s>" % self._connection

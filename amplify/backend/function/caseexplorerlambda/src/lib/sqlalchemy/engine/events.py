@@ -1,5 +1,5 @@
 # sqlalchemy/engine/events.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -716,8 +716,14 @@ class DialectEvents(event.Events):
                 return target
         elif isinstance(target, Engine):
             return target.dialect
-        else:
+        elif isinstance(target, Dialect):
             return target
+        elif hasattr(target, "dispatch") and hasattr(
+            target.dispatch._events, "_no_async_engine_events"
+        ):
+            target.dispatch._events._no_async_engine_events()
+        else:
+            return None
 
     def do_connect(self, dialect, conn_rec, cargs, cparams):
         """Receive connection arguments before a connection is made.

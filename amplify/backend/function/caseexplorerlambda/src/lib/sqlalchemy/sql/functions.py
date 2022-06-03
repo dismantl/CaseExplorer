@@ -1,5 +1,5 @@
 # sql/functions.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -167,7 +167,7 @@ class FunctionElement(Executable, ColumnElement, FromClause, Generative):
 
             :meth:`_functions.FunctionElement.column_valued`
 
-        """  # noqa E501
+        """  # noqa: E501
 
         return ScalarFunctionColumn(self, name, type_)
 
@@ -212,7 +212,15 @@ class FunctionElement(Executable, ColumnElement, FromClause, Generative):
          string name will be added as a column to the .c collection
          of the resulting :class:`_sql.TableValuedAlias`.
 
+        :param joins_implicitly: when True, the table valued function may be
+         used in the FROM clause without any explicit JOIN to other tables
+         in the SQL query, and no "cartesian product" warning will be generated.
+         May be useful for SQL functions such as ``func.json_each()``.
+
+         .. versionadded:: 1.4.33
+
         .. versionadded:: 1.4.0b2
+
 
         .. seealso::
 
@@ -229,11 +237,12 @@ class FunctionElement(Executable, ColumnElement, FromClause, Generative):
             :meth:`_sql.TableValuedAlias.render_derived` - renders the alias
             using a derived column clause, e.g. ``AS name(col1, col2, ...)``
 
-        """  # noqa 501
+        """  # noqa: 501
 
         new_func = self._generate()
 
         with_ordinality = kw.pop("with_ordinality", None)
+        joins_implicitly = kw.pop("joins_implicitly", None)
         name = kw.pop("name", None)
 
         if with_ordinality:
@@ -244,7 +253,7 @@ class FunctionElement(Executable, ColumnElement, FromClause, Generative):
             *expr
         )
 
-        return new_func.alias(name=name)
+        return new_func.alias(name=name, joins_implicitly=joins_implicitly)
 
     def column_valued(self, name=None):
         """Return this :class:`_functions.FunctionElement` as a column expression that
@@ -271,7 +280,7 @@ class FunctionElement(Executable, ColumnElement, FromClause, Generative):
 
             :meth:`_functions.FunctionElement.table_valued`
 
-        """  # noqa 501
+        """  # noqa: 501
 
         return self.alias(name=name).column
 
@@ -296,7 +305,7 @@ class FunctionElement(Executable, ColumnElement, FromClause, Generative):
             :meth:`_functions.FunctionElement.table_valued` - generates table-valued
             SQL function expressions.
 
-        """  # noqa E501
+        """  # noqa: E501
 
         return ColumnCollection(
             columns=[(col.key, col) for col in self._all_selected_columns]
@@ -497,7 +506,7 @@ class FunctionElement(Executable, ColumnElement, FromClause, Generative):
 
         return None
 
-    def alias(self, name=None):
+    def alias(self, name=None, joins_implicitly=False):
         r"""Produce a :class:`_expression.Alias` construct against this
         :class:`.FunctionElement`.
 
@@ -539,6 +548,17 @@ class FunctionElement(Executable, ColumnElement, FromClause, Generative):
 
         .. versionadded:: 1.4.0b2  Added the ``.column`` accessor
 
+        :param name: alias name, will be rendered as ``AS <name>`` in the
+         FROM clause
+
+        :param joins_implicitly: when True, the table valued function may be
+         used in the FROM clause without any explicit JOIN to other tables
+         in the SQL query, and no "cartesian product" warning will be
+         generated.  May be useful for SQL functions such as
+         ``func.json_each()``.
+
+         .. versionadded:: 1.4.33
+
         .. seealso::
 
             :ref:`tutorial_functions_table_valued` -
@@ -554,7 +574,10 @@ class FunctionElement(Executable, ColumnElement, FromClause, Generative):
         """
 
         return TableValuedAlias._construct(
-            self, name, table_value_type=self.type
+            self,
+            name,
+            table_value_type=self.type,
+            joins_implicitly=joins_implicitly,
         )
 
     def select(self):
@@ -977,6 +1000,7 @@ class GenericFunction(util.with_metaclass(_GenericMeta, Function)):
 
         class as_utc(GenericFunction):
             type = DateTime
+            inherit_cache = True
 
         print(select(func.as_utc()))
 
@@ -991,6 +1015,7 @@ class GenericFunction(util.with_metaclass(_GenericMeta, Function)):
         class as_utc(GenericFunction):
             type = DateTime
             package = "time"
+            inherit_cache = True
 
     The above function would be available from :data:`.func`
     using the package name ``time``::
@@ -1008,6 +1033,7 @@ class GenericFunction(util.with_metaclass(_GenericMeta, Function)):
             package = "geo"
             name = "ST_Buffer"
             identifier = "buffer"
+            inherit_cache = True
 
     The above function will render as follows::
 
@@ -1026,6 +1052,7 @@ class GenericFunction(util.with_metaclass(_GenericMeta, Function)):
             package = "geo"
             name = quoted_name("ST_Buffer", True)
             identifier = "buffer"
+            inherit_cache = True
 
     The above function will render as::
 
@@ -1143,19 +1170,19 @@ class coalesce(ReturnTypeFromArgs):
     inherit_cache = True
 
 
-class max(ReturnTypeFromArgs):  # noqa  A001
+class max(ReturnTypeFromArgs):  # noqa:  A001
     """The SQL MAX() aggregate function."""
 
     inherit_cache = True
 
 
-class min(ReturnTypeFromArgs):  # noqa A001
+class min(ReturnTypeFromArgs):  # noqa: A001
     """The SQL MIN() aggregate function."""
 
     inherit_cache = True
 
 
-class sum(ReturnTypeFromArgs):  # noqa A001
+class sum(ReturnTypeFromArgs):  # noqa: A001
     """The SQL SUM() aggregate function."""
 
     inherit_cache = True

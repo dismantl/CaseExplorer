@@ -2,8 +2,14 @@ from collections.abc import Mapping, MutableMapping, Sequence
 from urllib.parse import urlsplit
 import itertools
 import json
-import pkgutil
 import re
+import sys
+
+# The files() API was added in Python 3.9.
+if sys.version_info >= (3, 9):  # pragma: no cover
+    from importlib import resources
+else:  # pragma: no cover
+    import importlib_resources as resources  # type: ignore
 
 
 class URIDict(MutableMapping):
@@ -51,8 +57,9 @@ def load_schema(name):
     Load a schema from ./schemas/``name``.json and return it.
     """
 
-    data = pkgutil.get_data("jsonschema", "schemas/{0}.json".format(name))
-    return json.loads(data.decode("utf-8"))
+    path = resources.files(__package__).joinpath(f"schemas/{name}.json")
+    data = path.read_text(encoding="utf-8")
+    return json.loads(data)
 
 
 def format_as_index(container, indices):
@@ -105,7 +112,7 @@ def extras_msg(extras):
         verb = "was"
     else:
         verb = "were"
-    return ", ".join(repr(extra) for extra in extras), verb
+    return ", ".join(repr(extra) for extra in sorted(extras)), verb
 
 
 def ensure_list(thing):
@@ -181,7 +188,8 @@ def uniq(container):
         sliced = itertools.islice(sort, 1, None)
 
         for i, j in zip(sort, sliced):
-            return not _sequence_equal(i, j)
+            if equal(i, j):
+                return False
 
     except (NotImplementedError, TypeError):
         seen = []

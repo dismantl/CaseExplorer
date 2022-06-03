@@ -1,5 +1,5 @@
 # sqlalchemy/__init__.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -123,6 +123,7 @@ from .types import Text
 from .types import TIME
 from .types import Time
 from .types import TIMESTAMP
+from .types import TupleType
 from .types import TypeDecorator
 from .types import Unicode
 from .types import UnicodeText
@@ -130,7 +131,7 @@ from .types import VARBINARY
 from .types import VARCHAR
 
 
-__version__ = "1.4.26"
+__version__ = "1.4.37"
 
 
 def __go(lcls):

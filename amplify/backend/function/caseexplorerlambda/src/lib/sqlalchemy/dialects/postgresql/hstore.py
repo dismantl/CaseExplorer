@@ -1,5 +1,5 @@
 # postgresql/hstore.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -296,41 +296,49 @@ class hstore(sqlfunc.GenericFunction):
 
     type = HSTORE
     name = "hstore"
+    inherit_cache = True
 
 
 class _HStoreDefinedFunction(sqlfunc.GenericFunction):
     type = sqltypes.Boolean
     name = "defined"
+    inherit_cache = True
 
 
 class _HStoreDeleteFunction(sqlfunc.GenericFunction):
     type = HSTORE
     name = "delete"
+    inherit_cache = True
 
 
 class _HStoreSliceFunction(sqlfunc.GenericFunction):
     type = HSTORE
     name = "slice"
+    inherit_cache = True
 
 
 class _HStoreKeysFunction(sqlfunc.GenericFunction):
     type = ARRAY(sqltypes.Text)
     name = "akeys"
+    inherit_cache = True
 
 
 class _HStoreValsFunction(sqlfunc.GenericFunction):
     type = ARRAY(sqltypes.Text)
     name = "avals"
+    inherit_cache = True
 
 
 class _HStoreArrayFunction(sqlfunc.GenericFunction):
     type = ARRAY(sqltypes.Text)
     name = "hstore_to_array"
+    inherit_cache = True
 
 
 class _HStoreMatrixFunction(sqlfunc.GenericFunction):
     type = ARRAY(sqltypes.Text)
     name = "hstore_to_matrix"
+    inherit_cache = True
 
 
 #

@@ -1,5 +1,5 @@
 # testing/engines.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -17,6 +17,7 @@ from .util import decorator
 from .util import gc_collect
 from .. import event
 from .. import pool
+from ..util import await_only
 
 
 class ConnectionKiller(object):
@@ -96,7 +97,10 @@ class ConnectionKiller(object):
                         and proxy_ref._pool is rec.pool
                     ):
                         self._safe(proxy_ref._checkin)
-            rec.dispose()
+            if hasattr(rec, "sync_engine"):
+                await_only(rec.dispose())
+            else:
+                rec.dispose()
         eng.clear()
 
     def after_test(self):
@@ -272,11 +276,15 @@ def testing_engine(
     future=None,
     asyncio=False,
     transfer_staticpool=False,
+    _sqlite_savepoint=False,
 ):
     """Produce an engine configured by --options with optional overrides."""
 
     if asyncio:
-        from sqlalchemy.ext.asyncio import create_async_engine as create_engine
+        assert not _sqlite_savepoint
+        from sqlalchemy.ext.asyncio import (
+            create_async_engine as create_engine,
+        )
     elif future or (
         config.db and config.db._is_future and future is not False
     ):
@@ -288,9 +296,11 @@ def testing_engine(
     if not options:
         use_reaper = True
         scope = "function"
+        sqlite_savepoint = False
     else:
         use_reaper = options.pop("use_reaper", True)
         scope = options.pop("scope", "function")
+        sqlite_savepoint = options.pop("sqlite_savepoint", False)
 
     url = url or config.db.url
 
@@ -306,10 +316,21 @@ def testing_engine(
 
     engine = create_engine(url, **options)
 
+    if sqlite_savepoint and engine.name == "sqlite":
+        # apply SQLite savepoint workaround
+        @event.listens_for(engine, "connect")
+        def do_connect(dbapi_connection, connection_record):
+            dbapi_connection.isolation_level = None
+
+        @event.listens_for(engine, "begin")
+        def do_begin(conn):
+            conn.exec_driver_sql("BEGIN")
+
     if transfer_staticpool:
         from sqlalchemy.pool import StaticPool
 
         if config.db is not None and isinstance(config.db.pool, StaticPool):
+            use_reaper = False
             engine.pool._transfer_from(config.db.pool)
 
     if scope == "global":

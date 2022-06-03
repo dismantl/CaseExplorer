@@ -1,6 +1,8 @@
 """
 Creation and extension of validators, with implementations for existing drafts.
 """
+from __future__ import annotations
+
 from collections import deque
 from collections.abc import Sequence
 from functools import lru_cache
@@ -10,11 +12,13 @@ from warnings import warn
 import contextlib
 import json
 import reprlib
+import typing
 import warnings
 
 import attr
 
 from jsonschema import (
+    _format,
     _legacy_validators,
     _types,
     _utils,
@@ -22,9 +26,9 @@ from jsonschema import (
     exceptions,
 )
 
-_VALIDATORS = {}
+_VALIDATORS: dict[str, typing.Any] = {}
 _META_SCHEMAS = _utils.URIDict()
-_VOCABULARIES = []
+_VOCABULARIES: list[tuple[str, typing.Any]] = []
 
 
 def __getattr__(name):
@@ -33,6 +37,7 @@ def __getattr__(name):
             "Importing ErrorTree from jsonschema.validators is deprecated. "
             "Instead import it from jsonschema.exceptions.",
             DeprecationWarning,
+            stacklevel=2,
         )
         from jsonschema.exceptions import ErrorTree
         return ErrorTree
@@ -41,6 +46,7 @@ def __getattr__(name):
             "Accessing jsonschema.validators.validators is deprecated. "
             "Use jsonschema.validators.validator_for with a given schema.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return _VALIDATORS
     elif name == "meta_schemas":
@@ -48,6 +54,7 @@ def __getattr__(name):
             "Accessing jsonschema.validators.meta_schemas is deprecated. "
             "Use jsonschema.validators.validator_for with a given schema.",
             DeprecationWarning,
+            stacklevel=2,
         )
         return _META_SCHEMAS
     raise AttributeError(f"module {__name__} has no attribute {name}")
@@ -102,7 +109,8 @@ def create(
     meta_schema,
     validators=(),
     version=None,
-    type_checker=_types.draft7_type_checker,
+    type_checker=_types.draft202012_type_checker,
+    format_checker=_format.draft202012_format_checker,
     id_of=_id_of,
     applicable_validators=lambda schema: schema.items(),
 ):
@@ -143,6 +151,14 @@ def create(
             If unprovided, a `jsonschema.TypeChecker` will be created
             with a set of default types typical of JSON Schema drafts.
 
+        format_checker (jsonschema.FormatChecker):
+
+            a format checker, used when applying the :validator:`format`
+            validator.
+
+            If unprovided, a `jsonschema.FormatChecker` will be created
+            with a set of default formats typical of JSON Schema drafts.
+
         id_of (collections.abc.Callable):
 
             A function that given a schema, returns its ID.
@@ -155,8 +171,10 @@ def create(
 
     Returns:
 
-        a new `jsonschema.IValidator` class
+        a new `jsonschema.protocols.Validator` class
     """
+    # preemptively don't shadow the `Validator.format_checker` local
+    format_checker_arg = format_checker
 
     @attr.s
     class Validator:
@@ -164,11 +182,13 @@ def create(
         VALIDATORS = dict(validators)
         META_SCHEMA = dict(meta_schema)
         TYPE_CHECKER = type_checker
+        FORMAT_CHECKER = format_checker_arg
         ID_OF = staticmethod(id_of)
 
         schema = attr.ib(repr=reprlib.repr)
         resolver = attr.ib(default=None, repr=False)
         format_checker = attr.ib(default=None)
+        evolve = attr.evolve
 
         def __attrs_post_init__(self):
             if self.resolver is None:
@@ -182,9 +202,6 @@ def create(
             for error in cls(cls.META_SCHEMA).iter_errors(schema):
                 raise exceptions.SchemaError.create_from(error)
 
-        def evolve(self, **kwargs):
-            return attr.evolve(self, **kwargs)
-
         def iter_errors(self, instance, _schema=None):
             if _schema is not None:
                 warnings.warn(
@@ -195,6 +212,7 @@ def create(
                         "iter_errors(...) instead."
                     ),
                     DeprecationWarning,
+                    stacklevel=2,
                 )
             else:
                 _schema = self.schema
@@ -264,6 +282,7 @@ def create(
                         "instead."
                     ),
                     DeprecationWarning,
+                    stacklevel=2,
                 )
                 self = self.evolve(schema=_schema)
 
@@ -278,13 +297,19 @@ def create(
     return Validator
 
 
-def extend(validator, validators=(), version=None, type_checker=None):
+def extend(
+    validator,
+    validators=(),
+    version=None,
+    type_checker=None,
+    format_checker=None,
+):
     """
     Create a new validator class by extending an existing one.
 
     Arguments:
 
-        validator (jsonschema.IValidator):
+        validator (jsonschema.protocols.Validator):
 
             an existing validator class
 
@@ -314,11 +339,20 @@ def extend(validator, validators=(), version=None, type_checker=None):
             a type checker, used when applying the :validator:`type` validator.
 
             If unprovided, the type checker of the extended
-            `jsonschema.IValidator` will be carried along.
+            `jsonschema.protocols.Validator` will be carried along.
+
+        format_checker (jsonschema.FormatChecker):
+
+            a format checker, used when applying the :validator:`format`
+            validator.
+
+            If unprovided, the format checker of the extended
+            `jsonschema.protocols.Validator` will be carried along.
 
     Returns:
 
-        a new `jsonschema.IValidator` class extending the one provided
+        a new `jsonschema.protocols.Validator` class extending the one
+        provided
 
     .. note:: Meta Schemas
 
@@ -336,11 +370,14 @@ def extend(validator, validators=(), version=None, type_checker=None):
 
     if type_checker is None:
         type_checker = validator.TYPE_CHECKER
+    if format_checker is None:
+        format_checker = validator.FORMAT_CHECKER
     return create(
         meta_schema=validator.META_SCHEMA,
         validators=all_validators,
         version=version,
         type_checker=type_checker,
+        format_checker=format_checker,
         id_of=validator.ID_OF,
     )
 
@@ -371,6 +408,7 @@ Draft3Validator = create(
         "uniqueItems": _validators.uniqueItems,
     },
     type_checker=_types.draft3_type_checker,
+    format_checker=_format.draft3_format_checker,
     version="draft3",
     id_of=lambda schema: schema.get("id", ""),
     applicable_validators=_legacy_validators.ignore_ref_siblings,
@@ -407,6 +445,7 @@ Draft4Validator = create(
         "uniqueItems": _validators.uniqueItems,
     },
     type_checker=_types.draft4_type_checker,
+    format_checker=_format.draft4_format_checker,
     version="draft4",
     id_of=lambda schema: schema.get("id", ""),
     applicable_validators=_legacy_validators.ignore_ref_siblings,
@@ -448,6 +487,7 @@ Draft6Validator = create(
         "uniqueItems": _validators.uniqueItems,
     },
     type_checker=_types.draft6_type_checker,
+    format_checker=_format.draft6_format_checker,
     version="draft6",
     applicable_validators=_legacy_validators.ignore_ref_siblings,
 )
@@ -489,6 +529,7 @@ Draft7Validator = create(
         "uniqueItems": _validators.uniqueItems,
     },
     type_checker=_types.draft7_type_checker,
+    format_checker=_format.draft7_format_checker,
     version="draft7",
     applicable_validators=_legacy_validators.ignore_ref_siblings,
 )
@@ -534,6 +575,7 @@ Draft201909Validator = create(
         "uniqueItems": _validators.uniqueItems,
     },
     type_checker=_types.draft201909_type_checker,
+    format_checker=_format.draft201909_format_checker,
     version="draft2019-09",
 )
 
@@ -579,6 +621,7 @@ Draft202012Validator = create(
         "uniqueItems": _validators.uniqueItems,
     },
     type_checker=_types.draft202012_type_checker,
+    format_checker=_format.draft202012_format_checker,
     version="draft2020-12",
 )
 
@@ -728,6 +771,7 @@ class RefResolver(object):
             "jsonschema.RefResolver.in_scope is deprecated and will be "
             "removed in a future release.",
             DeprecationWarning,
+            stacklevel=3,
         )
         self.push_scope(scope)
         try:
@@ -756,25 +800,25 @@ class RefResolver(object):
         finally:
             self.pop_scope()
 
-    def _finditem(self, schema, key):
-        values = deque([schema])
-        while values:
-            each = values.pop()
-            if not isinstance(each, dict):
-                continue
-            if key in each:
-                yield each
-            values.extendleft(each.values())
+    def _find_in_referrer(self, key):
+        return self._get_subschemas_cache()[key]
 
-    def resolve(self, ref):
-        """
-        Resolve the given reference.
-        """
-        url = self._urljoin_cache(self.resolution_scope, ref).rstrip("/")
+    @lru_cache()  # noqa: B019
+    def _get_subschemas_cache(self):
+        cache = {key: [] for key in _SUBSCHEMAS_KEYWORDS}
+        for keyword, subschema in _search_schema(
+            self.referrer, _match_subschema_keywords,
+        ):
+            cache[keyword].append(subschema)
+        return cache
 
+    @lru_cache()  # noqa: B019
+    def _find_in_subschemas(self, url):
+        subschemas = self._get_subschemas_cache()["$id"]
+        if not subschemas:
+            return None
         uri, fragment = urldefrag(url)
-
-        for subschema in self._finditem(self.referrer, "$id"):
+        for subschema in subschemas:
             target_uri = self._urljoin_cache(
                 self.resolution_scope, subschema["$id"],
             )
@@ -782,6 +826,17 @@ class RefResolver(object):
                 if fragment:
                     subschema = self.resolve_fragment(subschema, fragment)
                 return url, subschema
+        return None
+
+    def resolve(self, ref):
+        """
+        Resolve the given reference.
+        """
+        url = self._urljoin_cache(self.resolution_scope, ref).rstrip("/")
+
+        match = self._find_in_subschemas(url)
+        if match is not None:
+            return match
 
         return url, self._remote_cache(url)
 
@@ -820,12 +875,19 @@ class RefResolver(object):
         if not fragment:
             return document
 
+        if document is self.referrer:
+            find = self._find_in_referrer
+        else:
+
+            def find(key):
+                yield from _search_schema(document, _match_keyword(key))
+
         for keyword in ["$anchor", "$dynamicAnchor"]:
-            for subschema in self._finditem(document, keyword):
+            for subschema in find(keyword):
                 if fragment == subschema[keyword]:
                     return subschema
         for keyword in ["id", "$id"]:
-            for subschema in self._finditem(document, keyword):
+            for subschema in find(keyword):
                 if "#" + fragment == subschema[keyword]:
                     return subschema
 
@@ -901,6 +963,35 @@ class RefResolver(object):
         return result
 
 
+_SUBSCHEMAS_KEYWORDS = ("$id", "id", "$anchor", "$dynamicAnchor")
+
+
+def _match_keyword(keyword):
+
+    def matcher(value):
+        if keyword in value:
+            yield value
+
+    return matcher
+
+
+def _match_subschema_keywords(value):
+    for keyword in _SUBSCHEMAS_KEYWORDS:
+        if keyword in value:
+            yield keyword, value
+
+
+def _search_schema(schema, matcher):
+    """Breadth-first search routine."""
+    values = deque([schema])
+    while values:
+        value = values.pop()
+        if not isinstance(value, dict):
+            continue
+        yield from matcher(value)
+        values.extendleft(value.values())
+
+
 def validate(instance, schema, cls=None, *args, **kwargs):
     """
     Validate an instance under the given schema.
@@ -916,7 +1007,7 @@ def validate(instance, schema, cls=None, *args, **kwargs):
 
     If you know you have a valid schema already, especially if you
     intend to validate multiple instances with the same schema, you
-    likely would prefer using the `IValidator.validate` method directly
+    likely would prefer using the `Validator.validate` method directly
     on a specific validator (e.g. ``Draft7Validator.validate``).
 
 
@@ -930,7 +1021,7 @@ def validate(instance, schema, cls=None, *args, **kwargs):
 
             The schema to validate with
 
-        cls (IValidator):
+        cls (Validator):
 
             The class that will be used to validate the instance.
 

@@ -1,12 +1,12 @@
 import re
-from sqlalchemy import cast, Date
+from sqlalchemy import cast, Date, column
 from sqlalchemy.sql import select, func, and_, or_, text
 # from sqlalchemy.sql.expression import table
 from flask import current_app
 import json
 from . import models
 from .models import *
-from .utils import get_orm_class_by_name, get_eager_query, db_session, get_root_model_list
+from .utils import get_orm_class_by_name, get_eager_query, db_session, get_root_model_list, decimal_to_float
 from .officer import Officer, CopCache
 
 
@@ -17,10 +17,8 @@ class DataService:
         if app:
             return self.init_app(app)
 
-
     def init_app(self, app):
         pass
-
 
     @classmethod
     def fetch_cases_by_cop(cls, seq_number, req):
@@ -30,13 +28,11 @@ class DataService:
             'lastRow': result['last_row']
         }
 
-
     @classmethod
     def fetch_seq_number_by_id(cls, id):
         with db_session(current_app.config.bpdwatch_db_engine) as bpdwatch_db:
             officer = bpdwatch_db.query(Officer).get(id)
             return officer.unique_internal_identifier
-
 
     @classmethod
     def fetch_label_by_cop(cls, seq_number):
@@ -44,11 +40,18 @@ class DataService:
             officer = bpdwatch_db.query(Officer).filter(Officer.unique_internal_identifier == seq_number).one()
             return f'{officer.job_title()} {officer.full_name()} ({seq_number})'
 
-
     @classmethod
     def fetch_rows_orm(cls, table_name, req):
         orm_cls = get_orm_class_by_name(table_name)
         result = fetch_rows_from_model(orm_cls, req)
+        return {
+            'rows': result['rows'],
+            'lastRow': result['last_row']
+        }
+    
+    @classmethod
+    def fetch_bail_rows(cls, req):
+        result = fetch_bail_stats(req)
         return {
             'rows': result['rows'],
             'lastRow': result['last_row']
@@ -115,7 +118,6 @@ class DataService:
         return result
 
 
-
 def fetch_rows_by_cop(seq_number, req, total_only=False):
     query = Case.query\
         .join(CopCache, Case.case_number == CopCache.case_number)\
@@ -147,7 +149,7 @@ def fetch_rows_by_cop(seq_number, req, total_only=False):
     if total_only:
         return query.count()
 
-    query = build_limit(query, table, req)
+    query = build_limit(query, req)
     results = query.all()
 
     results_len = len(results)
@@ -180,7 +182,7 @@ def fetch_rows_from_model(cls, req, eager=False, total_only=False):
     if total_only:
         return query.count()
     
-    query = build_limit(query, table, req)
+    query = build_limit(query, req)
     results = query.all()
     results_len = len(results)
     current_last_row = start_row + results_len
@@ -203,24 +205,82 @@ def fetch_rows_from_model(cls, req, eager=False, total_only=False):
     }
 
 
-def build_select(table, req):
+def fetch_bail_stats(req, total_only=False):
+    start_row = int(req['startRow'])
+    end_row = int(req['endRow'])
+    page_size = end_row - start_row
+
+    class FauxTable:
+        c = {**dict(DSCR.__table__.c), **dict(DSCRDefendant.__table__.c), **dict(DSCRBailEvent.__table__.c)}
+
+    query, fields = build_bail_select(req)
+    query = build_where(query, FauxTable, req)
+    query = build_order_by(query, FauxTable, req)
+    query = build_group_by(query, FauxTable, req)
+
+    # if total_only:
+        # return query.count()
+    
+    query = build_limit(query, req)
+    # results = query.all()
+    # print(query)
+    with db_session() as db:
+        results = list(db.execute(query))
+    results_len = len(results)
+    current_last_row = start_row + results_len
+    last_row = current_last_row if current_last_row <= end_row else -1
+    rows = results[:page_size]
+
+    labeled_rows = []
+    for row in decimal_to_float(rows):
+        assert(len(fields) == len(row))
+        labeled_row = {}
+        for i in range(0, len(fields)):
+            labeled_row[fields[i]] = row[i]
+        labeled_rows.append(labeled_row)
+
+    return {
+        'rows': labeled_rows,
+        'last_row': last_row
+    }
+
+
+def build_bail_select(req):
     row_group_cols = req['rowGroupCols']
     group_keys = req['groupKeys']
     value_cols = req['valueCols']
 
+    available_cols = [
+        DSCR.court_system,
+        DSCRDefendant.race,
+        DSCRDefendant.sex,
+        DSCRBailEvent.event_name,
+        DSCRBailEvent.code,
+        DSCRBailEvent.type_of_bond,
+        DSCRBailEvent.bail_amount,
+        DSCRBailEvent.percentage_required
+    ]
+    cols_map = {col.name: col for col in available_cols}
+
     if is_grouping(row_group_cols, group_keys):
-        cols = [row_group_cols[len(group_keys)]['field']]
+        cols = [cols_map[row_group_cols[len(group_keys)]['field']]]
         for value_col in value_cols:
             agg_func = value_col['aggFunc']
             field = value_col['field']
             try:
-                col = getattr(func, agg_func)(table.c[field]).label(field)
+                col = getattr(func, agg_func)(cols_map[field]).label(field)
             except KeyError:
                 raise Exception('Invalid column {}'.format(field))
             cols.append(col)
-        return select(cols)
+        ret = cols
     else:
-        return select([table])
+        ret = available_cols
+    
+    fields = [col.name for col in ret]
+
+    return select(ret).select_from(DSCRBailEvent)\
+        .join(DSCRDefendant, DSCRBailEvent.case_number == DSCRDefendant.case_number)\
+        .join(DSCR, DSCRBailEvent.case_number == DSCR.case_number), fields
 
 
 def build_where(query, table, req):
@@ -230,7 +290,7 @@ def build_where(query, table, req):
 
     where_parts = []
     if len(group_keys) > 0:
-        for idx, key in group_keys:
+        for idx, key in enumerate(group_keys):
             field = row_group_cols[idx]['field']
             where_parts.append(table.c[field] == key)
 
@@ -247,7 +307,7 @@ def build_where(query, table, req):
     return query
 
 
-def build_limit(query, table, req):
+def build_limit(query, req):
     start_row = req['startRow']
     end_row = req['endRow']
     page_size = end_row - start_row

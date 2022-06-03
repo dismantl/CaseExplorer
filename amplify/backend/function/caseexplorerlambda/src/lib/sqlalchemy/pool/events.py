@@ -1,5 +1,5 @@
 # sqlalchemy/pool/events.py
-# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -51,8 +51,14 @@ class PoolEvents(event.Events):
                 return target
         elif isinstance(target, Engine):
             return target.pool
-        else:
+        elif isinstance(target, Pool):
             return target
+        elif hasattr(target, "dispatch") and hasattr(
+            target.dispatch._events, "_no_async_engine_events"
+        ):
+            target.dispatch._events._no_async_engine_events()
+        else:
+            return None
 
     @classmethod
     def _listen(cls, event_key, **kw):

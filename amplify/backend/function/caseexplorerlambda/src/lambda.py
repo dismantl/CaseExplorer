@@ -100,6 +100,10 @@ def handler(event, context):
             elif path == '/api/v1/cases/count':  # only used by Case Harvester README badge
                 total = DataService.fetch_total('cases')
                 return gen_response(200, json.dumps({'count': total}))
+            elif path == '/api/v1/bail_stats':
+                req = json.loads(event['body'])
+                rows = DataService.fetch_bail_rows(req)
+                return gen_response(200, json.dumps(rows))
             elif html_match:
                 case_number = html_match.group('case_number')
                 obj = app.config.case_details_bucket.Object(case_number).get()
