@@ -1,53 +1,57 @@
 # flake8: noqa
-from graphql import GraphQLResolveInfo as ResolveInfo
+from graphql import ResolveInfo
 
-from .argument import Argument
-from .base64 import Base64
-from .context import Context
+from .objecttype import ObjectType
+from .interface import Interface
+from .mutation import Mutation
+from .scalars import Scalar, String, ID, Int, Float, Boolean
 from .datetime import Date, DateTime, Time
 from .decimal import Decimal
-from .dynamic import Dynamic
+from .json import JSONString
+from .uuid import UUID
+from .schema import Schema
+from .structures import List, NonNull
 from .enum import Enum
 from .field import Field
 from .inputfield import InputField
+from .argument import Argument
 from .inputobjecttype import InputObjectType
-from .interface import Interface
-from .json import JSONString
-from .mutation import Mutation
-from .objecttype import ObjectType
-from .scalars import ID, Boolean, Float, Int, Scalar, String
-from .schema import Schema
-from .structures import List, NonNull
+from .dynamic import Dynamic
 from .union import Union
-from .uuid import UUID
+from .context import Context
+
+# Deprecated
+from .abstracttype import AbstractType
+
 
 __all__ = [
-    "Argument",
-    "Base64",
-    "Boolean",
-    "Context",
-    "Date",
-    "DateTime",
-    "Decimal",
-    "Dynamic",
+    "ObjectType",
+    "InputObjectType",
+    "Interface",
+    "Mutation",
     "Enum",
     "Field",
-    "Float",
-    "ID",
     "InputField",
-    "InputObjectType",
-    "Int",
-    "Interface",
-    "JSONString",
-    "List",
-    "Mutation",
-    "NonNull",
-    "ObjectType",
-    "ResolveInfo",
-    "Scalar",
     "Schema",
+    "Scalar",
     "String",
+    "ID",
+    "Int",
+    "Float",
+    "Date",
+    "DateTime",
     "Time",
+    "Decimal",
+    "JSONString",
     "UUID",
+    "Boolean",
+    "List",
+    "NonNull",
+    "Argument",
+    "Dynamic",
     "Union",
+    "Context",
+    "ResolveInfo",
+    # Deprecated
+    "AbstractType",
 ]

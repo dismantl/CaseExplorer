@@ -1,5 +1,5 @@
 # sql/ddl.py
-# Copyright (C) 2009-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2009-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -22,9 +22,6 @@ from ..util import topological
 
 
 class _DDLCompiles(ClauseElement):
-    _hierarchy_supports_caching = False
-    """disable cache warnings for all _DDLCompiles subclasses. """
-
     def _compiler(self, dialect, **kw):
         """Return a compiler appropriate for this ClauseElement, given a
         Dialect."""
@@ -312,10 +309,8 @@ class DDL(DDLElement):
 
         :param statement:
           A string or unicode string to be executed.  Statements will be
-          processed with Python's string formatting operator using
-          a fixed set of string substitutions, as well as additional
-          substitutions provided by the optional :paramref:`.DDL.context`
-          parameter.
+          processed with Python's string formatting operator.  See the
+          ``context`` argument and the ``execute_at`` method.
 
           A literal '%' in a statement must be escaped as '%%'.
 

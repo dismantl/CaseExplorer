@@ -1,5 +1,5 @@
 # orm/loading.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -264,20 +264,14 @@ def merge_frozen_result(session, statement, frozen_result, load=True):
         session.autoflush = autoflush
 
 
-@util.deprecated_20(
-    ":func:`_orm.merge_result`",
-    alternative="The function as well as the method on :class:`_orm.Query` "
-    "is superseded by the :func:`_orm.merge_frozen_result` function.",
-    becomes_legacy=True,
+@util.deprecated(
+    "2.0",
+    "The :func:`_orm.merge_result` method is superseded by the "
+    ":func:`_orm.merge_frozen_result` function.",
 )
 @util.preload_module("sqlalchemy.orm.context")
 def merge_result(query, iterator, load=True):
-    """Merge a result into the given :class:`.Query` object's Session.
-
-    See :meth:`_orm.Query.merge_result` for top-level documentation on this
-    function.
-
-    """
+    """Merge a result into this :class:`.Query` object's Session."""
 
     querycontext = util.preloaded.orm_context
 
@@ -758,7 +752,7 @@ def _instance_processor(
                         # test.orm.inheritance.test_basic ->
                         # EagerTargetingTest.test_adapt_stringency
                         # OptimizedLoadTest.test_column_expression_joined
-                        # PolymorphicOnNotLocalTest.test_polymorphic_on_column_prop  # noqa: E501
+                        # PolymorphicOnNotLocalTest.test_polymorphic_on_column_prop  # noqa E501
                         #
 
                         adapted_col = adapter.columns[col]

@@ -1,5 +1,5 @@
 # sqlalchemy/log.py
-# Copyright (C) 2006-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2006-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 # Includes alterations by Vinay Sajip vinay_sajip@yahoo.co.uk
 #
@@ -21,17 +21,6 @@ instance only.
 import logging
 import sys
 
-from .util import py311
-from .util import py38
-
-if py38:
-    STACKLEVEL = True
-    # needed as of py3.11.0b1
-    # #8019
-    STACKLEVEL_OFFSET = 2 if py311 else 1
-else:
-    STACKLEVEL = False
-    STACKLEVEL_OFFSET = 0
 
 # set initial level to WARN.  This so that
 # log statements don't occur in the absence of explicit
@@ -171,11 +160,6 @@ class InstanceLogger(object):
             selected_level = self.logger.getEffectiveLevel()
 
         if level >= selected_level:
-            if STACKLEVEL:
-                kwargs["stacklevel"] = (
-                    kwargs.get("stacklevel", 1) + STACKLEVEL_OFFSET
-                )
-
             self.logger._log(level, msg, args, **kwargs)
 
     def isEnabledFor(self, level):

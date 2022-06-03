@@ -1,11 +1,10 @@
 # ext/asyncio/__init__.py
-# Copyright (C) 2020-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2020-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: https://www.opensource.org/licenses/mit-license.php
 
-from .engine import async_engine_from_config
 from .engine import AsyncConnection
 from .engine import AsyncEngine
 from .engine import AsyncTransaction

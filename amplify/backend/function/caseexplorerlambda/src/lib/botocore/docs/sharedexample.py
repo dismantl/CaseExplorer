@@ -10,17 +10,16 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import numbers
 import re
-
-from botocore.docs.utils import escape_controls
+import numbers
 from botocore.utils import parse_timestamp
+from botocore.docs.utils import escape_controls
+from botocore.compat import six
 
 
-class SharedExampleDocumenter:
-    def document_shared_example(
-        self, example, prefix, section, operation_model
-    ):
+class SharedExampleDocumenter(object):
+    def document_shared_example(self, example, prefix, section,
+                                operation_model):
         """Documents a single shared example based on its definition.
 
         :param example: The model of the example
@@ -34,9 +33,8 @@ class SharedExampleDocumenter:
         section.style.new_paragraph()
         section.write(example.get('description'))
         section.style.new_line()
-        self.document_input(
-            section, example, prefix, operation_model.input_shape
-        )
+        self.document_input(section, example, prefix,
+                            operation_model.input_shape)
         self.document_output(section, example, operation_model.output_shape)
 
     def document_input(self, section, example, prefix, shape):
@@ -98,9 +96,8 @@ class SharedExampleDocumenter:
         else:
             self._document_str(section, value, path)
 
-    def _document_dict(
-        self, section, value, comments, path, shape, top_level=False
-    ):
+    def _document_dict(self, section, value, comments, path, shape,
+                       top_level=False):
         dict_section = section.add_new_section('dict-value')
         self._start_nested_value(dict_section, '{')
         for key, val in value.items():
@@ -170,7 +167,7 @@ class SharedExampleDocumenter:
         # We do the string conversion because this might accept a type that
         # we don't specifically address.
         safe_value = escape_controls(value)
-        section.write(f"'{safe_value}',")
+        section.write(u"'%s'," % six.text_type(safe_value))
 
     def _document_number(self, section, value, path):
         section.write("%s," % str(value))
@@ -201,9 +198,8 @@ class SharedExampleDocumenter:
         section.write(end)
 
 
-def document_shared_examples(
-    section, operation_model, example_prefix, shared_examples
-):
+def document_shared_examples(section, operation_model, example_prefix,
+                             shared_examples):
     """Documents the shared examples
 
     :param section: The section to write to.
@@ -223,5 +219,5 @@ def document_shared_examples(
             example=example,
             section=container_section.add_new_section(example['id']),
             prefix=example_prefix,
-            operation_model=operation_model,
+            operation_model=operation_model
         )

@@ -3,8 +3,7 @@
     "GetDevicePositionHistory": {
       "input_token": "NextToken",
       "output_token": "NextToken",
-      "result_key": "DevicePositions",
-      "limit_key": "MaxResults"
+      "result_key": "DevicePositions"
     },
     "ListGeofenceCollections": {
       "input_token": "NextToken",
@@ -15,8 +14,7 @@
     "ListGeofences": {
       "input_token": "NextToken",
       "output_token": "NextToken",
-      "result_key": "Entries",
-      "limit_key": "MaxResults"
+      "result_key": "Entries"
     },
     "ListMaps": {
       "input_token": "NextToken",

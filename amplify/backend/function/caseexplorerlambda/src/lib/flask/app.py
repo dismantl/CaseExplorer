@@ -16,6 +16,7 @@ from werkzeug.exceptions import BadRequest
 from werkzeug.exceptions import BadRequestKeyError
 from werkzeug.exceptions import HTTPException
 from werkzeug.exceptions import InternalServerError
+from werkzeug.local import ContextVar
 from werkzeug.routing import BuildError
 from werkzeug.routing import Map
 from werkzeug.routing import MapAdapter
@@ -50,7 +51,6 @@ from .scaffold import find_package
 from .scaffold import Scaffold
 from .scaffold import setupmethod
 from .sessions import SecureCookieSessionInterface
-from .sessions import SessionInterface
 from .signals import appcontext_tearing_down
 from .signals import got_request_exception
 from .signals import request_finished
@@ -379,7 +379,7 @@ class Flask(Scaffold):
     #: :class:`~flask.sessions.SecureCookieSessionInterface` is used here.
     #:
     #: .. versionadded:: 0.8
-    session_interface: SessionInterface = SecureCookieSessionInterface()
+    session_interface = SecureCookieSessionInterface()
 
     def __init__(
         self,
@@ -1265,7 +1265,9 @@ class Flask(Scaffold):
         self.shell_context_processors.append(f)
         return f
 
-    def _find_error_handler(self, e: Exception) -> t.Optional["ErrorHandlerCallable"]:
+    def _find_error_handler(
+        self, e: Exception
+    ) -> t.Optional["ErrorHandlerCallable[Exception]"]:
         """Return a registered error handler for an exception in this order:
         blueprint handler for a specific code, app handler for a specific code,
         blueprint handler for an exception class, app handler for an exception
@@ -1457,26 +1459,17 @@ class Flask(Scaffold):
         )
 
     def raise_routing_exception(self, request: Request) -> "te.NoReturn":
-        """Intercept routing exceptions and possibly do something else.
+        """Exceptions that are recording during routing are reraised with
+        this method.  During debug we are not reraising redirect requests
+        for non ``GET``, ``HEAD``, or ``OPTIONS`` requests and we're raising
+        a different error instead to help debug situations.
 
-        In debug mode, intercept a routing redirect and replace it with
-        an error if the body will be discarded.
-
-        With modern Werkzeug this shouldn't occur, since it now uses a
-        308 status which tells the browser to resend the method and
-        body.
-
-        .. versionchanged:: 2.1
-            Don't intercept 307 and 308 redirects.
-
-        :meta private:
         :internal:
         """
         if (
             not self.debug
             or not isinstance(request.routing_exception, RequestRedirect)
-            or request.routing_exception.code in {307, 308}
-            or request.method in {"GET", "HEAD", "OPTIONS"}
+            or request.method in ("GET", "HEAD", "OPTIONS")
         ):
             raise request.routing_exception  # type: ignore
 
@@ -1628,6 +1621,13 @@ class Flask(Scaffold):
                 "Install Flask with the 'async' extra in order to use async views."
             ) from None
 
+        # Check that Werkzeug isn't using its fallback ContextVar class.
+        if ContextVar.__module__ == "werkzeug.local":
+            raise RuntimeError(
+                "Async cannot be used with this combination of Python "
+                "and Greenlet versions."
+            )
+
         return asgiref_async_to_sync(func)
 
     def make_response(self, rv: ResponseReturnValue) -> Response:
@@ -1681,13 +1681,13 @@ class Flask(Scaffold):
 
             # a 3-tuple is unpacked directly
             if len_rv == 3:
-                rv, status, headers = rv  # type: ignore[misc]
+                rv, status, headers = rv
             # decide if a 2-tuple has status or headers
             elif len_rv == 2:
                 if isinstance(rv[1], (Headers, dict, tuple, list)):
                     rv, headers = rv
                 else:
-                    rv, status = rv  # type: ignore[misc]
+                    rv, status = rv
             # other sized tuples are not allowed
             else:
                 raise TypeError(
@@ -1710,11 +1710,7 @@ class Flask(Scaffold):
                 # let the response class set the status and headers instead of
                 # waiting to do it manually, so that the class can handle any
                 # special logic
-                rv = self.response_class(
-                    rv,
-                    status=status,
-                    headers=headers,  # type: ignore[arg-type]
-                )
+                rv = self.response_class(rv, status=status, headers=headers)
                 status = headers = None
             elif isinstance(rv, dict):
                 rv = jsonify(rv)
@@ -1742,13 +1738,13 @@ class Flask(Scaffold):
         # prefer the status if it was provided
         if status is not None:
             if isinstance(status, (str, bytes, bytearray)):
-                rv.status = status
+                rv.status = status  # type: ignore
             else:
                 rv.status_code = status
 
         # extend existing headers with provided headers
         if headers:
-            rv.headers.update(headers)  # type: ignore[arg-type]
+            rv.headers.update(headers)
 
         return rv
 

@@ -131,8 +131,7 @@ def _render(template: Template, context: dict, app: "Flask") -> str:
 
 
 def render_template(
-    template_name_or_list: t.Union[str, Template, t.List[t.Union[str, Template]]],
-    **context: t.Any
+    template_name_or_list: t.Union[str, t.List[str]], **context: t.Any
 ) -> str:
     """Renders a template from the template folder with the given
     context.

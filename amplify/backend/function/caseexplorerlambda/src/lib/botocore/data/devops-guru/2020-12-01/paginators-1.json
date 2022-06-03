@@ -5,16 +5,14 @@
       "output_token": "NextToken",
       "result_key": [
         "CloudFormation",
-        "Service",
-        "Tags"
+        "Service"
       ]
     },
     "GetResourceCollection": {
       "input_token": "NextToken",
       "output_token": "NextToken",
       "result_key": [
-        "ResourceCollection.CloudFormation.StackNames",
-        "ResourceCollection.Tags"
+        "ResourceCollection.CloudFormation.StackNames"
       ],
       "non_aggregate_keys": [
         "ResourceCollection"
@@ -74,34 +72,6 @@
       "output_token": "NextToken",
       "result_key": [
         "Costs"
-      ]
-    },
-    "DescribeOrganizationResourceCollectionHealth": {
-      "input_token": "NextToken",
-      "output_token": "NextToken",
-      "result_key": [
-        "CloudFormation",
-        "Account",
-        "Service",
-        "Tags"
-      ]
-    },
-    "ListOrganizationInsights": {
-      "input_token": "NextToken",
-      "limit_key": "MaxResults",
-      "output_token": "NextToken",
-      "result_key": [
-        "ProactiveInsights",
-        "ReactiveInsights"
-      ]
-    },
-    "SearchOrganizationInsights": {
-      "input_token": "NextToken",
-      "limit_key": "MaxResults",
-      "output_token": "NextToken",
-      "result_key": [
-        "ProactiveInsights",
-        "ReactiveInsights"
       ]
     }
   }

@@ -13,7 +13,7 @@ info = None
 demo_dict = {"attr": "value"}
 
 
-class demo_obj:
+class demo_obj(object):
     attr = "value"
 
 

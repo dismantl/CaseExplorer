@@ -1,5 +1,5 @@
 # engine/util.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -147,9 +147,9 @@ def _distill_params_20(params):
     elif isinstance(
         params,
         (tuple, dict, immutabledict),
-        # only do abc.__instancecheck__ for Mapping after we've checked
-        # for plain dictionaries and would otherwise raise
-    ) or isinstance(params, collections_abc.Mapping):
+        # avoid abc.__instancecheck__
+        # (collections_abc.Sequence, collections_abc.Mapping),
+    ):
         return (params,), _no_kw
     else:
         raise exc.ArgumentError("mapping or sequence expected for parameters")
@@ -169,23 +169,6 @@ class TransactionalContext(object):
         raise NotImplementedError()
 
     def _transaction_is_closed(self):
-        raise NotImplementedError()
-
-    def _rollback_can_be_called(self):
-        """indicates the object is in a state that is known to be acceptable
-        for rollback() to be called.
-
-        This does not necessarily mean rollback() will succeed or not raise
-        an error, just that there is currently no state detected that indicates
-        rollback() would fail or emit warnings.
-
-        It also does not mean that there's a transaction in progress, as
-        it is usually safe to call rollback() even if no transaction is
-        present.
-
-        .. versionadded:: 1.4.28
-
-        """
         raise NotImplementedError()
 
     def _get_subject(self):
@@ -233,8 +216,7 @@ class TransactionalContext(object):
                 self.commit()
             except:
                 with util.safe_reraise():
-                    if self._rollback_can_be_called():
-                        self.rollback()
+                    self.rollback()
             finally:
                 if not out_of_band_exit:
                     subject._trans_context_manager = self._outer_trans_ctx
@@ -245,8 +227,7 @@ class TransactionalContext(object):
                     if not self._transaction_is_closed():
                         self.close()
                 else:
-                    if self._rollback_can_be_called():
-                        self.rollback()
+                    self.rollback()
             finally:
                 if not out_of_band_exit:
                     subject._trans_context_manager = self._outer_trans_ctx

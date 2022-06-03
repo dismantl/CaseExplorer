@@ -1,5 +1,5 @@
 # engine/url.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -182,7 +182,7 @@ class URL(
             return util.EMPTY_DICT
 
         def _assert_value(val):
-            if isinstance(val, compat.string_types):
+            if isinstance(val, str):
                 return val
             elif isinstance(val, collections_abc.Sequence):
                 return tuple(_assert_value(elem) for elem in val)
@@ -559,22 +559,6 @@ class URL(
 
     def __repr__(self):
         return self.render_as_string()
-
-    def __copy__(self):
-        return self.__class__.create(
-            self.drivername,
-            self.username,
-            self.password,
-            self.host,
-            self.port,
-            self.database,
-            # note this is an immutabledict of str-> str / tuple of str,
-            # also fully immutable.  does not require deepcopy
-            self.query,
-        )
-
-    def __deepcopy__(self, memo):
-        return self.__copy__()
 
     def __hash__(self):
         return hash(str(self))

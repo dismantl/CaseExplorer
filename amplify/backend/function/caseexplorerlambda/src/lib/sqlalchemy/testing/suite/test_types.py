@@ -41,9 +41,6 @@ from ... import UnicodeText
 from ... import util
 from ...orm import declarative_base
 from ...orm import Session
-from ...sql.sqltypes import LargeBinary
-from ...sql.sqltypes import PickleType
-from ...util import compat
 from ...util import u
 
 
@@ -198,42 +195,6 @@ class UnicodeTextTest(_UnicodeFixture, fixtures.TablesTest):
         self._test_null_strings(connection)
 
 
-class BinaryTest(_LiteralRoundTripFixture, fixtures.TablesTest):
-    __requires__ = ("binary_literals",)
-    __backend__ = True
-
-    @classmethod
-    def define_tables(cls, metadata):
-        Table(
-            "binary_table",
-            metadata,
-            Column(
-                "id", Integer, primary_key=True, test_needs_autoincrement=True
-            ),
-            Column("binary_data", LargeBinary),
-            Column("pickle_data", PickleType),
-        )
-
-    def test_binary_roundtrip(self, connection):
-        binary_table = self.tables.binary_table
-
-        connection.execute(
-            binary_table.insert(), {"id": 1, "binary_data": b"this is binary"}
-        )
-        row = connection.execute(select(binary_table.c.binary_data)).first()
-        eq_(row, (b"this is binary",))
-
-    def test_pickle_roundtrip(self, connection):
-        binary_table = self.tables.binary_table
-
-        connection.execute(
-            binary_table.insert(),
-            {"id": 1, "pickle_data": {"foo": [1, 2, 3], "bar": "bat"}},
-        )
-        row = connection.execute(select(binary_table.c.pickle_data)).first()
-        eq_(row, ({"foo": [1, 2, 3], "bar": "bat"},))
-
-
 class TextTest(_LiteralRoundTripFixture, fixtures.TablesTest):
     __requires__ = ("text_type",)
     __backend__ = True
@@ -347,11 +308,6 @@ class _DateFixture(_LiteralRoundTripFixture, fixtures.TestBase):
             Column("decorated_date_data", Decorated),
         )
 
-    @testing.requires.datetime_implicit_bound
-    def test_select_direct(self, connection):
-        result = connection.scalar(select(literal(self.data)))
-        eq_(result, self.data)
-
     def test_round_trip(self, connection):
         date_table = self.tables.date_table
 
@@ -426,15 +382,6 @@ class DateTimeTest(_DateFixture, fixtures.TablesTest):
     data = datetime.datetime(2012, 10, 15, 12, 57, 18)
 
 
-class DateTimeTZTest(_DateFixture, fixtures.TablesTest):
-    __requires__ = ("datetime_timezone",)
-    __backend__ = True
-    datatype = DateTime(timezone=True)
-    data = datetime.datetime(
-        2012, 10, 15, 12, 57, 18, tzinfo=compat.timezone.utc
-    )
-
-
 class DateTimeMicrosecondsTest(_DateFixture, fixtures.TablesTest):
     __requires__ = ("datetime_microseconds",)
     __backend__ = True
@@ -448,24 +395,12 @@ class TimestampMicrosecondsTest(_DateFixture, fixtures.TablesTest):
     datatype = TIMESTAMP
     data = datetime.datetime(2012, 10, 15, 12, 57, 18, 396)
 
-    @testing.requires.timestamp_microseconds_implicit_bound
-    def test_select_direct(self, connection):
-        result = connection.scalar(select(literal(self.data)))
-        eq_(result, self.data)
-
 
 class TimeTest(_DateFixture, fixtures.TablesTest):
     __requires__ = ("time",)
     __backend__ = True
     datatype = Time
     data = datetime.time(12, 57, 18)
-
-
-class TimeTZTest(_DateFixture, fixtures.TablesTest):
-    __requires__ = ("time_timezone",)
-    __backend__ = True
-    datatype = Time(timezone=True)
-    data = datetime.time(12, 57, 18, tzinfo=compat.timezone.utc)
 
 
 class TimeMicrosecondsTest(_DateFixture, fixtures.TablesTest):
@@ -653,16 +588,6 @@ class NumericTest(_LiteralRoundTripFixture, fixtures.TestBase):
             Numeric(precision=8, scale=4, asdecimal=False),
             [15.7563, decimal.Decimal("15.7563")],
             [15.7563],
-        )
-
-    @testing.requires.infinity_floats
-    def test_infinity_floats(self, do_numeric_test):
-        """test for #977, #7283"""
-
-        do_numeric_test(
-            Float(None),
-            [float("inf")],
-            [float("inf")],
         )
 
     @testing.requires.fetch_null_from_numeric
@@ -1483,14 +1408,12 @@ class JSONLegacyStringCastIndexTest(
 
 
 __all__ = (
-    "BinaryTest",
     "UnicodeVarcharTest",
     "UnicodeTextTest",
     "JSONTest",
     "JSONLegacyStringCastIndexTest",
     "DateTest",
     "DateTimeTest",
-    "DateTimeTZTest",
     "TextTest",
     "NumericTest",
     "IntegerTest",
@@ -1500,7 +1423,6 @@ __all__ = (
     "TimeMicrosecondsTest",
     "TimestampMicrosecondsTest",
     "TimeTest",
-    "TimeTZTest",
     "DateTimeMicrosecondsTest",
     "DateHistoricTest",
     "StringTest",

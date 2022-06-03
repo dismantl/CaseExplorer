@@ -5,7 +5,7 @@
 import threading
 
 
-class RetryQuota:
+class RetryQuota(object):
     INITIAL_CAPACITY = 500
 
     def __init__(self, initial_capacity=INITIAL_CAPACITY, lock=None):
@@ -47,7 +47,8 @@ class RetryQuota:
             return
         with self._lock:
             amount = min(
-                self._max_capacity - self._available_capacity, capacity_amount
+                self._max_capacity - self._available_capacity,
+                capacity_amount
             )
             self._available_capacity += amount
 

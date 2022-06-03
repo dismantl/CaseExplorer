@@ -1394,9 +1394,7 @@
         },
         "name":{
           "shape":"Name",
-          "documentation":"<p>The new name of the application. The name must be unique in the region in which you are updating the application.</p>",
-          "deprecated":true,
-          "deprecatedMessage":"Name update for application is deprecated."
+          "documentation":"<p>The new name of the application. The name must be unique in the region in which you are updating the application.</p>"
         },
         "description":{
           "shape":"Description",
@@ -1425,9 +1423,7 @@
         },
         "name":{
           "shape":"Name",
-          "documentation":"<p>The new name of the attribute group. The name must be unique in the region in which you are updating the attribute group.</p>",
-          "deprecated":true,
-          "deprecatedMessage":"Name update for attribute group is deprecated."
+          "documentation":"<p>The new name of the attribute group. The name must be unique in the region in which you are updating the attribute group.</p>"
         },
         "description":{
           "shape":"Description",

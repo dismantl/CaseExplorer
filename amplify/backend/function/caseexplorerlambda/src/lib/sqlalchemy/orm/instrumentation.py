@@ -1,5 +1,5 @@
 # orm/instrumentation.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -29,8 +29,6 @@ alternate instrumentation forms.
 
 """
 
-
-import weakref
 
 from . import base
 from . import collections
@@ -133,7 +131,7 @@ class ClassManager(HasMemoized, dict):
         if registry:
             registry._add_manager(self)
         if declarative_scan:
-            self.declarative_scan = weakref.ref(declarative_scan)
+            self.declarative_scan = declarative_scan
         if expired_attribute_loader:
             self.expired_attribute_loader = expired_attribute_loader
 

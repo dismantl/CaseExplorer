@@ -1,28 +1,20 @@
-from __future__ import annotations
+from marshmallow.schema import Schema, SchemaOpts
 
-from packaging.version import Version
-
+from . import fields
 from marshmallow.decorators import (
-    post_dump,
-    post_load,
     pre_dump,
+    post_dump,
     pre_load,
+    post_load,
     validates,
     validates_schema,
 )
+from marshmallow.utils import EXCLUDE, INCLUDE, RAISE, pprint, missing
 from marshmallow.exceptions import ValidationError
-from marshmallow.schema import Schema, SchemaOpts
-from marshmallow.utils import EXCLUDE, INCLUDE, RAISE, missing, pprint
+from distutils.version import LooseVersion
 
-from . import fields
-
-__version__ = "3.16.0"
-__parsed_version__ = Version(__version__)
-__version_info__: tuple[int, int, int] | tuple[
-    int, int, int, str, int
-] = __parsed_version__.release  # type: ignore[assignment]
-if __parsed_version__.pre:
-    __version_info__ += __parsed_version__.pre  # type: ignore[assignment]
+__version__ = "3.14.0"
+__version_info__ = tuple(LooseVersion(__version__).version)
 __all__ = [
     "EXCLUDE",
     "INCLUDE",

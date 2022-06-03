@@ -21,7 +21,7 @@ class CreatePostResult(graphene.Union):
 
 
 class CreatePost(graphene.Mutation):
-    class Arguments:
+    class Input:
         text = graphene.String(required=True)
 
     result = graphene.Field(CreatePostResult)

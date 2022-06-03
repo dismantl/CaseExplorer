@@ -1,4 +1,5 @@
 import re
+from collections import OrderedDict
 
 from ..types import Field, InputObjectType, String
 from ..types.mutation import Mutation
@@ -27,24 +28,26 @@ class ClientIDMutation(Mutation):
             input_fields = {}
 
         cls.Input = type(
-            f"{base_name}Input",
+            "{}Input".format(base_name),
             bases,
-            dict(input_fields, client_mutation_id=String(name="clientMutationId")),
+            OrderedDict(
+                input_fields, client_mutation_id=String(name="clientMutationId")
+            ),
         )
 
-        arguments = dict(
+        arguments = OrderedDict(
             input=cls.Input(required=True)
             # 'client_mutation_id': String(name='clientMutationId')
         )
         mutate_and_get_payload = getattr(cls, "mutate_and_get_payload", None)
         if cls.mutate and cls.mutate.__func__ == ClientIDMutation.mutate.__func__:
             assert mutate_and_get_payload, (
-                f"{name or cls.__name__}.mutate_and_get_payload method is required"
+                "{name}.mutate_and_get_payload method is required"
                 " in a ClientIDMutation."
-            )
+            ).format(name=name or cls.__name__)
 
         if not name:
-            name = f"{base_name}Payload"
+            name = "{}Payload".format(base_name)
 
         super(ClientIDMutation, cls).__init_subclass_with_meta__(
             output=None, arguments=arguments, name=name, **options
@@ -58,7 +61,9 @@ class ClientIDMutation(Mutation):
                 payload.client_mutation_id = input.get("client_mutation_id")
             except Exception:
                 raise Exception(
-                    f"Cannot set client_mutation_id in the payload object {repr(payload)}"
+                    ("Cannot set client_mutation_id in the payload object {}").format(
+                        repr(payload)
+                    )
                 )
             return payload
 

@@ -2,6 +2,7 @@ import operator
 import re
 
 import sqlalchemy as sa
+from sqlalchemy import func
 from .. import config
 from .. import engines
 from .. import eq_
@@ -14,7 +15,6 @@ from ..schema import Column
 from ..schema import Table
 from ... import event
 from ... import ForeignKey
-from ... import func
 from ... import Identity
 from ... import inspect
 from ... import Integer
@@ -25,7 +25,6 @@ from ... import types as sql_types
 from ...schema import DDL
 from ...schema import Index
 from ...sql.elements import quoted_name
-from ...sql.schema import BLANK_SCHEMA
 from ...testing import is_false
 from ...testing import is_true
 
@@ -510,20 +509,6 @@ class ComponentReflectionTest(fixtures.TablesTest):
     @testing.requires.schema_reflection
     def test_get_schema_names(self):
         insp = inspect(self.bind)
-
-        self.assert_(testing.config.test_schema in insp.get_schema_names())
-
-    @testing.requires.schema_reflection
-    def test_get_schema_names_w_translate_map(self, connection):
-        """test #7300"""
-
-        connection = connection.execution_options(
-            schema_translate_map={
-                "foo": "bar",
-                BLANK_SCHEMA: testing.config.test_schema,
-            }
-        )
-        insp = inspect(connection)
 
         self.assert_(testing.config.test_schema in insp.get_schema_names())
 
@@ -1152,9 +1137,7 @@ class ComponentReflectionTestExtra(fixtures.TestBase):
             metadata,
             Column("a", Integer()),
             sa.CheckConstraint("a > 1 AND a < 5", name="cc1"),
-            sa.CheckConstraint(
-                "a = 1 OR (a > 2 AND a < 5)", name="UsesCasing"
-            ),
+            sa.CheckConstraint("a = 1 OR (a > 2 AND a < 5)", name="cc2"),
             schema=schema,
         )
 
@@ -1181,8 +1164,8 @@ class ComponentReflectionTestExtra(fixtures.TestBase):
         eq_(
             reflected,
             [
-                {"name": "UsesCasing", "sqltext": "a = 1 or a > 2 and a < 5"},
                 {"name": "cc1", "sqltext": "a > 1 and a < 5"},
+                {"name": "cc2", "sqltext": "a = 1 or a > 2 and a < 5"},
             ],
         )
 
@@ -1208,9 +1191,6 @@ class ComponentReflectionTestExtra(fixtures.TestBase):
         ]
         if testing.requires.index_reflects_included_columns.enabled:
             expected[0]["include_columns"] = []
-            expected[0]["dialect_options"] = {
-                "%s_include" % connection.engine.name: []
-            }
 
         with expect_warnings(
             "Skipped unsupported reflection of expression-based index t_idx"
@@ -1243,19 +1223,8 @@ class ComponentReflectionTestExtra(fixtures.TestBase):
                     "column_names": ["x"],
                     "include_columns": ["y"],
                     "unique": False,
-                    "dialect_options": {
-                        "%s_include" % connection.engine.name: ["y"]
-                    },
                 }
             ],
-        )
-
-        t2 = Table("t", MetaData(), autoload_with=connection)
-        eq_(
-            list(t2.indexes)[0].dialect_options[connection.engine.name][
-                "include"
-            ],
-            ["y"],
         )
 
     def _type_round_trip(self, connection, metadata, *types):

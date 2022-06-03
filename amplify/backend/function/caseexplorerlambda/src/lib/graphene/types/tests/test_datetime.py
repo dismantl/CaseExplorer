@@ -2,8 +2,7 @@ import datetime
 
 import pytz
 from graphql import GraphQLError
-
-from pytest import fixture
+import pytest
 
 from ..datetime import Date, DateTime, Time
 from ..objecttype import ObjectType
@@ -28,13 +27,13 @@ class Query(ObjectType):
 schema = Schema(query=Query)
 
 
-@fixture
+@pytest.fixture
 def sample_datetime():
     utc_datetime = datetime.datetime(2019, 5, 25, 5, 30, 15, 10, pytz.utc)
     return utc_datetime
 
 
-@fixture
+@pytest.fixture
 def sample_time(sample_datetime):
     time = datetime.time(
         sample_datetime.hour,
@@ -46,7 +45,7 @@ def sample_time(sample_datetime):
     return time
 
 
-@fixture
+@pytest.fixture
 def sample_date(sample_datetime):
     date = sample_datetime.date()
     return date
@@ -60,46 +59,12 @@ def test_datetime_query(sample_datetime):
     assert result.data == {"datetime": isoformat}
 
 
-def test_datetime_query_with_variables(sample_datetime):
-    isoformat = sample_datetime.isoformat()
-
-    result = schema.execute(
-        """
-        query GetDate($datetime: DateTime) {
-          literal: datetime(in: "%s")
-          value: datetime(in: $datetime)
-        }
-        """
-        % isoformat,
-        variable_values={"datetime": isoformat},
-    )
-    assert not result.errors
-    assert result.data == {"literal": isoformat, "value": isoformat}
-
-
 def test_date_query(sample_date):
     isoformat = sample_date.isoformat()
 
     result = schema.execute("""{ date(in: "%s") }""" % isoformat)
     assert not result.errors
     assert result.data == {"date": isoformat}
-
-
-def test_date_query_with_variables(sample_date):
-    isoformat = sample_date.isoformat()
-
-    result = schema.execute(
-        """
-        query GetDate($date: Date) {
-          literal: date(in: "%s")
-          value: date(in: $date)
-        }
-        """
-        % isoformat,
-        variable_values={"date": isoformat},
-    )
-    assert not result.errors
-    assert result.data == {"literal": isoformat, "value": isoformat}
 
 
 def test_time_query(sample_time):
@@ -110,35 +75,13 @@ def test_time_query(sample_time):
     assert result.data == {"time": isoformat}
 
 
-def test_time_query_with_variables(sample_time):
-    isoformat = sample_time.isoformat()
-
-    result = schema.execute(
-        """
-        query GetTime($time: Time) {
-          literal: time(at: "%s")
-          value: time(at: $time)
-        }
-        """
-        % isoformat,
-        variable_values={"time": isoformat},
-    )
-    assert not result.errors
-    assert result.data == {"literal": isoformat, "value": isoformat}
-
-
 def test_bad_datetime_query():
-    not_a_date = "Some string that's not a datetime"
+    not_a_date = "Some string that's not a date"
 
     result = schema.execute("""{ datetime(in: "%s") }""" % not_a_date)
 
-    assert result.errors and len(result.errors) == 1
-    error = result.errors[0]
-    assert isinstance(error, GraphQLError)
-    assert (
-        error.message == "DateTime cannot represent value:"
-        ' "Some string that\'s not a datetime"'
-    )
+    assert len(result.errors) == 1
+    assert isinstance(result.errors[0], GraphQLError)
     assert result.data is None
 
 
@@ -147,26 +90,18 @@ def test_bad_date_query():
 
     result = schema.execute("""{ date(in: "%s") }""" % not_a_date)
 
-    error = result.errors[0]
-    assert isinstance(error, GraphQLError)
-    assert (
-        error.message == "Date cannot represent value:"
-        ' "Some string that\'s not a date"'
-    )
+    assert len(result.errors) == 1
+    assert isinstance(result.errors[0], GraphQLError)
     assert result.data is None
 
 
 def test_bad_time_query():
-    not_a_date = "Some string that's not a time"
+    not_a_date = "Some string that's not a date"
 
     result = schema.execute("""{ time(at: "%s") }""" % not_a_date)
 
-    error = result.errors[0]
-    assert isinstance(error, GraphQLError)
-    assert (
-        error.message == "Time cannot represent value:"
-        ' "Some string that\'s not a time"'
-    )
+    assert len(result.errors) == 1
+    assert isinstance(result.errors[0], GraphQLError)
     assert result.data is None
 
 
@@ -228,15 +163,22 @@ def test_time_query_variable(sample_time):
     assert result.data == {"time": isoformat}
 
 
+@pytest.mark.xfail(
+    reason="creating the error message fails when un-parsable object is not JSON serializable."
+)
 def test_bad_variables(sample_date, sample_datetime, sample_time):
     def _test_bad_variables(type_, input_):
         result = schema.execute(
-            f"""query Test($input: {type_}){{ {type_.lower()}(in: $input) }}""",
+            """query Test($input: {}){{ {}(in: $input) }}""".format(
+                type_, type_.lower()
+            ),
             variables={"input": input_},
         )
-        assert isinstance(result.errors, list)
         assert len(result.errors) == 1
+        # when `input` is not JSON serializable formatting the error message in
+        # `graphql.utils.is_valid_value` line 79 fails with a TypeError
         assert isinstance(result.errors[0], GraphQLError)
+        print(result.errors[0])
         assert result.data is None
 
     not_a_date = dict()
@@ -252,6 +194,7 @@ def test_bad_variables(sample_date, sample_datetime, sample_time):
         ("DateTime", time),
         ("Date", not_a_date),
         ("Date", not_a_date_str),
+        ("Date", now),
         ("Date", time),
         ("Time", not_a_date),
         ("Time", not_a_date_str),

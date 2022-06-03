@@ -1,4 +1,9 @@
-from collections.abc import Mapping
+from collections import OrderedDict
+
+try:
+    from collections.abc import Mapping
+except ImportError:
+    from collections import Mapping
 
 
 def deflate(node, index=None, path=None):
@@ -16,9 +21,10 @@ def deflate(node, index=None, path=None):
         else:
             index[cache_key] = True
 
-    result = {}
+    field_names = node.keys()
+    result = OrderedDict()
 
-    for field_name in node:
+    for field_name in field_names:
         value = node[field_name]
 
         new_path = path + [field_name]

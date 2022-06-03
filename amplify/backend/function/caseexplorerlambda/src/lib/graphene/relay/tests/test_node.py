@@ -1,5 +1,4 @@
-import re
-from textwrap import dedent
+from collections import OrderedDict
 
 from graphql_relay import to_global_id
 
@@ -7,7 +6,7 @@ from ...types import ObjectType, Schema, String
 from ..node import Node, is_node
 
 
-class SharedNodeFields:
+class SharedNodeFields(object):
 
     shared = String()
     something_else = String()
@@ -71,33 +70,23 @@ def test_subclassed_node_query():
         % to_global_id("MyOtherNode", 1)
     )
     assert not executed.errors
-    assert executed.data == {
-        "node": {
-            "shared": "1",
-            "extraField": "extra field info.",
-            "somethingElse": "----",
+    assert executed.data == OrderedDict(
+        {
+            "node": OrderedDict(
+                [
+                    ("shared", "1"),
+                    ("extraField", "extra field info."),
+                    ("somethingElse", "----"),
+                ]
+            )
         }
-    }
+    )
 
 
 def test_node_requesting_non_node():
     executed = schema.execute(
         '{ node(id:"%s") { __typename } } ' % Node.to_global_id("RootQuery", 1)
     )
-    assert executed.errors
-    assert re.match(
-        r"ObjectType .* does not implement the .* interface.",
-        executed.errors[0].message,
-    )
-    assert executed.data == {"node": None}
-
-
-def test_node_requesting_unknown_type():
-    executed = schema.execute(
-        '{ node(id:"%s") { __typename } } ' % Node.to_global_id("UnknownType", 1)
-    )
-    assert executed.errors
-    assert re.match(r"Relay Node .* not found in schema", executed.errors[0].message)
     assert executed.data == {"node": None}
 
 
@@ -105,8 +94,7 @@ def test_node_query_incorrect_id():
     executed = schema.execute(
         '{ node(id:"%s") { ... on MyNode { name } } }' % "something:2"
     )
-    assert executed.errors
-    assert re.match(r"Unable to parse global ID .*", executed.errors[0].message)
+    assert not executed.errors
     assert executed.data == {"node": None}
 
 
@@ -147,7 +135,7 @@ def test_node_field_only_type_wrong():
         % Node.to_global_id("MyOtherNode", 1)
     )
     assert len(executed.errors) == 1
-    assert str(executed.errors[0]).startswith("Must receive a MyNode id.")
+    assert str(executed.errors[0]) == "Must receive a MyNode id."
     assert executed.data == {"onlyNode": None}
 
 
@@ -166,54 +154,39 @@ def test_node_field_only_lazy_type_wrong():
         % Node.to_global_id("MyOtherNode", 1)
     )
     assert len(executed.errors) == 1
-    assert str(executed.errors[0]).startswith("Must receive a MyNode id.")
+    assert str(executed.errors[0]) == "Must receive a MyNode id."
     assert executed.data == {"onlyNodeLazy": None}
 
 
 def test_str_schema():
     assert (
-        str(schema).strip()
-        == dedent(
-            '''
-        schema {
-          query: RootQuery
-        }
+        str(schema)
+        == """
+schema {
+  query: RootQuery
+}
 
-        type MyNode implements Node {
-          """The ID of the object"""
-          id: ID!
-          name: String
-        }
+type MyNode implements Node {
+  id: ID!
+  name: String
+}
 
-        """An object with an ID"""
-        interface Node {
-          """The ID of the object"""
-          id: ID!
-        }
+type MyOtherNode implements Node {
+  id: ID!
+  shared: String
+  somethingElse: String
+  extraField: String
+}
 
-        type MyOtherNode implements Node {
-          """The ID of the object"""
-          id: ID!
-          shared: String
-          somethingElse: String
-          extraField: String
-        }
+interface Node {
+  id: ID!
+}
 
-        type RootQuery {
-          first: String
-          node(
-            """The ID of the object"""
-            id: ID!
-          ): Node
-          onlyNode(
-            """The ID of the object"""
-            id: ID!
-          ): MyNode
-          onlyNodeLazy(
-            """The ID of the object"""
-            id: ID!
-          ): MyNode
-        }
-        '''
-        ).strip()
+type RootQuery {
+  first: String
+  node(id: ID!): Node
+  onlyNode(id: ID!): MyNode
+  onlyNodeLazy(id: ID!): MyNode
+}
+""".lstrip()
     )

@@ -1,4 +1,4 @@
-from pytest import raises
+import pytest
 
 from ...types import Argument, Field, Int, List, NonNull, ObjectType, Schema, String
 from ..connection import Connection, ConnectionField, PageInfo
@@ -24,7 +24,7 @@ def test_connection():
 
     assert MyObjectConnection._meta.name == "MyObjectConnection"
     fields = MyObjectConnection._meta.fields
-    assert list(fields) == ["page_info", "edges", "extra"]
+    assert list(fields.keys()) == ["page_info", "edges", "extra"]
     edge_field = fields["edges"]
     pageinfo_field = fields["page_info"]
 
@@ -39,7 +39,7 @@ def test_connection():
 
 
 def test_connection_inherit_abstracttype():
-    class BaseConnection:
+    class BaseConnection(object):
         extra = String()
 
     class MyObjectConnection(BaseConnection, Connection):
@@ -48,13 +48,13 @@ def test_connection_inherit_abstracttype():
 
     assert MyObjectConnection._meta.name == "MyObjectConnection"
     fields = MyObjectConnection._meta.fields
-    assert list(fields) == ["page_info", "edges", "extra"]
+    assert list(fields.keys()) == ["page_info", "edges", "extra"]
 
 
 def test_connection_name():
     custom_name = "MyObjectCustomNameConnection"
 
-    class BaseConnection:
+    class BaseConnection(object):
         extra = String()
 
     class MyObjectConnection(BaseConnection, Connection):
@@ -76,7 +76,7 @@ def test_edge():
     Edge = MyObjectConnection.Edge
     assert Edge._meta.name == "MyObjectEdge"
     edge_fields = Edge._meta.fields
-    assert list(edge_fields) == ["node", "cursor", "other"]
+    assert list(edge_fields.keys()) == ["node", "cursor", "other"]
 
     assert isinstance(edge_fields["node"], Field)
     assert edge_fields["node"].type == MyObject
@@ -86,7 +86,7 @@ def test_edge():
 
 
 def test_edge_with_bases():
-    class BaseEdge:
+    class BaseEdge(object):
         extra = String()
 
     class MyObjectConnection(Connection):
@@ -99,7 +99,7 @@ def test_edge_with_bases():
     Edge = MyObjectConnection.Edge
     assert Edge._meta.name == "MyObjectEdge"
     edge_fields = Edge._meta.fields
-    assert list(edge_fields) == ["node", "cursor", "extra", "other"]
+    assert list(edge_fields.keys()) == ["node", "cursor", "extra", "other"]
 
     assert isinstance(edge_fields["node"], Field)
     assert edge_fields["node"].type == MyObject
@@ -122,7 +122,7 @@ def test_edge_with_nonnull_node():
 def test_pageinfo():
     assert PageInfo._meta.name == "PageInfo"
     fields = PageInfo._meta.fields
-    assert list(fields) == [
+    assert list(fields.keys()) == [
         "has_next_page",
         "has_previous_page",
         "start_cursor",
@@ -146,7 +146,7 @@ def test_connectionfield():
 
 def test_connectionfield_node_deprecated():
     field = ConnectionField(MyObject)
-    with raises(Exception) as exc_info:
+    with pytest.raises(Exception) as exc_info:
         field.type
 
     assert "ConnectionFields now need a explicit ConnectionType for Nodes." in str(

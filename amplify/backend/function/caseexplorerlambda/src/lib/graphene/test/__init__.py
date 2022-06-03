@@ -1,4 +1,6 @@
 from promise import Promise, is_thenable
+import six
+from graphql.error import format_error as format_graphql_error
 from graphql.error import GraphQLError
 
 from graphene.types.schema import Schema
@@ -6,20 +8,25 @@ from graphene.types.schema import Schema
 
 def default_format_error(error):
     if isinstance(error, GraphQLError):
-        return error.formatted
-    return {"message": str(error)}
+        return format_graphql_error(error)
+
+    return {"message": six.text_type(error)}
 
 
 def format_execution_result(execution_result, format_error):
     if execution_result:
         response = {}
+
         if execution_result.errors:
             response["errors"] = [format_error(e) for e in execution_result.errors]
-        response["data"] = execution_result.data
+
+        if not execution_result.invalid:
+            response["data"] = execution_result.data
+
         return response
 
 
-class Client:
+class Client(object):
     def __init__(self, schema, format_error=None, **execute_options):
         assert isinstance(schema, Schema)
         self.schema = schema

@@ -1,8 +1,4 @@
-from textwrap import dedent
-
-from pytest import raises
-
-from graphql.type import GraphQLObjectType, GraphQLSchema
+import pytest
 
 from ..field import Field
 from ..objecttype import ObjectType
@@ -20,12 +16,7 @@ class Query(ObjectType):
 
 def test_schema():
     schema = Schema(Query)
-    graphql_schema = schema.graphql_schema
-    assert isinstance(graphql_schema, GraphQLSchema)
-    query_type = graphql_schema.query_type
-    assert isinstance(query_type, GraphQLObjectType)
-    assert query_type.name == "Query"
-    assert query_type.graphene_type is Query
+    assert schema.get_query_type() == schema.get_graphql_type(Query)
 
 
 def test_schema_get_type():
@@ -36,7 +27,7 @@ def test_schema_get_type():
 
 def test_schema_get_type_error():
     schema = Schema(Query)
-    with raises(AttributeError) as exc_info:
+    with pytest.raises(AttributeError) as exc_info:
         schema.X
 
     assert str(exc_info.value) == 'Type "X" not found in the Schema'
@@ -45,30 +36,22 @@ def test_schema_get_type_error():
 def test_schema_str():
     schema = Schema(Query)
     assert (
-        str(schema).strip()
-        == dedent(
-            """
-        type Query {
-          inner: MyOtherType
-        }
+        str(schema)
+        == """schema {
+  query: Query
+}
 
-        type MyOtherType {
-          field: String
-        }
-        """
-        ).strip()
+type MyOtherType {
+  field: String
+}
+
+type Query {
+  inner: MyOtherType
+}
+"""
     )
 
 
 def test_schema_introspect():
     schema = Schema(Query)
     assert "__schema" in schema.introspect()
-
-
-def test_schema_requires_query_type():
-    schema = Schema()
-    result = schema.execute("query {}")
-
-    assert len(result.errors) == 1
-    error = result.errors[0]
-    assert error.message == "Query root type must be provided."

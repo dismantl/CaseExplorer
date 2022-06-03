@@ -1,5 +1,5 @@
 # util/__init__.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -53,7 +53,6 @@ from .compat import b
 from .compat import b64decode
 from .compat import b64encode
 from .compat import binary_type
-from .compat import binary_types
 from .compat import byte_buffer
 from .compat import callable
 from .compat import cmp
@@ -77,7 +76,6 @@ from .compat import perf_counter
 from .compat import pickle
 from .compat import print_
 from .compat import py2k
-from .compat import py311
 from .compat import py37
 from .compat import py38
 from .compat import py39

@@ -1131,7 +1131,7 @@
         },
         {
           "shape": "GatewayTimeoutException",
-          "documentation": "Gateway Timeout"
+          "documentation": "Gateway Timeout Error"
         },
         {
           "shape": "TooManyRequestsException",
@@ -1713,7 +1713,7 @@
         },
         {
           "shape": "GatewayTimeoutException",
-          "documentation": "Gateway Timeout"
+          "documentation": "Gateway Timeout Error"
         },
         {
           "shape": "TooManyRequestsException",
@@ -4403,11 +4403,6 @@
           "locationName": "logLevel",
           "documentation": "The log level being written to CloudWatch Logs."
         },
-        "Maintenance": {
-          "shape": "MaintenanceStatus",
-          "locationName": "maintenance",
-          "documentation": "Maintenance settings for this channel."
-        },
         "Name": {
           "shape": "__string",
           "locationName": "name",
@@ -4544,11 +4539,6 @@
           "locationName": "logLevel",
           "documentation": "The log level being written to CloudWatch Logs."
         },
-        "Maintenance": {
-          "shape": "MaintenanceStatus",
-          "locationName": "maintenance",
-          "documentation": "Maintenance settings for this channel."
-        },
         "Name": {
           "shape": "__string",
           "locationName": "name",
@@ -4654,11 +4644,6 @@
           "locationName": "logLevel",
           "documentation": "The log level to write to CloudWatch Logs."
         },
-        "Maintenance": {
-          "shape": "MaintenanceCreateSettings",
-          "locationName": "maintenance",
-          "documentation": "Maintenance settings for this channel."
-        },
         "Name": {
           "shape": "__string",
           "locationName": "name",
@@ -4729,11 +4714,6 @@
           "shape": "LogLevel",
           "locationName": "logLevel",
           "documentation": "The log level to write to CloudWatch Logs."
-        },
-        "Maintenance": {
-          "shape": "MaintenanceCreateSettings",
-          "locationName": "maintenance",
-          "documentation": "Maintenance settings for this channel."
         },
         "Name": {
           "shape": "__string",
@@ -5295,11 +5275,6 @@
           "locationName": "logLevel",
           "documentation": "The log level being written to CloudWatch Logs."
         },
-        "Maintenance": {
-          "shape": "MaintenanceStatus",
-          "locationName": "maintenance",
-          "documentation": "Maintenance settings for this channel."
-        },
         "Name": {
           "shape": "__string",
           "locationName": "name",
@@ -5722,11 +5697,6 @@
           "shape": "LogLevel",
           "locationName": "logLevel",
           "documentation": "The log level being written to CloudWatch Logs."
-        },
-        "Maintenance": {
-          "shape": "MaintenanceStatus",
-          "locationName": "maintenance",
-          "documentation": "Maintenance settings for this channel."
         },
         "Name": {
           "shape": "__string",
@@ -6912,7 +6882,7 @@
         "CopyrightHolder": {
           "shape": "__stringMax1000",
           "locationName": "copyrightHolder",
-          "documentation": "Complete this field if you want to include the name of the copyright holder in the copyright tag in the captions metadata."
+          "documentation": "Applies only if you plan to convert these source captions to EBU-TT-D or TTML in an output. Complete this field if you want to include the name of the copyright holder in the copyright metadata tag in the TTML"
         },
         "FillLineGap": {
           "shape": "EbuTtDFillLineGapControl",
@@ -8518,12 +8488,7 @@
         "ProgramDateTime": {
           "shape": "HlsProgramDateTime",
           "locationName": "programDateTime",
-          "documentation": "Includes or excludes EXT-X-PROGRAM-DATE-TIME tag in .m3u8 manifest files. The value is calculated using the program date time clock."
-        },
-        "ProgramDateTimeClock": {
-          "shape": "HlsProgramDateTimeClock",
-          "locationName": "programDateTimeClock",
-          "documentation": "Specifies the algorithm used to drive the HLS EXT-X-PROGRAM-DATE-TIME clock. Options include:\n\nINITIALIZE_FROM_OUTPUT_TIMECODE: The PDT clock is initialized as a function of the first output timecode, then incremented by the EXTINF duration of each encoded segment.\n\nSYSTEM_CLOCK: The PDT clock is initialized as a function of the UTC wall clock, then incremented by the EXTINF duration of each encoded segment. If the PDT clock diverges from the wall clock by more than 500ms, it is resynchronized to the wall clock."
+          "documentation": "Includes or excludes EXT-X-PROGRAM-DATE-TIME tag in .m3u8 manifest files. The value is calculated as follows: either the program date and time are initialized using the input timecode source, or the time is initialized using the input timecode source and the date is initialized using the timestampOffset."
         },
         "ProgramDateTimePeriod": {
           "shape": "__integerMin0Max3600",
@@ -8772,14 +8737,6 @@
       "enum": [
         "EXCLUDE",
         "INCLUDE"
-      ]
-    },
-    "HlsProgramDateTimeClock": {
-      "type": "string",
-      "documentation": "Hls Program Date Time Clock",
-      "enum": [
-        "INITIALIZE_FROM_OUTPUT_TIMECODE",
-        "SYSTEM_CLOCK"
       ]
     },
     "HlsRedundantManifest": {
@@ -9819,11 +9776,6 @@
           "shape": "NetworkInputSettings",
           "locationName": "networkInputSettings",
           "documentation": "Input settings."
-        },
-        "Scte35Pid": {
-          "shape": "__integerMin32Max8191",
-          "locationName": "scte35Pid",
-          "documentation": "PID from which to read SCTE-35 messages. If left undefined, EML will select the first SCTE-35 PID found in the input."
         },
         "Smpte2038DataPreference": {
           "shape": "Smpte2038DataPreference",
@@ -11190,82 +11142,6 @@
         "PASSTHROUGH"
       ]
     },
-    "MaintenanceCreateSettings": {
-      "type": "structure",
-      "members": {
-        "MaintenanceDay": {
-          "shape": "MaintenanceDay",
-          "locationName": "maintenanceDay",
-          "documentation": "Choose one day of the week for maintenance. The chosen day is used for all future maintenance windows."
-        },
-        "MaintenanceStartTime": {
-          "shape": "__stringPattern010920300",
-          "locationName": "maintenanceStartTime",
-          "documentation": "Choose the hour that maintenance will start. The chosen time is used for all future maintenance windows."
-        }
-      },
-      "documentation": "Placeholder documentation for MaintenanceCreateSettings"
-    },
-    "MaintenanceDay": {
-      "type": "string",
-      "documentation": "The currently selected maintenance day.",
-      "enum": [
-        "MONDAY",
-        "TUESDAY",
-        "WEDNESDAY",
-        "THURSDAY",
-        "FRIDAY",
-        "SATURDAY",
-        "SUNDAY"
-      ]
-    },
-    "MaintenanceStatus": {
-      "type": "structure",
-      "members": {
-        "MaintenanceDay": {
-          "shape": "MaintenanceDay",
-          "locationName": "maintenanceDay",
-          "documentation": "The currently selected maintenance day."
-        },
-        "MaintenanceDeadline": {
-          "shape": "__string",
-          "locationName": "maintenanceDeadline",
-          "documentation": "Maintenance is required by the displayed date and time. Date and time is in ISO."
-        },
-        "MaintenanceScheduledDate": {
-          "shape": "__string",
-          "locationName": "maintenanceScheduledDate",
-          "documentation": "The currently scheduled maintenance date and time. Date and time is in ISO."
-        },
-        "MaintenanceStartTime": {
-          "shape": "__string",
-          "locationName": "maintenanceStartTime",
-          "documentation": "The currently selected maintenance start time. Time is in UTC."
-        }
-      },
-      "documentation": "Placeholder documentation for MaintenanceStatus"
-    },
-    "MaintenanceUpdateSettings": {
-      "type": "structure",
-      "members": {
-        "MaintenanceDay": {
-          "shape": "MaintenanceDay",
-          "locationName": "maintenanceDay",
-          "documentation": "Choose one day of the week for maintenance. The chosen day is used for all future maintenance windows."
-        },
-        "MaintenanceScheduledDate": {
-          "shape": "__string",
-          "locationName": "maintenanceScheduledDate",
-          "documentation": "Choose a specific date for maintenance to occur. The chosen date is used for the next maintenance window only."
-        },
-        "MaintenanceStartTime": {
-          "shape": "__stringPattern010920300",
-          "locationName": "maintenanceStartTime",
-          "documentation": "Choose the hour that maintenance will start. The chosen time is used for all future maintenance windows."
-        }
-      },
-      "documentation": "Placeholder documentation for MaintenanceUpdateSettings"
-    },
     "MaxResults": {
       "type": "integer",
       "min": 1,
@@ -12473,7 +12349,7 @@
         "Name": {
           "shape": "__stringMax32",
           "locationName": "name",
-          "documentation": "Custom output group name optionally defined by the user."
+          "documentation": "Custom output group name optionally defined by the user.  Only letters, numbers, and the underscore character allowed; only 32 characters allowed."
         },
         "OutputGroupSettings": {
           "shape": "OutputGroupSettings",
@@ -13827,11 +13703,6 @@
           "locationName": "logLevel",
           "documentation": "The log level being written to CloudWatch Logs."
         },
-        "Maintenance": {
-          "shape": "MaintenanceStatus",
-          "locationName": "maintenance",
-          "documentation": "Maintenance settings for this channel."
-        },
         "Name": {
           "shape": "__string",
           "locationName": "name",
@@ -14111,11 +13982,6 @@
           "shape": "LogLevel",
           "locationName": "logLevel",
           "documentation": "The log level being written to CloudWatch Logs."
-        },
-        "Maintenance": {
-          "shape": "MaintenanceStatus",
-          "locationName": "maintenance",
-          "documentation": "Maintenance settings for this channel."
         },
         "Name": {
           "shape": "__string",
@@ -14473,7 +14339,7 @@
         "StyleControl": {
           "shape": "TtmlDestinationStyleControl",
           "locationName": "styleControl",
-          "documentation": "This field is not currently supported and will not affect the output styling. Leave the default value."
+          "documentation": "When set to passthrough, passes through style and position information from a TTML-like input source (TTML, SMPTE-TT, CFF-TT) to the CFF-TT output or TTML output."
         }
       },
       "documentation": "Ttml Destination Settings"
@@ -14607,11 +14473,6 @@
           "locationName": "logLevel",
           "documentation": "The log level to write to CloudWatch Logs."
         },
-        "Maintenance": {
-          "shape": "MaintenanceUpdateSettings",
-          "locationName": "maintenance",
-          "documentation": "Maintenance settings for this channel."
-        },
         "Name": {
           "shape": "__string",
           "locationName": "name",
@@ -14717,11 +14578,6 @@
           "shape": "LogLevel",
           "locationName": "logLevel",
           "documentation": "The log level to write to CloudWatch Logs."
-        },
-        "Maintenance": {
-          "shape": "MaintenanceUpdateSettings",
-          "locationName": "maintenance",
-          "documentation": "Maintenance settings for this channel."
         },
         "Name": {
           "shape": "__string",
@@ -15800,12 +15656,6 @@
       "min": 30,
       "documentation": "Placeholder documentation for __integerMin30"
     },
-    "__integerMin32Max8191": {
-      "type": "integer",
-      "min": 32,
-      "max": 8191,
-      "documentation": "Placeholder documentation for __integerMin32Max8191"
-    },
     "__integerMin4Max20": {
       "type": "integer",
       "min": 4,
@@ -16296,11 +16146,6 @@
       "min": 6,
       "max": 6,
       "documentation": "Placeholder documentation for __stringMin6Max6"
-    },
-    "__stringPattern010920300": {
-      "type": "string",
-      "pattern": "^([0,1]?[0-9]|2[0-3]):00$",
-      "documentation": "Placeholder documentation for __stringPattern010920300"
     },
     "__timestampIso8601": {
       "type": "timestamp",

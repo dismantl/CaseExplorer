@@ -9,6 +9,7 @@ from .globals import current_app
 from .helpers import _split_blueprint_path
 
 if t.TYPE_CHECKING:
+    import typing_extensions as te
     from werkzeug.routing import Rule
 
 
@@ -109,7 +110,7 @@ class Request(RequestBase):
         return _split_blueprint_path(name)
 
     def _load_form_data(self) -> None:
-        super()._load_form_data()
+        RequestBase._load_form_data(self)
 
         # In debug mode we're replacing the files multidict with an ad-hoc
         # subclass that raises a different error for key errors.
@@ -123,14 +124,11 @@ class Request(RequestBase):
 
             attach_enctype_error_multidict(self)
 
-    def on_json_loading_failed(self, e: t.Optional[ValueError]) -> t.Any:
-        try:
-            return super().on_json_loading_failed(e)
-        except BadRequest as e:
-            if current_app and current_app.debug:
-                raise
+    def on_json_loading_failed(self, e: Exception) -> "te.NoReturn":
+        if current_app and current_app.debug:
+            raise BadRequest(f"Failed to decode JSON object: {e}")
 
-            raise BadRequest() from e
+        raise BadRequest()
 
 
 class Response(ResponseBase):
@@ -154,8 +152,6 @@ class Response(ResponseBase):
     default_mimetype = "text/html"
 
     json_module = json
-
-    autocorrect_location_header = False
 
     @property
     def max_cookie_size(self) -> int:  # type: ignore

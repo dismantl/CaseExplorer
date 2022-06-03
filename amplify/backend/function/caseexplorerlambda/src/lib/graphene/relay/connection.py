@@ -1,8 +1,14 @@
 import re
-from collections.abc import Iterable
+from collections import OrderedDict
+
+try:
+    from collections.abc import Iterable
+except ImportError:
+    from collections import Iterable
+
 from functools import partial
 
-from graphql_relay import connection_from_array
+from graphql_relay import connection_from_list
 
 from ..types import Boolean, Enum, Int, Interface, List, NonNull, Scalar, String, Union
 from ..types.field import Field
@@ -41,17 +47,6 @@ class PageInfo(ObjectType):
     )
 
 
-# noinspection PyPep8Naming
-def page_info_adapter(startCursor, endCursor, hasPreviousPage, hasNextPage):
-    """Adapter for creating PageInfo instances"""
-    return PageInfo(
-        start_cursor=startCursor,
-        end_cursor=endCursor,
-        has_previous_page=hasPreviousPage,
-        has_next_page=hasNextPage,
-    )
-
-
 class ConnectionOptions(ObjectTypeOptions):
     node = None
 
@@ -63,26 +58,30 @@ class Connection(ObjectType):
     @classmethod
     def __init_subclass_with_meta__(cls, node=None, name=None, **options):
         _meta = ConnectionOptions(cls)
-        assert node, f"You have to provide a node in {cls.__name__}.Meta"
+        assert node, "You have to provide a node in {}.Meta".format(cls.__name__)
         assert isinstance(node, NonNull) or issubclass(
             node, (Scalar, Enum, ObjectType, Interface, Union, NonNull)
-        ), f'Received incompatible node "{node}" for Connection {cls.__name__}.'
+        ), ('Received incompatible node "{}" for Connection {}.').format(
+            node, cls.__name__
+        )
 
         base_name = re.sub("Connection$", "", name or cls.__name__) or node._meta.name
         if not name:
-            name = f"{base_name}Connection"
+            name = "{}Connection".format(base_name)
 
         edge_class = getattr(cls, "Edge", None)
         _node = node
 
-        class EdgeBase:
+        class EdgeBase(object):
             node = Field(_node, description="The item at the end of the edge")
             cursor = String(required=True, description="A cursor for use in pagination")
 
         class EdgeMeta:
-            description = f"A Relay edge containing a `{base_name}` and its cursor."
+            description = "A Relay edge containing a `{}` and its cursor.".format(
+                base_name
+            )
 
-        edge_name = f"{base_name}Edge"
+        edge_name = "{}Edge".format(base_name)
         if edge_class:
             edge_bases = (edge_class, EdgeBase, ObjectType)
         else:
@@ -93,43 +92,45 @@ class Connection(ObjectType):
 
         options["name"] = name
         _meta.node = node
-        _meta.fields = {
-            "page_info": Field(
-                PageInfo,
-                name="pageInfo",
-                required=True,
-                description="Pagination data for this connection.",
-            ),
-            "edges": Field(
-                NonNull(List(edge)),
-                description="Contains the nodes in this connection.",
-            ),
-        }
+        _meta.fields = OrderedDict(
+            [
+                (
+                    "page_info",
+                    Field(
+                        PageInfo,
+                        name="pageInfo",
+                        required=True,
+                        description="Pagination data for this connection.",
+                    ),
+                ),
+                (
+                    "edges",
+                    Field(
+                        NonNull(List(edge)),
+                        description="Contains the nodes in this connection.",
+                    ),
+                ),
+            ]
+        )
         return super(Connection, cls).__init_subclass_with_meta__(
             _meta=_meta, **options
         )
 
 
-# noinspection PyPep8Naming
-def connection_adapter(cls, edges, pageInfo):
-    """Adapter for creating Connection instances"""
-    return cls(edges=edges, page_info=pageInfo)
-
-
 class IterableConnectionField(Field):
-    def __init__(self, type_, *args, **kwargs):
+    def __init__(self, type, *args, **kwargs):
         kwargs.setdefault("before", String())
         kwargs.setdefault("after", String())
         kwargs.setdefault("first", Int())
         kwargs.setdefault("last", Int())
-        super(IterableConnectionField, self).__init__(type_, *args, **kwargs)
+        super(IterableConnectionField, self).__init__(type, *args, **kwargs)
 
     @property
     def type(self):
-        type_ = super(IterableConnectionField, self).type
-        connection_type = type_
-        if isinstance(type_, NonNull):
-            connection_type = type_.of_type
+        type = super(IterableConnectionField, self).type
+        connection_type = type
+        if isinstance(type, NonNull):
+            connection_type = type.of_type
 
         if is_node(connection_type):
             raise Exception(
@@ -137,10 +138,10 @@ class IterableConnectionField(Field):
                 "Read more: https://github.com/graphql-python/graphene/blob/v2.0.0/UPGRADE-v2.0.md#node-connections"
             )
 
-        assert issubclass(
-            connection_type, Connection
-        ), f'{self.__class__.__name__} type has to be a subclass of Connection. Received "{connection_type}".'
-        return type_
+        assert issubclass(connection_type, Connection), (
+            '{} type have to be a subclass of Connection. Received "{}".'
+        ).format(self.__class__.__name__, connection_type)
+        return type
 
     @classmethod
     def resolve_connection(cls, connection_type, args, resolved):
@@ -148,15 +149,15 @@ class IterableConnectionField(Field):
             return resolved
 
         assert isinstance(resolved, Iterable), (
-            f"Resolved value from the connection field has to be an iterable or instance of {connection_type}. "
-            f'Received "{resolved}"'
-        )
-        connection = connection_from_array(
+            "Resolved value from the connection field have to be iterable or instance of {}. "
+            'Received "{}"'
+        ).format(connection_type, resolved)
+        connection = connection_from_list(
             resolved,
             args,
-            connection_type=partial(connection_adapter, connection_type),
+            connection_type=connection_type,
             edge_type=connection_type.Edge,
-            page_info_type=page_info_adapter,
+            pageinfo_type=PageInfo,
         )
         connection.iterable = resolved
         return connection
@@ -171,8 +172,8 @@ class IterableConnectionField(Field):
         on_resolve = partial(cls.resolve_connection, connection_type, args)
         return maybe_thenable(resolved, on_resolve)
 
-    def wrap_resolve(self, parent_resolver):
-        resolver = super(IterableConnectionField, self).wrap_resolve(parent_resolver)
+    def get_resolver(self, parent_resolver):
+        resolver = super(IterableConnectionField, self).get_resolver(parent_resolver)
         return partial(self.connection_resolver, resolver, self.type)
 
 

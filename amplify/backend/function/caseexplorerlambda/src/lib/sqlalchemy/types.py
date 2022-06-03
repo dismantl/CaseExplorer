@@ -1,5 +1,5 @@
 # types.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -13,7 +13,6 @@ __all__ = [
     "TypeEngine",
     "TypeDecorator",
     "UserDefinedType",
-    "ExternalType",
     "INT",
     "CHAR",
     "VARCHAR",
@@ -37,7 +36,6 @@ __all__ = [
     "INTEGER",
     "DATE",
     "TIME",
-    "TupleType",
     "String",
     "Integer",
     "SmallInteger",
@@ -105,13 +103,11 @@ from .sql.sqltypes import Text
 from .sql.sqltypes import TIME
 from .sql.sqltypes import Time
 from .sql.sqltypes import TIMESTAMP
-from .sql.sqltypes import TupleType
 from .sql.sqltypes import Unicode
 from .sql.sqltypes import UnicodeText
 from .sql.sqltypes import VARBINARY
 from .sql.sqltypes import VARCHAR
 from .sql.type_api import adapt_type
-from .sql.type_api import ExternalType
 from .sql.type_api import to_instance
 from .sql.type_api import TypeDecorator
 from .sql.type_api import TypeEngine

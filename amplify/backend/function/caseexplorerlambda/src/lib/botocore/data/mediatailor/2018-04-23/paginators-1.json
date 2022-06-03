@@ -41,12 +41,6 @@
       "limit_key": "MaxResults",
       "output_token": "NextToken",
       "result_key": "Items"
-    },
-    "ListLiveSources": {
-      "input_token": "NextToken",
-      "limit_key": "MaxResults",
-      "output_token": "NextToken",
-      "result_key": "Items"
     }
   }
 }

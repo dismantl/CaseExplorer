@@ -15,22 +15,16 @@ import logging
 
 import boto3
 
+
 logger = logging.getLogger(__name__)
 
 
-class ResourceMeta:
+class ResourceMeta(object):
     """
     An object containing metadata about a resource.
     """
-
-    def __init__(
-        self,
-        service_name,
-        identifiers=None,
-        client=None,
-        data=None,
-        resource_model=None,
-    ):
+    def __init__(self, service_name, identifiers=None, client=None,
+                 data=None, resource_model=None):
         #: (``string``) The service name, e.g. 's3'
         self.service_name = service_name
 
@@ -48,9 +42,8 @@ class ResourceMeta:
         self.resource_model = resource_model
 
     def __repr__(self):
-        return 'ResourceMeta(\'{}\', identifiers={})'.format(
-            self.service_name, self.identifiers
-        )
+        return 'ResourceMeta(\'{0}\', identifiers={1})'.format(
+            self.service_name, self.identifiers)
 
     def __eq__(self, other):
         # Two metas are equal if their components are all equal
@@ -68,7 +61,7 @@ class ResourceMeta:
         return ResourceMeta(service_name, **params)
 
 
-class ServiceResource:
+class ServiceResource(object):
     """
     A base class for resources.
 
@@ -115,22 +108,22 @@ class ServiceResource:
                 continue
 
             if name not in self.meta.identifiers:
-                raise ValueError(f'Unknown keyword argument: {name}')
+                raise ValueError('Unknown keyword argument: {0}'.format(name))
 
             setattr(self, '_' + name, value)
 
         # Validate that all identifiers have been set.
         for identifier in self.meta.identifiers:
             if getattr(self, identifier) is None:
-                raise ValueError(f'Required parameter {identifier} not set')
+                raise ValueError(
+                    'Required parameter {0} not set'.format(identifier))
 
     def __repr__(self):
         identifiers = []
         for identifier in self.meta.identifiers:
-            identifiers.append(
-                f'{identifier}={repr(getattr(self, identifier))}'
-            )
-        return "{}({})".format(
+            identifiers.append('{0}={1}'.format(
+                identifier, repr(getattr(self, identifier))))
+        return "{0}({1})".format(
             self.__class__.__name__,
             ', '.join(identifiers),
         )

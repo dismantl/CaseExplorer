@@ -1,12 +1,9 @@
-from textwrap import dedent
+import six
 
 from ..argument import Argument
 from ..enum import Enum, PyEnum
 from ..field import Field
 from ..inputfield import InputField
-from ..inputobjecttype import InputObjectType
-from ..mutation import Mutation
-from ..scalars import String
 from ..schema import ObjectType, Schema
 
 
@@ -20,14 +17,14 @@ def test_enum_construction():
 
         @property
         def description(self):
-            return f"Description {self.name}"
+            return "Description {}".format(self.name)
 
     assert RGB._meta.name == "RGB"
     assert RGB._meta.description == "Description"
 
     values = RGB._meta.enum.__members__.values()
-    assert sorted(v.name for v in values) == ["BLUE", "GREEN", "RED"]
-    assert sorted(v.description for v in values) == [
+    assert sorted([v.name for v in values]) == ["BLUE", "GREEN", "RED"]
+    assert sorted([v.description for v in values]) == [
         "Description BLUE",
         "Description GREEN",
         "Description RED",
@@ -52,7 +49,7 @@ def test_enum_instance_construction():
     RGB = Enum("RGB", "RED,GREEN,BLUE")
 
     values = RGB._meta.enum.__members__.values()
-    assert sorted(v.name for v in values) == ["BLUE", "GREEN", "RED"]
+    assert sorted([v.name for v in values]) == ["BLUE", "GREEN", "RED"]
 
 
 def test_enum_from_builtin_enum():
@@ -85,22 +82,42 @@ def test_enum_from_builtin_enum_accepts_lambda_description():
     class Query(ObjectType):
         foo = Episode()
 
-    schema = Schema(query=Query).graphql_schema
+    schema = Schema(query=Query)
 
-    episode = schema.get_type("PyEpisode")
+    GraphQLPyEpisode = schema._type_map["PyEpisode"].values
 
-    assert episode.description == "StarWars Episodes"
-    assert [
-        (name, value.description, value.deprecation_reason)
-        for name, value in episode.values.items()
-    ] == [
-        ("NEWHOPE", "New Hope Episode", "meh"),
-        ("EMPIRE", "Other", None),
-        ("JEDI", "Other", None),
-    ]
+    assert schema._type_map["PyEpisode"].description == "StarWars Episodes"
+    assert (
+        GraphQLPyEpisode[0].name == "NEWHOPE"
+        and GraphQLPyEpisode[0].description == "New Hope Episode"
+    )
+    assert (
+        GraphQLPyEpisode[1].name == "EMPIRE"
+        and GraphQLPyEpisode[1].description == "Other"
+    )
+    assert (
+        GraphQLPyEpisode[2].name == "JEDI"
+        and GraphQLPyEpisode[2].description == "Other"
+    )
+
+    assert (
+        GraphQLPyEpisode[0].name == "NEWHOPE"
+        and GraphQLPyEpisode[0].deprecation_reason == "meh"
+    )
+    assert (
+        GraphQLPyEpisode[1].name == "EMPIRE"
+        and GraphQLPyEpisode[1].deprecation_reason is None
+    )
+    assert (
+        GraphQLPyEpisode[2].name == "JEDI"
+        and GraphQLPyEpisode[2].deprecation_reason is None
+    )
 
 
 def test_enum_from_python3_enum_uses_enum_doc():
+    if not six.PY3:
+        return
+
     from enum import Enum as PyEnum
 
     class Color(PyEnum):
@@ -177,7 +194,7 @@ def test_enum_can_be_compared():
     assert RGB.BLUE == 3
 
 
-def test_enum_can_be_initialized():
+def test_enum_can_be_initialzied():
     class RGB(Enum):
         RED = 1
         GREEN = 2
@@ -229,246 +246,3 @@ def test_enum_skip_meta_from_members():
         "GREEN": RGB1.GREEN,
         "BLUE": RGB1.BLUE,
     }
-
-
-def test_enum_types():
-    from enum import Enum as PyEnum
-
-    class Color(PyEnum):
-        """Primary colors"""
-
-        RED = 1
-        YELLOW = 2
-        BLUE = 3
-
-    GColor = Enum.from_enum(Color)
-
-    class Query(ObjectType):
-        color = GColor(required=True)
-
-        def resolve_color(_, info):
-            return Color.RED
-
-    schema = Schema(query=Query)
-
-    assert (
-        str(schema).strip()
-        == dedent(
-            '''
-            type Query {
-              color: Color!
-            }
-
-            """Primary colors"""
-            enum Color {
-              RED
-              YELLOW
-              BLUE
-            }
-            '''
-        ).strip()
-    )
-
-
-def test_enum_resolver():
-    from enum import Enum as PyEnum
-
-    class Color(PyEnum):
-        RED = 1
-        GREEN = 2
-        BLUE = 3
-
-    GColor = Enum.from_enum(Color)
-
-    class Query(ObjectType):
-        color = GColor(required=True)
-
-        def resolve_color(_, info):
-            return Color.RED
-
-    schema = Schema(query=Query)
-
-    results = schema.execute("query { color }")
-    assert not results.errors
-
-    assert results.data["color"] == Color.RED.name
-
-
-def test_enum_resolver_compat():
-    from enum import Enum as PyEnum
-
-    class Color(PyEnum):
-        RED = 1
-        GREEN = 2
-        BLUE = 3
-
-    GColor = Enum.from_enum(Color)
-
-    class Query(ObjectType):
-        color = GColor(required=True)
-        color_by_name = GColor(required=True)
-
-        def resolve_color(_, info):
-            return Color.RED.value
-
-        def resolve_color_by_name(_, info):
-            return Color.RED.name
-
-    schema = Schema(query=Query)
-
-    results = schema.execute(
-        """query {
-            color
-            colorByName
-        }"""
-    )
-    assert not results.errors
-
-    assert results.data["color"] == Color.RED.name
-    assert results.data["colorByName"] == Color.RED.name
-
-
-def test_enum_resolver_invalid():
-    from enum import Enum as PyEnum
-
-    class Color(PyEnum):
-        RED = 1
-        GREEN = 2
-        BLUE = 3
-
-    GColor = Enum.from_enum(Color)
-
-    class Query(ObjectType):
-        color = GColor(required=True)
-
-        def resolve_color(_, info):
-            return "BLACK"
-
-    schema = Schema(query=Query)
-
-    results = schema.execute("query { color }")
-    assert results.errors
-    assert results.errors[0].message == "Enum 'Color' cannot represent value: 'BLACK'"
-
-
-def test_field_enum_argument():
-    class Color(Enum):
-        RED = 1
-        GREEN = 2
-        BLUE = 3
-
-    class Brick(ObjectType):
-        color = Color(required=True)
-
-    color_filter = None
-
-    class Query(ObjectType):
-        bricks_by_color = Field(Brick, color=Color(required=True))
-
-        def resolve_bricks_by_color(_, info, color):
-            nonlocal color_filter
-            color_filter = color
-            return Brick(color=color)
-
-    schema = Schema(query=Query)
-
-    results = schema.execute(
-        """
-        query {
-            bricksByColor(color: RED) {
-                color
-            }
-        }
-    """
-    )
-    assert not results.errors
-    assert results.data == {"bricksByColor": {"color": "RED"}}
-    assert color_filter == Color.RED
-
-
-def test_mutation_enum_input():
-    class RGB(Enum):
-        """Available colors"""
-
-        RED = 1
-        GREEN = 2
-        BLUE = 3
-
-    color_input = None
-
-    class CreatePaint(Mutation):
-        class Arguments:
-            color = RGB(required=True)
-
-        color = RGB(required=True)
-
-        def mutate(_, info, color):
-            nonlocal color_input
-            color_input = color
-            return CreatePaint(color=color)
-
-    class MyMutation(ObjectType):
-        create_paint = CreatePaint.Field()
-
-    class Query(ObjectType):
-        a = String()
-
-    schema = Schema(query=Query, mutation=MyMutation)
-    result = schema.execute(
-        """ mutation MyMutation {
-        createPaint(color: RED) {
-            color
-        }
-    }
-    """
-    )
-    assert not result.errors
-    assert result.data == {"createPaint": {"color": "RED"}}
-
-    assert color_input == RGB.RED
-
-
-def test_mutation_enum_input_type():
-    class RGB(Enum):
-        """Available colors"""
-
-        RED = 1
-        GREEN = 2
-        BLUE = 3
-
-    class ColorInput(InputObjectType):
-        color = RGB(required=True)
-
-    color_input_value = None
-
-    class CreatePaint(Mutation):
-        class Arguments:
-            color_input = ColorInput(required=True)
-
-        color = RGB(required=True)
-
-        def mutate(_, info, color_input):
-            nonlocal color_input_value
-            color_input_value = color_input.color
-            return CreatePaint(color=color_input.color)
-
-    class MyMutation(ObjectType):
-        create_paint = CreatePaint.Field()
-
-    class Query(ObjectType):
-        a = String()
-
-    schema = Schema(query=Query, mutation=MyMutation)
-    result = schema.execute(
-        """
-        mutation MyMutation {
-            createPaint(colorInput: { color: RED }) {
-                color
-            }
-        }
-        """
-    )
-    assert not result.errors
-    assert result.data == {"createPaint": {"color": "RED"}}
-
-    assert color_input_value == RGB.RED

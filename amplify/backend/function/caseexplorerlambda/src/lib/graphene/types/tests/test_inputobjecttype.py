@@ -8,7 +8,7 @@ from ..schema import Schema
 from ..unmountedtype import UnmountedType
 
 
-class MyType:
+class MyType(object):
     pass
 
 
@@ -50,7 +50,7 @@ def test_ordered_fields_in_inputobjecttype():
         field = MyScalar()
         asa = InputField(MyType)
 
-    assert list(MyInputObjectType._meta.fields) == ["b", "a", "field", "asa"]
+    assert list(MyInputObjectType._meta.fields.keys()) == ["b", "a", "field", "asa"]
 
 
 def test_generate_inputobjecttype_unmountedtype():
@@ -78,13 +78,13 @@ def test_generate_inputobjecttype_as_argument():
 
 
 def test_generate_inputobjecttype_inherit_abstracttype():
-    class MyAbstractType:
+    class MyAbstractType(object):
         field1 = MyScalar(MyType)
 
     class MyInputObjectType(InputObjectType, MyAbstractType):
         field2 = MyScalar(MyType)
 
-    assert list(MyInputObjectType._meta.fields) == ["field1", "field2"]
+    assert list(MyInputObjectType._meta.fields.keys()) == ["field1", "field2"]
     assert [type(x) for x in MyInputObjectType._meta.fields.values()] == [
         InputField,
         InputField,
@@ -92,13 +92,13 @@ def test_generate_inputobjecttype_inherit_abstracttype():
 
 
 def test_generate_inputobjecttype_inherit_abstracttype_reversed():
-    class MyAbstractType:
+    class MyAbstractType(object):
         field1 = MyScalar(MyType)
 
     class MyInputObjectType(MyAbstractType, InputObjectType):
         field2 = MyScalar(MyType)
 
-    assert list(MyInputObjectType._meta.fields) == ["field1", "field2"]
+    assert list(MyInputObjectType._meta.fields.keys()) == ["field1", "field2"]
     assert [type(x) for x in MyInputObjectType._meta.fields.values()] == [
         InputField,
         InputField,
@@ -112,7 +112,7 @@ def test_inputobjecttype_of_input():
 
         @property
         def full_name(self):
-            return f"{self.first_name} {self.last_name}"
+            return "{} {}".format(self.first_name, self.last_name)
 
     class Parent(InputObjectType):
         child = InputField(Child)
@@ -133,6 +133,5 @@ def test_inputobjecttype_of_input():
     }
     """
     )
-
     assert not result.errors
     assert result.data == {"isChild": True}

@@ -1,5 +1,5 @@
 # postgresql/ext.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -54,7 +54,6 @@ class aggregate_order_by(expression.ColumnElement):
     __visit_name__ = "aggregate_order_by"
 
     stringify_dialect = "postgresql"
-    inherit_cache = False
 
     def __init__(self, target, *order_by):
         self.target = coercions.expect(roles.ExpressionElementRole, target)
@@ -100,7 +99,6 @@ class ExcludeConstraint(ColumnCollectionConstraint):
     __visit_name__ = "exclude_constraint"
 
     where = None
-    inherit_cache = False
 
     create_drop_stringify_dialect = "postgresql"
 

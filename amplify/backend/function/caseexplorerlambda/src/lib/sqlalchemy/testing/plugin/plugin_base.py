@@ -1,5 +1,5 @@
 # plugin/plugin_base.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -101,7 +101,7 @@ def setup_options(make_option):
     make_option(
         "--dbdriver",
         action="append",
-        type=str,
+        type="string",
         dest="dbdriver",
         help="Additional database drivers to include in tests.  "
         "These are linked to the existing database URLs by the "

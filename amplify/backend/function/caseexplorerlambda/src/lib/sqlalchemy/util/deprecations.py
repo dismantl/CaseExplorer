@@ -1,5 +1,5 @@
 # util/deprecations.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -27,10 +27,7 @@ if os.getenv("SQLALCHEMY_WARN_20", "false").lower() in ("true", "yes", "1"):
 
 
 def _warn_with_version(msg, version, type_, stacklevel, code=None):
-    if (
-        issubclass(type_, exc.Base20DeprecationWarning)
-        and not SQLALCHEMY_WARN_20
-    ):
+    if issubclass(type_, exc.RemovedIn20Warning) and not SQLALCHEMY_WARN_20:
         return
 
     warn = type_(msg, code=code)
@@ -101,18 +98,13 @@ def deprecated_20_cls(
     if alternative:
         message += " " + alternative
 
-    if becomes_legacy:
-        warning_cls = exc.LegacyAPIWarning
-    else:
-        warning_cls = exc.RemovedIn20Warning
-
     def decorate(cls):
         return _decorate_cls_with_warning(
             cls,
             constructor,
-            warning_cls,
+            exc.RemovedIn20Warning,
             message,
-            warning_cls.deprecated_since,
+            exc.RemovedIn20Warning.deprecated_since,
             message,
         )
 
@@ -219,12 +211,9 @@ def deprecated_20(api_name, alternative=None, becomes_legacy=False, **kw):
     if alternative:
         message += " " + alternative
 
-    if becomes_legacy:
-        warning_cls = exc.LegacyAPIWarning
-    else:
-        warning_cls = exc.RemovedIn20Warning
-
-    return deprecated("2.0", message=message, warning=warning_cls, **kw)
+    return deprecated(
+        "2.0", message=message, warning=exc.RemovedIn20Warning, **kw
+    )
 
 
 def deprecated_params(**specs):
@@ -345,7 +334,7 @@ def _decorate_cls_with_warning(
         if constructor is not None:
             docstring_header %= dict(func=constructor)
 
-        if issubclass(wtype, exc.Base20DeprecationWarning):
+        if issubclass(wtype, exc.RemovedIn20Warning):
             docstring_header += (
                 " (Background on SQLAlchemy 2.0 at: "
                 ":ref:`migration_20_toplevel`)"
@@ -383,7 +372,7 @@ def _decorate_with_warning(
 
     message = _sanitize_restructured_text(message)
 
-    if issubclass(wtype, exc.Base20DeprecationWarning):
+    if issubclass(wtype, exc.RemovedIn20Warning):
         doc_only = (
             " (Background on SQLAlchemy 2.0 at: "
             ":ref:`migration_20_toplevel`)"

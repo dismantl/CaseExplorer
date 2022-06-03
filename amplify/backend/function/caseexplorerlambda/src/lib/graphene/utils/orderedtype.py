@@ -2,7 +2,7 @@ from functools import total_ordering
 
 
 @total_ordering
-class OrderedType:
+class OrderedType(object):
     creation_counter = 1
 
     def __init__(self, _creation_counter=None):
@@ -36,4 +36,4 @@ class OrderedType:
         return NotImplemented
 
     def __hash__(self):
-        return hash(self.creation_counter)
+        return hash((self.creation_counter))

@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from ..utils.deprecated import warn_deprecation
 from ..utils.get_unbound_function import get_unbound_function
 from ..utils.props import props
@@ -72,44 +74,56 @@ class Mutation(ObjectType):
         output=None,
         arguments=None,
         _meta=None,
-        **options,
+        **options
     ):
         if not _meta:
             _meta = MutationOptions(cls)
+
         output = output or getattr(cls, "Output", None)
         fields = {}
 
         for interface in interfaces:
-            assert issubclass(
-                interface, Interface
-            ), f'All interfaces of {cls.__name__} must be a subclass of Interface. Received "{interface}".'
+            assert issubclass(interface, Interface), (
+                'All interfaces of {} must be a subclass of Interface. Received "{}".'
+            ).format(cls.__name__, interface)
             fields.update(interface._meta.fields)
+
         if not output:
             # If output is defined, we don't need to get the fields
-            fields = {}
+            fields = OrderedDict()
             for base in reversed(cls.__mro__):
                 fields.update(yank_fields_from_attrs(base.__dict__, _as=Field))
             output = cls
+
         if not arguments:
             input_class = getattr(cls, "Arguments", None)
             if not input_class:
                 input_class = getattr(cls, "Input", None)
                 if input_class:
                     warn_deprecation(
-                        f"Please use {cls.__name__}.Arguments instead of {cls.__name__}.Input."
-                        " Input is now only used in ClientMutationID.\n"
-                        "Read more:"
-                        " https://github.com/graphql-python/graphene/blob/v2.0.0/UPGRADE-v2.0.md#mutation-input"
+                        (
+                            "Please use {name}.Arguments instead of {name}.Input."
+                            "Input is now only used in ClientMutationID.\n"
+                            "Read more:"
+                            " https://github.com/graphql-python/graphene/blob/v2.0.0/UPGRADE-v2.0.md#mutation-input"
+                        ).format(name=cls.__name__)
                     )
-            arguments = props(input_class) if input_class else {}
+
+            if input_class:
+                arguments = props(input_class)
+            else:
+                arguments = {}
+
         if not resolver:
             mutate = getattr(cls, "mutate", None)
             assert mutate, "All mutations must define a mutate method in it"
             resolver = get_unbound_function(mutate)
+
         if _meta.fields:
             _meta.fields.update(fields)
         else:
             _meta.fields = fields
+
         _meta.interfaces = interfaces
         _meta.output = output
         _meta.resolver = resolver

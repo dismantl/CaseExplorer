@@ -1,4 +1,4 @@
-from pytest import raises
+import pytest
 
 from ..field import Field
 from ..objecttype import ObjectType
@@ -38,7 +38,7 @@ def test_generate_union_with_meta():
 
 
 def test_generate_union_with_no_types():
-    with raises(Exception) as exc_info:
+    with pytest.raises(Exception) as exc_info:
 
         class MyUnion(Union):
             pass

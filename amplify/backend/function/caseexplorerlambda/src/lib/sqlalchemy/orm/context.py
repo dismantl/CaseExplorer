@@ -1,5 +1,5 @@
 # orm/context.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -22,7 +22,6 @@ from .. import future
 from .. import inspect
 from .. import sql
 from .. import util
-from ..sql import ClauseElement
 from ..sql import coercions
 from ..sql import expression
 from ..sql import roles
@@ -107,27 +106,7 @@ class QueryContext(object):
         self.params = params
 
         self.propagated_loader_options = {
-            # issue 7447.
-            # propagated loader options will be present on loaded InstanceState
-            # objects under state.load_options and are typically used by
-            # LazyLoader to apply options to the SELECT statement it emits.
-            # For compile state options (i.e. loader strategy options), these
-            # need to line up with the ".load_path" attribute which in
-            # loader.py is pulled from context.compile_state.current_path.
-            # so, this means these options have to be the ones from the
-            # *cached* statement that's travelling with compile_state, not the
-            # *current* statement which won't match up for an ad-hoc
-            # AliasedClass
-            cached_o
-            for cached_o in compile_state.select_statement._with_options
-            if cached_o.propagate_to_loaders and cached_o._is_compile_state
-        } | {
-            # for user defined loader options that are not "compile state",
-            # those just need to be present as they are
-            uncached_o
-            for uncached_o in statement._with_options
-            if uncached_o.propagate_to_loaders
-            and not uncached_o._is_compile_state
+            o for o in statement._with_options if o.propagate_to_loaders
         }
 
         self.attributes = dict(compile_state.attributes)
@@ -383,12 +362,6 @@ class ORMCompileState(CompileState):
             for m in m2.iterate_to_root():  # TODO: redundant ?
                 self._polymorphic_adapters[m.local_table] = adapter
 
-    @classmethod
-    def _create_entities_collection(cls, query, legacy):
-        raise NotImplementedError(
-            "this method only works for ORMSelectCompileState"
-        )
-
 
 @sql.base.CompileState.plugin_for("orm", "orm_from_statement")
 class ORMFromStatementCompileState(ORMCompileState):
@@ -495,8 +468,8 @@ class ORMFromStatementCompileState(ORMCompileState):
                 entity.setup_compile_state(self)
 
             # we did the setup just to get primary columns.
-            self.statement = _AdHocColumnsStatement(
-                self.statement, self.primary_columns
+            self.statement = expression.TextualSelect(
+                self.statement, self.primary_columns, positional=False
             )
         else:
             # allow TextualSelect with implicit columns as well
@@ -521,65 +494,6 @@ class ORMFromStatementCompileState(ORMCompileState):
 
     def _get_current_adapter(self):
         return None
-
-
-class _AdHocColumnsStatement(ClauseElement):
-    """internal object created to somewhat act like a SELECT when we
-    are selecting columns from a DML RETURNING.
-
-
-    """
-
-    __visit_name__ = None
-
-    def __init__(self, text, columns):
-        self.element = text
-        self.column_args = [
-            coercions.expect(roles.ColumnsClauseRole, c) for c in columns
-        ]
-
-    def _generate_cache_key(self):
-        raise NotImplementedError()
-
-    def _gen_cache_key(self, anon_map, bindparams):
-        raise NotImplementedError()
-
-    def _compiler_dispatch(
-        self, compiler, compound_index=None, asfrom=False, **kw
-    ):
-        """provide a fixed _compiler_dispatch method."""
-
-        toplevel = not compiler.stack
-        entry = (
-            compiler._default_stack_entry if toplevel else compiler.stack[-1]
-        )
-
-        populate_result_map = (
-            toplevel
-            # these two might not be needed
-            or (
-                compound_index == 0
-                and entry.get("need_result_map_for_compound", False)
-            )
-            or entry.get("need_result_map_for_nested", False)
-        )
-
-        if populate_result_map:
-            compiler._ordered_columns = (
-                compiler._textual_ordered_columns
-            ) = False
-
-            # enable looser result column matching.  this is shown to be
-            # needed by test_query.py::TextTest
-            compiler._loose_column_name_matching = True
-
-            for c in self.column_args:
-                compiler.process(
-                    c,
-                    within_columns_clause=True,
-                    add_to_result_map=compiler._add_to_result_map,
-                )
-        return compiler.process(self.element, **kw)
 
 
 @sql.base.CompileState.plugin_for("orm", "select")
@@ -676,6 +590,10 @@ class ORMSelectCompileState(ORMCompileState, SelectState):
         else:
             self.label_style = self.select_statement._label_style
 
+        self._label_convention = self._column_naming_convention(
+            statement._label_style, self.use_legacy_query_style
+        )
+
         if select_statement._memoized_select_entities:
             self._memoized_entities = {
                 memoized_entities: _QueryEntity.to_compile_state(
@@ -688,14 +606,6 @@ class ORMSelectCompileState(ORMCompileState, SelectState):
                     select_statement._memoized_select_entities
                 )
             }
-
-        # label_convention is stateful and will yield deduping keys if it
-        # sees the same key twice.  therefore it's important that it is not
-        # invoked for the above "memoized" entities that aren't actually
-        # in the columns clause
-        self._label_convention = self._column_naming_convention(
-            statement._label_style, self.use_legacy_query_style
-        )
 
         _QueryEntity.to_compile_state(
             self,
@@ -851,7 +761,7 @@ class ORMSelectCompileState(ORMCompileState, SelectState):
                     for s in query._correlate
                 )
             )
-        elif query._correlate_except is not None:
+        elif query._correlate_except:
             self.correlate_except = tuple(
                 util.flatten_iterator(
                     sql_util.surface_selectables(s) if s is not None else None
@@ -1293,7 +1203,7 @@ class ORMSelectCompileState(ORMCompileState, SelectState):
         if correlate:
             statement.correlate.non_generative(statement, *correlate)
 
-        if correlate_except is not None:
+        if correlate_except:
             statement.correlate_except.non_generative(
                 statement, *correlate_except
             )
@@ -1341,12 +1251,8 @@ class ORMSelectCompileState(ORMCompileState, SelectState):
 
         adapters = []
 
+        # vvvvvvvvvvvvvvv legacy vvvvvvvvvvvvvvvvvv
         if self._from_obj_alias:
-            # used for legacy going forward for query set_ops, e.g.
-            # union(), union_all(), etc.
-            # 1.4 and previously, also used for from_self(),
-            # select_entity_from()
-            #
             # for the "from obj" alias, apply extra rule to the
             # 'ORM only' check, if this query were generated from a
             # subquery of itself, i.e. _from_selectable(), apply adaption
@@ -1360,15 +1266,11 @@ class ORMSelectCompileState(ORMCompileState, SelectState):
                 )
             )
 
-        # vvvvvvvvvvvvvvv legacy vvvvvvvvvvvvvvvvvv
-        # this can totally go away when we remove join(..., aliased=True)
         if self._aliased_generations:
             adapters.append((False, self._adapt_aliased_generation))
         # ^^^^^^^^^^^^^ legacy ^^^^^^^^^^^^^^^^^^^^^
 
-        # this was *hopefully* the only adapter we were going to need
-        # going forward...however, we unfortunately need _from_obj_alias
-        # for query.union(), which we can't drop
+        # this is the only adapter we would need going forward...
         if self._polymorphic_adapters:
             adapters.append((False, self._adapt_polymorphic_element))
 
@@ -2213,8 +2115,7 @@ class ORMSelectCompileState(ORMCompileState, SelectState):
                 for ae in self.global_attributes[
                     ("additional_entity_criteria", ext_info.mapper)
                 ]
-                if (ae.include_aliases or ae.entity is ext_info)
-                and ae._should_include(self)
+                if ae.include_aliases or ae.entity is ext_info
             )
         else:
             return ()
@@ -2258,10 +2159,7 @@ class ORMSelectCompileState(ORMCompileState, SelectState):
 
             single_crit = ext_info.mapper._single_table_criterion
 
-            if self.compile_options._for_refresh_state:
-                additional_entity_criteria = []
-            else:
-                additional_entity_criteria = self._get_extra_criteria(ext_info)
+            additional_entity_criteria = self._get_extra_criteria(ext_info)
 
             if single_crit is not None:
                 additional_entity_criteria += (single_crit,)
@@ -2448,15 +2346,11 @@ class _QueryEntity(object):
                             entity._select_iterable,
                             entities_collection,
                             idx,
-                            is_current_entities,
                         )
                 else:
                     if entity._annotations.get("bundle", False):
                         _BundleEntity(
-                            compile_state,
-                            entity,
-                            entities_collection,
-                            is_current_entities,
+                            compile_state, entity, entities_collection
                         )
                     elif entity._is_clause_list:
                         # this is legacy only - test_composites.py
@@ -2466,15 +2360,10 @@ class _QueryEntity(object):
                             entity._select_iterable,
                             entities_collection,
                             idx,
-                            is_current_entities,
                         )
                     else:
                         _ColumnEntity._for_columns(
-                            compile_state,
-                            [entity],
-                            entities_collection,
-                            idx,
-                            is_current_entities,
+                            compile_state, [entity], entities_collection, idx
                         )
             elif entity.is_bundle:
                 _BundleEntity(compile_state, entity, entities_collection)
@@ -2679,7 +2568,6 @@ class _BundleEntity(_QueryEntity):
         compile_state,
         expr,
         entities_collection,
-        is_current_entities,
         setup_entities=True,
         parent_bundle=None,
     ):
@@ -2710,7 +2598,6 @@ class _BundleEntity(_QueryEntity):
                         compile_state,
                         expr,
                         entities_collection,
-                        is_current_entities,
                         parent_bundle=self,
                     )
                 elif isinstance(expr, Bundle):
@@ -2718,7 +2605,6 @@ class _BundleEntity(_QueryEntity):
                         compile_state,
                         expr,
                         entities_collection,
-                        is_current_entities,
                         parent_bundle=self,
                     )
                 else:
@@ -2727,7 +2613,6 @@ class _BundleEntity(_QueryEntity):
                         [expr],
                         entities_collection,
                         None,
-                        is_current_entities,
                         parent_bundle=self,
                     )
 
@@ -2801,7 +2686,6 @@ class _ColumnEntity(_QueryEntity):
         columns,
         entities_collection,
         raw_column_index,
-        is_current_entities,
         parent_bundle=None,
     ):
         for column in columns:
@@ -2821,7 +2705,6 @@ class _ColumnEntity(_QueryEntity):
                         entities_collection,
                         _entity,
                         raw_column_index,
-                        is_current_entities,
                         parent_bundle=parent_bundle,
                     )
                 else:
@@ -2831,7 +2714,6 @@ class _ColumnEntity(_QueryEntity):
                         entities_collection,
                         _entity,
                         raw_column_index,
-                        is_current_entities,
                         parent_bundle=parent_bundle,
                     )
             else:
@@ -2840,7 +2722,6 @@ class _ColumnEntity(_QueryEntity):
                     column,
                     entities_collection,
                     raw_column_index,
-                    is_current_entities,
                     parent_bundle=parent_bundle,
                 )
 
@@ -2931,14 +2812,12 @@ class _RawColumnEntity(_ColumnEntity):
         column,
         entities_collection,
         raw_column_index,
-        is_current_entities,
         parent_bundle=None,
     ):
         self.expr = column
         self.raw_column_index = raw_column_index
         self.translate_raw_column = raw_column_index is not None
-
-        if not is_current_entities or column._is_text_clause:
+        if column._is_text_clause:
             self._label_name = None
         else:
             self._label_name = compile_state._label_convention(column)
@@ -2997,7 +2876,6 @@ class _ORMColumnEntity(_ColumnEntity):
         entities_collection,
         parententity,
         raw_column_index,
-        is_current_entities,
         parent_bundle=None,
     ):
         annotations = column._annotations
@@ -3024,13 +2902,9 @@ class _ORMColumnEntity(_ColumnEntity):
             self.translate_raw_column = raw_column_index is not None
 
         self.raw_column_index = raw_column_index
-
-        if is_current_entities:
-            self._label_name = compile_state._label_convention(
-                column, col_name=orm_key
-            )
-        else:
-            self._label_name = None
+        self._label_name = compile_state._label_convention(
+            column, col_name=orm_key
+        )
 
         _entity._post_inspect
         self.entity_zero = self.entity_zero_or_selectable = ezero = _entity

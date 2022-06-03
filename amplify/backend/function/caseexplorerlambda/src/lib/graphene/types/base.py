@@ -1,10 +1,12 @@
-from typing import Type
-
-from ..utils.subclass_with_meta import SubclassWithMeta, SubclassWithMeta_Meta
+from ..utils.subclass_with_meta import SubclassWithMeta
 from ..utils.trim_docstring import trim_docstring
+import six
+
+if six.PY3:
+    from typing import Type
 
 
-class BaseOptions:
+class BaseOptions(object):
     name = None  # type: str
     description = None  # type: str
 
@@ -20,13 +22,10 @@ class BaseOptions:
         if not self._frozen:
             super(BaseOptions, self).__setattr__(name, value)
         else:
-            raise Exception(f"Can't modify frozen Options {self}")
+            raise Exception("Can't modify frozen Options {}".format(self))
 
     def __repr__(self):
-        return f"<{self.__class__.__name__} name={repr(self.name)}>"
-
-
-BaseTypeMeta = SubclassWithMeta_Meta
+        return "<{} name={}>".format(self.__class__.__name__, repr(self.name))
 
 
 class BaseType(SubclassWithMeta):
@@ -38,7 +37,7 @@ class BaseType(SubclassWithMeta):
     def __init_subclass_with_meta__(
         cls, name=None, description=None, _meta=None, **_kwargs
     ):
-        assert "_meta" not in cls.__dict__, "Can't assign meta directly"
+        assert "_meta" not in cls.__dict__, "Can't assign directly meta"
         if not _meta:
             return
         _meta.name = name or cls.__name__

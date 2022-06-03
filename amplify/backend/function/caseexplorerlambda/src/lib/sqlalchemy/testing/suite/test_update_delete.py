@@ -8,7 +8,6 @@ from ... import String
 
 class SimpleUpdateDeleteTest(fixtures.TablesTest):
     run_deletes = "each"
-    __requires__ = ("sane_rowcount",)
     __backend__ = True
 
     @classmethod

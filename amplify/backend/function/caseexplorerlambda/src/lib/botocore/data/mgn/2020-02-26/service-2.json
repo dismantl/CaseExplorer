@@ -97,22 +97,6 @@
       "documentation":"<p>Deletes a single source server by ID.</p>",
       "idempotent":true
     },
-    "DeleteVcenterClient":{
-      "name":"DeleteVcenterClient",
-      "http":{
-        "method":"POST",
-        "requestUri":"/DeleteVcenterClient",
-        "responseCode":204
-      },
-      "input":{"shape":"DeleteVcenterClientRequest"},
-      "errors":[
-        {"shape":"UninitializedAccountException"},
-        {"shape":"ResourceNotFoundException"},
-        {"shape":"ValidationException"}
-      ],
-      "documentation":"<p>Deletes a given vCenter client by ID.</p>",
-      "idempotent":true
-    },
     "DescribeJobLogItems":{
       "name":"DescribeJobLogItems",
       "http":{
@@ -126,7 +110,7 @@
         {"shape":"UninitializedAccountException"},
         {"shape":"ValidationException"}
       ],
-      "documentation":"<p>Retrieves detailed job log items with paging.</p>"
+      "documentation":"<p>Retrieves detailed Job log with paging.</p>"
     },
     "DescribeJobs":{
       "name":"DescribeJobs",
@@ -141,7 +125,7 @@
         {"shape":"UninitializedAccountException"},
         {"shape":"ValidationException"}
       ],
-      "documentation":"<p>Returns a list of Jobs. Use the JobsID and fromDate and toData filters to limit which jobs are returned. The response is sorted by creationDataTime - latest date first. Jobs are normally created by the StartTest, StartCutover, and TerminateTargetInstances APIs. Jobs are also created by DiagnosticLaunch and TerminateDiagnosticInstances, which are APIs available only to *Support* and only used in response to relevant support tickets.</p>"
+      "documentation":"<p>Returns a list of Jobs. Use the JobsID and fromDate and toData filters to limit which jobs are returned. The response is sorted by creationDataTime - latest date first. Jobs are normaly created by the StartTest, StartCutover, and TerminateTargetInstances APIs. Jobs are also created by DiagnosticLaunch and TerminateDiagnosticInstances, which are APIs available only to *Support* and only used in response to relevant support tickets.</p>"
     },
     "DescribeReplicationConfigurationTemplates":{
       "name":"DescribeReplicationConfigurationTemplates",
@@ -174,22 +158,6 @@
       ],
       "documentation":"<p>Retrieves all SourceServers or multiple SourceServers by ID.</p>"
     },
-    "DescribeVcenterClients":{
-      "name":"DescribeVcenterClients",
-      "http":{
-        "method":"GET",
-        "requestUri":"/DescribeVcenterClients",
-        "responseCode":200
-      },
-      "input":{"shape":"DescribeVcenterClientsRequest"},
-      "output":{"shape":"DescribeVcenterClientsResponse"},
-      "errors":[
-        {"shape":"UninitializedAccountException"},
-        {"shape":"ResourceNotFoundException"},
-        {"shape":"ValidationException"}
-      ],
-      "documentation":"<p>Returns a list of the installed vCenter clients.</p>"
-    },
     "DisconnectFromService":{
       "name":"DisconnectFromService",
       "http":{
@@ -204,7 +172,7 @@
         {"shape":"ResourceNotFoundException"},
         {"shape":"ConflictException"}
       ],
-      "documentation":"<p>Disconnects specific Source Servers from Application Migration Service. Data replication is stopped immediately. All AWS resources created by Application Migration Service for enabling the replication of these source servers will be terminated / deleted within 90 minutes. Launched Test or Cutover instances will NOT be terminated. If the agent on the source server has not been prevented from communicating with the Application Migration Service service, then it will receive a command to uninstall itself (within approximately 10 minutes). The following properties of the SourceServer will be changed immediately: dataReplicationInfo.dataReplicationState will be set to DISCONNECTED; The totalStorageBytes property for each of dataReplicationInfo.replicatedDisks will be set to zero; dataReplicationInfo.lagDuration and dataReplicationInfo.lagDuration will be nullified.</p>"
+      "documentation":"<p>Disconnects specific Source Servers from Application Migration Service. Data replication is stopped immediately. All AWS resources created by Application Migration Service for enabling the replication of these source servers will be terminated / deleted within 90 minutes. Launched Test or Cutover instances will NOT be terminated. If the agent on the source server has not been prevented from communciating with the Application Migration Service service, then it will receive a command to uninstall itself (within approximately 10 minutes). The following properties of the SourceServer will be changed immediately: dataReplicationInfo.dataReplicationState will be set to DISCONNECTED; The totalStorageBytes property for each of dataReplicationInfo.replicatedDisks will be set to zero; dataReplicationInfo.lagDuration and dataReplicationInfo.lagDurationwill be nullified.</p>"
     },
     "FinalizeCutover":{
       "name":"FinalizeCutover",
@@ -221,7 +189,7 @@
         {"shape":"ValidationException"},
         {"shape":"ConflictException"}
       ],
-      "documentation":"<p>Finalizes the cutover immediately for specific Source Servers. All AWS resources created by Application Migration Service for enabling the replication of these source servers will be terminated / deleted within 90 minutes. Launched Test or Cutover instances will NOT be terminated. The AWS Replication Agent will receive a command to uninstall itself (within 10 minutes). The following properties of the SourceServer will be changed immediately: dataReplicationInfo.dataReplicationState will be changed to DISCONNECTED; The SourceServer.lifeCycle.state will be changed to CUTOVER; The totalStorageBytes property fo each of dataReplicationInfo.replicatedDisks will be set to zero; dataReplicationInfo.lagDuration and dataReplicationInfo.lagDuration will be nullified.</p>"
+      "documentation":"<p>Finalizes the cutover immediately for specific Source Servers. All AWS resources created by Application Migration Service for enabling the replication of these source servers will be terminated / deleted within 90 minutes. Launched Test or Cutover instances will NOT be terminated. The AWS Replication Agent will receive a command to uninstall itself (within 10 minutes). The following properties of the SourceServer will be changed immediately: dataReplicationInfo.dataReplicationState will be to DISCONNECTED; The SourceServer.lifeCycle.state will be changed to CUTOVER; The totalStorageBytes property fo each of dataReplicationInfo.replicatedDisks will be set to zero; dataReplicationInfo.lagDuration and dataReplicationInfo.lagDurationwill be nullified.</p>"
     },
     "GetLaunchConfiguration":{
       "name":"GetLaunchConfiguration",
@@ -300,7 +268,7 @@
         {"shape":"ResourceNotFoundException"},
         {"shape":"ConflictException"}
       ],
-      "documentation":"<p>Archives specific Source Servers by setting the SourceServer.isArchived property to true for specified SourceServers by ID. This command only works for SourceServers with a lifecycle. state which equals DISCONNECTED or CUTOVER.</p>"
+      "documentation":"<p>Archives specific Source Servers by setting the SourceServer.isArchived property to true for specified SourceServers by ID. This command only works for SourceServers with a lifecycle.state which equals DISCONNECTED or CUTOVER.</p>"
     },
     "RetryDataReplication":{
       "name":"RetryDataReplication",
@@ -334,24 +302,6 @@
       ],
       "documentation":"<p>Launches a Cutover Instance for specific Source Servers. This command starts a LAUNCH job whose initiatedBy property is StartCutover and changes the SourceServer.lifeCycle.state property to CUTTING_OVER.</p>"
     },
-    "StartReplication":{
-      "name":"StartReplication",
-      "http":{
-        "method":"POST",
-        "requestUri":"/StartReplication",
-        "responseCode":200
-      },
-      "input":{"shape":"StartReplicationRequest"},
-      "output":{"shape":"SourceServer"},
-      "errors":[
-        {"shape":"UninitializedAccountException"},
-        {"shape":"ResourceNotFoundException"},
-        {"shape":"ValidationException"},
-        {"shape":"ServiceQuotaExceededException"},
-        {"shape":"ConflictException"}
-      ],
-      "documentation":"<p>Starts replication for SNAPSHOT_SHIPPING agents.</p>"
-    },
     "StartTest":{
       "name":"StartTest",
       "http":{
@@ -366,7 +316,7 @@
         {"shape":"ValidationException"},
         {"shape":"ConflictException"}
       ],
-      "documentation":"<p>Launches a Test Instance for specific Source Servers. This command starts a LAUNCH job whose initiatedBy property is StartTest and changes the SourceServer.lifeCycle.state property to TESTING.</p>"
+      "documentation":"<p>Lauches a Test Instance for specific Source Servers. This command starts a LAUNCH job whose initiatedBy property is StartTest and changes the SourceServer.lifeCycle.state property to TESTING.</p>"
     },
     "TagResource":{
       "name":"TagResource",
@@ -473,23 +423,6 @@
         {"shape":"AccessDeniedException"}
       ],
       "documentation":"<p>Updates multiple ReplicationConfigurationTemplates by ID.</p>"
-    },
-    "UpdateSourceServerReplicationType":{
-      "name":"UpdateSourceServerReplicationType",
-      "http":{
-        "method":"POST",
-        "requestUri":"/UpdateSourceServerReplicationType",
-        "responseCode":200
-      },
-      "input":{"shape":"UpdateSourceServerReplicationTypeRequest"},
-      "output":{"shape":"SourceServer"},
-      "errors":[
-        {"shape":"UninitializedAccountException"},
-        {"shape":"ResourceNotFoundException"},
-        {"shape":"ValidationException"},
-        {"shape":"ConflictException"}
-      ],
-      "documentation":"<p>Allows you to change between the AGENT_BASED replication type and the SNAPSHOT_SHIPPING replication type.</p>"
     }
   },
   "shapes":{
@@ -514,13 +447,6 @@
     "Boolean":{
       "type":"boolean",
       "box":true
-    },
-    "BootMode":{
-      "type":"string",
-      "enum":[
-        "LEGACY_BIOS",
-        "UEFI"
-      ]
     },
     "BoundedString":{
       "type":"string",
@@ -584,11 +510,11 @@
         "message":{"shape":"LargeBoundedString"},
         "resourceId":{
           "shape":"LargeBoundedString",
-          "documentation":"<p>A conflict occurred when prompting for the Resource ID.</p>"
+          "documentation":"<p>A conflict occured when prompting for the Resource ID.</p>"
         },
         "resourceType":{
           "shape":"LargeBoundedString",
-          "documentation":"<p>A conflict occurred when prompting for resource type.</p>"
+          "documentation":"<p>A conflict occured when prompting for resource type.</p>"
         }
       },
       "documentation":"<p>The request could not be completed due to a conflict with the current state of the target resource.</p>",
@@ -638,15 +564,15 @@
         },
         "defaultLargeStagingDiskType":{
           "shape":"ReplicationConfigurationDefaultLargeStagingDiskType",
-          "documentation":"<p>Request to configure the default large staging disk EBS volume type during Replication Settings template creation.</p>"
+          "documentation":"<p>Request to configure the Staging Disk EBS volume type to \"gp2\" during Replication Settings template creation.</p>"
         },
         "ebsEncryption":{
           "shape":"ReplicationConfigurationEbsEncryption",
-          "documentation":"<p>Request to configure EBS encryption during Replication Settings template creation.</p>"
+          "documentation":"<p>Request to configure EBS enryption during Replication Settings template creation.</p>"
         },
         "ebsEncryptionKeyArn":{
           "shape":"ARN",
-          "documentation":"<p>Request to configure an EBS encryption key during Replication Settings template creation.</p>"
+          "documentation":"<p>Request to configure an EBS enryption key during Replication Settings template creation.</p>"
         },
         "replicationServerInstanceType":{
           "shape":"EC2InstanceType",
@@ -654,7 +580,7 @@
         },
         "replicationServersSecurityGroupsIDs":{
           "shape":"ReplicationServersSecurityGroupsIDs",
-          "documentation":"<p>Request to configure the Replication Server Security group ID during Replication Settings template creation.</p>"
+          "documentation":"<p>Request to configure the Replication Server Secuirity group ID during Replication Settings template creation.</p>"
         },
         "stagingAreaSubnetId":{
           "shape":"SubnetID",
@@ -662,7 +588,7 @@
         },
         "stagingAreaTags":{
           "shape":"TagsMap",
-          "documentation":"<p>Request to configure Staging Area tags during Replication Settings template creation.</p>"
+          "documentation":"<p>Request to configure Staiging Area tags during Replication Settings template creation.</p>"
         },
         "tags":{
           "shape":"TagsMap",
@@ -704,9 +630,7 @@
         "FAILED_TO_ATTACH_STAGING_DISKS",
         "FAILED_TO_PAIR_REPLICATION_SERVER_WITH_AGENT",
         "FAILED_TO_CONNECT_AGENT_TO_REPLICATION_SERVER",
-        "FAILED_TO_START_DATA_TRANSFER",
-        "UNSUPPORTED_VM_CONFIGURATION",
-        "LAST_SNAPSHOT_JOB_FAILED"
+        "FAILED_TO_START_DATA_TRANSFER"
       ]
     },
     "DataReplicationInfo":{
@@ -730,11 +654,7 @@
         },
         "lagDuration":{
           "shape":"ISO8601DatetimeString",
-          "documentation":"<p>Request to query data replication lag duration.</p>"
-        },
-        "lastSnapshotDateTime":{
-          "shape":"ISO8601DatetimeString",
-          "documentation":"<p>Request to query data replication last snapshot time.</p>"
+          "documentation":"<p>Request to query data replication lag durating.</p>"
         },
         "replicatedDisks":{
           "shape":"DataReplicationInfoReplicatedDisks",
@@ -805,7 +725,7 @@
           "documentation":"<p>Request to query data initiation status.</p>"
         }
       },
-      "documentation":"<p>Data replication initiation step.</p>"
+      "documentation":"<p>Data replication intiation step.</p>"
     },
     "DataReplicationInitiationStepName":{
       "type":"string",
@@ -849,9 +769,7 @@
         "PAUSED",
         "RESCAN",
         "STALLED",
-        "DISCONNECTED",
-        "PENDING_SNAPSHOT_SHIPPING",
-        "SHIPPING_SNAPSHOT"
+        "DISCONNECTED"
       ]
     },
     "DeleteJobRequest":{
@@ -899,16 +817,6 @@
       "members":{
       }
     },
-    "DeleteVcenterClientRequest":{
-      "type":"structure",
-      "required":["vcenterClientID"],
-      "members":{
-        "vcenterClientID":{
-          "shape":"VcenterClientID",
-          "documentation":"<p>ID of resource to be deleted.</p>"
-        }
-      }
-    },
     "DescribeJobLogItemsRequest":{
       "type":"structure",
       "required":["jobID"],
@@ -942,6 +850,7 @@
     },
     "DescribeJobsRequest":{
       "type":"structure",
+      "required":["filters"],
       "members":{
         "filters":{
           "shape":"DescribeJobsRequestFilters",
@@ -949,11 +858,11 @@
         },
         "maxResults":{
           "shape":"StrictlyPositiveInteger",
-          "documentation":"<p>Request to describe job log items by max results.</p>"
+          "documentation":"<p>Request to describe Job log by max results.</p>"
         },
         "nextToken":{
           "shape":"PaginationToken",
-          "documentation":"<p>Request to describe job log items by next token.</p>"
+          "documentation":"<p>Request to describe Job logby next token.</p>"
         }
       }
     },
@@ -970,7 +879,7 @@
         },
         "toDate":{
           "shape":"ISO8601DatetimeString",
-          "documentation":"<p>Request to describe job log items by last date.</p>"
+          "documentation":"<p>Request to describe Job log by last date.</p>"
         }
       },
       "documentation":"<p>Request to describe Job log filters.</p>"
@@ -996,6 +905,7 @@
     },
     "DescribeReplicationConfigurationTemplatesRequest":{
       "type":"structure",
+      "required":["replicationConfigurationTemplateIDs"],
       "members":{
         "maxResults":{
           "shape":"StrictlyPositiveInteger",
@@ -1026,6 +936,7 @@
     },
     "DescribeSourceServersRequest":{
       "type":"structure",
+      "required":["filters"],
       "members":{
         "filters":{
           "shape":"DescribeSourceServersRequestFilters",
@@ -1047,14 +958,6 @@
         "isArchived":{
           "shape":"Boolean",
           "documentation":"<p>Request to filter Source Servers list by archived.</p>"
-        },
-        "lifeCycleStates":{
-          "shape":"LifeCycleStates",
-          "documentation":"<p>Request to filter Source Servers list by life cycle states.</p>"
-        },
-        "replicationTypes":{
-          "shape":"ReplicationTypes",
-          "documentation":"<p>Request to filter Source Servers list by replication type.</p>"
         },
         "sourceServerIDs":{
           "shape":"DescribeSourceServersRequestFiltersIDs",
@@ -1079,36 +982,6 @@
         "nextToken":{
           "shape":"PaginationToken",
           "documentation":"<p>Request to filter Source Servers next token.</p>"
-        }
-      }
-    },
-    "DescribeVcenterClientsRequest":{
-      "type":"structure",
-      "members":{
-        "maxResults":{
-          "shape":"StrictlyPositiveInteger",
-          "documentation":"<p>Maximum results to be returned in DescribeVcenterClients.</p>",
-          "location":"querystring",
-          "locationName":"maxResults"
-        },
-        "nextToken":{
-          "shape":"PaginationToken",
-          "documentation":"<p>Next pagination token to be provided for DescribeVcenterClients.</p>",
-          "location":"querystring",
-          "locationName":"nextToken"
-        }
-      }
-    },
-    "DescribeVcenterClientsResponse":{
-      "type":"structure",
-      "members":{
-        "items":{
-          "shape":"VcenterClientList",
-          "documentation":"<p>List of items returned by DescribeVcenterClients.</p>"
-        },
-        "nextToken":{
-          "shape":"PaginationToken",
-          "documentation":"<p>Next pagination token returned from DescribeVcenterClients.</p>"
         }
       }
     },
@@ -1159,7 +1032,7 @@
       "members":{
         "sourceServerID":{
           "shape":"SourceServerID",
-          "documentation":"<p>Request to finalize Cutover by Source Server ID.</p>"
+          "documentation":"<p>Request to finalize Cutover by Soure Server ID.</p>"
         }
       }
     },
@@ -1188,7 +1061,7 @@
       "members":{
         "sourceServerID":{
           "shape":"SourceServerID",
-          "documentation":"<p>Request to get Replication Configuration by Source Server ID.</p>"
+          "documentation":"<p>Request to get Replication Configuaration by Source Server ID.</p>"
         }
       }
     },
@@ -1216,10 +1089,6 @@
         "hostname":{
           "shape":"BoundedString",
           "documentation":"<p>Hostname identification hint.</p>"
-        },
-        "vmPath":{
-          "shape":"BoundedString",
-          "documentation":"<p>vCenter VM path identification hint.</p>"
         },
         "vmWareUuid":{
           "shape":"BoundedString",
@@ -1298,7 +1167,7 @@
         },
         "tags":{
           "shape":"TagsMap",
-          "documentation":"<p>Tags associated with specific Job.</p>"
+          "documentation":"<p>Tags associated with spcific Job.</p>"
         },
         "type":{
           "shape":"JobType",
@@ -1405,10 +1274,6 @@
     "LaunchConfiguration":{
       "type":"structure",
       "members":{
-        "bootMode":{
-          "shape":"BootMode",
-          "documentation":"<p>Launch configuration boot mode.</p>"
-        },
         "copyPrivateIp":{
           "shape":"Boolean",
           "documentation":"<p>Copy Private IP during Launch Configuration.</p>"
@@ -1419,27 +1284,27 @@
         },
         "ec2LaunchTemplateID":{
           "shape":"BoundedString",
-          "documentation":"<p>Launch configuration EC2 Launch template ID.</p>"
+          "documentation":"<p>Configure EC2 lauch configuration template ID.</p>"
         },
         "launchDisposition":{
           "shape":"LaunchDisposition",
-          "documentation":"<p>Launch disposition for launch configuration.</p>"
+          "documentation":"<p>Configure launch dispostion for launch configuration.</p>"
         },
         "licensing":{
           "shape":"Licensing",
-          "documentation":"<p>Launch configuration OS licensing.</p>"
+          "documentation":"<p>Configure launch configuration OS licensing.</p>"
         },
         "name":{
           "shape":"SmallBoundedString",
-          "documentation":"<p>Launch configuration name.</p>"
+          "documentation":"<p>Configure launch configuration name.</p>"
         },
         "sourceServerID":{
           "shape":"SourceServerID",
-          "documentation":"<p>Launch configuration Source Server ID.</p>"
+          "documentation":"<p>Configure launch configuration Source Server ID.</p>"
         },
         "targetInstanceTypeRightSizingMethod":{
           "shape":"TargetInstanceTypeRightSizingMethod",
-          "documentation":"<p>Launch configuration Target instance type right sizing method.</p>"
+          "documentation":"<p>Configure launch configuration Target instance type right sizing method.</p>"
         }
       }
     },
@@ -1465,18 +1330,18 @@
       "members":{
         "ec2InstanceID":{
           "shape":"EC2InstanceID",
-          "documentation":"<p>Launched instance EC2 ID.</p>"
+          "documentation":"<p>Configure launced instance EC2 ID.</p>"
         },
         "firstBoot":{
           "shape":"FirstBoot",
-          "documentation":"<p>Launched instance first boot.</p>"
+          "documentation":"<p>Configure launced instance first boot.</p>"
         },
         "jobID":{
           "shape":"JobID",
-          "documentation":"<p>Launched instance Job ID.</p>"
+          "documentation":"<p>Configure launced instance Job ID.</p>"
         }
       },
-      "documentation":"<p>Launched instance.</p>"
+      "documentation":"<p>Configure launced instance.</p>"
     },
     "Licensing":{
       "type":"structure",
@@ -1579,7 +1444,7 @@
       "members":{
         "finalized":{
           "shape":"LifeCycleLastTestFinalized",
-          "documentation":"<p>Lifecycle last Test finalized.</p>"
+          "documentation":"<p>Lifecycle last Test finlized.</p>"
         },
         "initiated":{
           "shape":"LifeCycleLastTestInitiated",
@@ -1600,7 +1465,7 @@
           "documentation":"<p>Lifecycle Test failed API call date and time.</p>"
         }
       },
-      "documentation":"<p>Lifecycle last Test finalized.</p>"
+      "documentation":"<p>Lifecycle last Test finlized.</p>"
     },
     "LifeCycleLastTestInitiated":{
       "type":"structure",
@@ -1636,15 +1501,8 @@
         "READY_FOR_CUTOVER",
         "CUTTING_OVER",
         "CUTOVER",
-        "DISCONNECTED",
-        "DISCOVERED"
+        "DISCONNECTED"
       ]
-    },
-    "LifeCycleStates":{
-      "type":"list",
-      "member":{"shape":"LifeCycleState"},
-      "max":10,
-      "min":0
     },
     "ListTagsForResourceRequest":{
       "type":"structure",
@@ -1814,8 +1672,7 @@
       "type":"string",
       "enum":[
         "GP2",
-        "ST1",
-        "GP3"
+        "ST1"
       ]
     },
     "ReplicationConfigurationEbsEncryption":{
@@ -1843,10 +1700,6 @@
         "stagingDiskType":{
           "shape":"ReplicationConfigurationReplicatedDiskStagingDiskType",
           "documentation":"<p>Replication Configuration replicated disk staging disk type.</p>"
-        },
-        "throughput":{
-          "shape":"PositiveInteger",
-          "documentation":"<p>Replication Configuration replicated disk throughput.</p>"
         }
       },
       "documentation":"<p>Replication Configuration replicated disk.</p>"
@@ -1859,9 +1712,7 @@
         "IO1",
         "SC1",
         "ST1",
-        "STANDARD",
-        "GP3",
-        "IO2"
+        "STANDARD"
       ]
     },
     "ReplicationConfigurationReplicatedDisks":{
@@ -1884,7 +1735,7 @@
         },
         "bandwidthThrottling":{
           "shape":"PositiveInteger",
-          "documentation":"<p>Replication Configuration template bandwidth throttling.</p>"
+          "documentation":"<p>Replication Configuration template bandwidth throtting.</p>"
         },
         "createPublicIP":{
           "shape":"Boolean",
@@ -1896,7 +1747,7 @@
         },
         "defaultLargeStagingDiskType":{
           "shape":"ReplicationConfigurationDefaultLargeStagingDiskType",
-          "documentation":"<p>Replication Configuration template use default large Staging Disk type.</p>"
+          "documentation":"<p>Replication Configuration template use dedault large Staging Disk type.</p>"
         },
         "ebsEncryption":{
           "shape":"ReplicationConfigurationEbsEncryption",
@@ -1908,7 +1759,7 @@
         },
         "replicationConfigurationTemplateID":{
           "shape":"ReplicationConfigurationTemplateID",
-          "documentation":"<p>Replication Configuration template ID.</p>"
+          "documentation":"<p>Replication Configuration template template ID.</p>"
         },
         "replicationServerInstanceType":{
           "shape":"EC2InstanceType",
@@ -1958,19 +1809,6 @@
       "max":32,
       "min":0
     },
-    "ReplicationType":{
-      "type":"string",
-      "enum":[
-        "AGENT_BASED",
-        "SNAPSHOT_SHIPPING"
-      ]
-    },
-    "ReplicationTypes":{
-      "type":"list",
-      "member":{"shape":"ReplicationType"},
-      "max":2,
-      "min":0
-    },
     "ResourceNotFoundException":{
       "type":"structure",
       "members":{
@@ -2007,39 +1845,6 @@
       "max":255,
       "min":0,
       "pattern":"^sg-[0-9a-fA-F]{8,}$"
-    },
-    "ServiceQuotaExceededException":{
-      "type":"structure",
-      "members":{
-        "code":{"shape":"LargeBoundedString"},
-        "message":{"shape":"LargeBoundedString"},
-        "quotaCode":{
-          "shape":"LargeBoundedString",
-          "documentation":"<p>Exceeded the service quota code.</p>"
-        },
-        "quotaValue":{
-          "shape":"StrictlyPositiveInteger",
-          "documentation":"<p>Exceeded the service quota value.</p>"
-        },
-        "resourceId":{
-          "shape":"LargeBoundedString",
-          "documentation":"<p>Exceeded the service quota resource ID.</p>"
-        },
-        "resourceType":{
-          "shape":"LargeBoundedString",
-          "documentation":"<p>Exceeded the service quota resource type.</p>"
-        },
-        "serviceCode":{
-          "shape":"LargeBoundedString",
-          "documentation":"<p>Exceeded the service quota service code.</p>"
-        }
-      },
-      "documentation":"<p>The request could not be completed because its exceeded the service quota.</p>",
-      "error":{
-        "httpStatusCode":402,
-        "senderFault":true
-      },
-      "exception":true
     },
     "SmallBoundedString":{
       "type":"string",
@@ -2107,10 +1912,6 @@
           "shape":"LifeCycle",
           "documentation":"<p>Source server lifecycle state.</p>"
         },
-        "replicationType":{
-          "shape":"ReplicationType",
-          "documentation":"<p>Source server replication type.</p>"
-        },
         "sourceProperties":{
           "shape":"SourceProperties",
           "documentation":"<p>Source server properties.</p>"
@@ -2122,10 +1923,6 @@
         "tags":{
           "shape":"TagsMap",
           "documentation":"<p>Source server Tags.</p>"
-        },
-        "vcenterClientID":{
-          "shape":"VcenterClientID",
-          "documentation":"<p>Source server vCenter client id.</p>"
         }
       }
     },
@@ -2165,16 +1962,6 @@
         "job":{
           "shape":"Job",
           "documentation":"<p>Start Cutover Job response.</p>"
-        }
-      }
-    },
-    "StartReplicationRequest":{
-      "type":"structure",
-      "required":["sourceServerID"],
-      "members":{
-        "sourceServerID":{
-          "shape":"SourceServerID",
-          "documentation":"<p>ID of source server on which to start replication.</p>"
         }
       }
     },
@@ -2326,7 +2113,7 @@
         "code":{"shape":"LargeBoundedString"},
         "message":{"shape":"LargeBoundedString"}
       },
-      "documentation":"<p>Uninitialized account exception.</p>",
+      "documentation":"<p>Unitialized account exception.</p>",
       "error":{
         "httpStatusCode":400,
         "senderFault":true
@@ -2358,10 +2145,6 @@
       "type":"structure",
       "required":["sourceServerID"],
       "members":{
-        "bootMode":{
-          "shape":"BootMode",
-          "documentation":"<p>Update Launch configuration boot mode request.</p>"
-        },
         "copyPrivateIp":{
           "shape":"Boolean",
           "documentation":"<p>Update Launch configuration copy Private IP request.</p>"
@@ -2520,23 +2303,6 @@
         }
       }
     },
-    "UpdateSourceServerReplicationTypeRequest":{
-      "type":"structure",
-      "required":[
-        "replicationType",
-        "sourceServerID"
-      ],
-      "members":{
-        "replicationType":{
-          "shape":"ReplicationType",
-          "documentation":"<p>Replication type to which to update source server.</p>"
-        },
-        "sourceServerID":{
-          "shape":"SourceServerID",
-          "documentation":"<p>ID of source server on which to update replication type.</p>"
-        }
-      }
-    },
     "ValidationException":{
       "type":"structure",
       "members":{
@@ -2584,54 +2350,6 @@
         "fieldValidationFailed",
         "other"
       ]
-    },
-    "VcenterClient":{
-      "type":"structure",
-      "members":{
-        "arn":{
-          "shape":"ARN",
-          "documentation":"<p>Arn of vCenter client.</p>"
-        },
-        "datacenterName":{
-          "shape":"BoundedString",
-          "documentation":"<p>Datacenter name of vCenter client.</p>"
-        },
-        "hostname":{
-          "shape":"BoundedString",
-          "documentation":"<p>Hostname of vCenter client .</p>"
-        },
-        "lastSeenDatetime":{
-          "shape":"ISO8601DatetimeString",
-          "documentation":"<p>Last seen time of vCenter client.</p>"
-        },
-        "sourceServerTags":{
-          "shape":"TagsMap",
-          "documentation":"<p>Tags for Source Server of vCenter client.</p>"
-        },
-        "tags":{
-          "shape":"TagsMap",
-          "documentation":"<p>Tags for vCenter client.</p>"
-        },
-        "vcenterClientID":{
-          "shape":"VcenterClientID",
-          "documentation":"<p>ID of vCenter client.</p>"
-        },
-        "vcenterUUID":{
-          "shape":"BoundedString",
-          "documentation":"<p>Vcenter UUID of vCenter client.</p>"
-        }
-      },
-      "documentation":"<p>vCenter client.</p>"
-    },
-    "VcenterClientID":{
-      "type":"string",
-      "max":21,
-      "min":21,
-      "pattern":"^vcc-[0-9a-zA-Z]{17}$"
-    },
-    "VcenterClientList":{
-      "type":"list",
-      "member":{"shape":"VcenterClient"}
     }
   },
   "documentation":"<p>The Application Migration Service service.</p>"

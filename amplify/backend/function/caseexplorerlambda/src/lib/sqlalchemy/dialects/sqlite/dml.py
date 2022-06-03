@@ -1,4 +1,4 @@
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -36,7 +36,6 @@ class Insert(StandardInsert):
     """
 
     stringify_dialect = "sqlite"
-    inherit_cache = False
 
     @util.memoized_property
     def excluded(self):

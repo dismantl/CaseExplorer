@@ -10,12 +10,12 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import logging
 import time
+import logging
 import weakref
 
 from botocore import xform_name
-from botocore.exceptions import BotoCoreError, ConnectionError, HTTPClientError
+from botocore.exceptions import BotoCoreError, HTTPClientError, ConnectionError
 from botocore.model import OperationNotFoundError
 from botocore.utils import CachedProperty
 
@@ -27,14 +27,12 @@ class EndpointDiscoveryException(BotoCoreError):
 
 
 class EndpointDiscoveryRequired(EndpointDiscoveryException):
-    """Endpoint Discovery is disabled but is required for this operation."""
-
+    """ Endpoint Discovery is disabled but is required for this operation. """
     fmt = 'Endpoint Discovery is not enabled but this operation requires it.'
 
 
 class EndpointDiscoveryRefreshFailed(EndpointDiscoveryException):
-    """Endpoint Discovery failed to the refresh the known endpoints."""
-
+    """ Endpoint Discovery failed to the refresh the known endpoints. """
     fmt = 'Endpoint Discovery failed to refresh the required endpoints.'
 
 
@@ -44,7 +42,7 @@ def block_endpoint_discovery_required_operations(model, **kwargs):
         raise EndpointDiscoveryRequired()
 
 
-class EndpointDiscoveryModel:
+class EndpointDiscoveryModel(object):
     def __init__(self, service_model):
         self._service_model = service_model
 
@@ -63,9 +61,7 @@ class EndpointDiscoveryModel:
 
     def discovery_required_for(self, operation_name):
         try:
-            operation_model = self._service_model.operation_model(
-                operation_name
-            )
+            operation_model = self._service_model.operation_model(operation_name)
             return operation_model.endpoint_discovery.get('required', False)
         except OperationNotFoundError:
             return False
@@ -76,7 +72,7 @@ class EndpointDiscoveryModel:
         if not kwargs.get('Identifiers'):
             kwargs.pop('Operation', None)
             kwargs.pop('Identifiers', None)
-        return {k: v for k, v in kwargs.items() if k in input_keys}
+        return dict((k, v) for k, v in kwargs.items() if k in input_keys)
 
     def gather_identifiers(self, operation, params):
         return self._gather_ids(operation.input_shape, params)
@@ -89,17 +85,13 @@ class EndpointDiscoveryModel:
         for member_name, member_shape in shape.members.items():
             if member_shape.metadata.get('endpointdiscoveryid'):
                 ids[member_name] = params[member_name]
-            elif (
-                member_shape.type_name == 'structure' and member_name in params
-            ):
+            elif member_shape.type_name == 'structure' and member_name in params:
                 self._gather_ids(member_shape, params[member_name], ids)
         return ids
 
 
-class EndpointDiscoveryManager:
-    def __init__(
-        self, client, cache=None, current_time=None, always_discover=True
-    ):
+class EndpointDiscoveryManager(object):
+    def __init__(self, client, cache=None, current_time=None, always_discover=True):
         if cache is None:
             cache = {}
         self._cache = cache
@@ -222,7 +214,7 @@ class EndpointDiscoveryManager:
         return None
 
 
-class EndpointDiscoveryHandler:
+class EndpointDiscoveryHandler(object):
     def __init__(self, manager):
         self._manager = manager
 

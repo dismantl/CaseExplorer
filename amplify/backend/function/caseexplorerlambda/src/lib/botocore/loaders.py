@@ -101,23 +101,14 @@ information that doesn't quite fit in the original models, but is still needed
 for the sdk. For instance, additional operation parameters might be added here
 which don't represent the actual service api.
 """
-import logging
 import os
+import logging
 
 from botocore import BOTOCORE_ROOT
-from botocore.compat import HAS_GZIP, OrderedDict, json
+from botocore.compat import json
+from botocore.compat import OrderedDict
 from botocore.exceptions import DataNotFoundError, UnknownServiceError
 from botocore.utils import deep_merge
-
-_JSON_OPEN_METHODS = {
-    '.json': open,
-}
-
-
-if HAS_GZIP:
-    from gzip import open as gzip_open
-
-    _JSON_OPEN_METHODS['.json.gz'] = gzip_open
 
 
 logger = logging.getLogger(__name__)
@@ -132,7 +123,6 @@ def instance_cache(func):
     ``self._cache`` dictionary.
 
     """
-
     def _wrapper(self, *args, **kwargs):
         key = (func.__name__,) + args
         for pair in sorted(kwargs.items()):
@@ -142,17 +132,15 @@ def instance_cache(func):
         data = func(self, *args, **kwargs)
         self._cache[key] = data
         return data
-
     return _wrapper
 
 
-class JSONFileLoader:
+class JSONFileLoader(object):
     """Loader JSON files.
 
     This class can load the default format of models, which is a JSON file.
 
     """
-
     def exists(self, file_path):
         """Checks if the file exists.
 
@@ -163,22 +151,7 @@ class JSONFileLoader:
         :return: True if file path exists, False otherwise.
 
         """
-        for ext in _JSON_OPEN_METHODS:
-            if os.path.isfile(file_path + ext):
-                return True
-        return False
-
-    def _load_file(self, full_path, open_method):
-        if not os.path.isfile(full_path):
-            return
-
-        # By default the file will be opened with locale encoding on Python 3.
-        # We specify "utf8" here to ensure the correct behavior.
-        with open_method(full_path, 'rb') as fp:
-            payload = fp.read().decode('utf-8')
-
-        logger.debug("Loading JSON file: %s", full_path)
-        return json.loads(payload, object_pairs_hook=OrderedDict)
+        return os.path.isfile(file_path + '.json')
 
     def load_file(self, file_path):
         """Attempt to load the file path.
@@ -190,11 +163,17 @@ class JSONFileLoader:
         :return: The loaded data if it exists, otherwise None.
 
         """
-        for (ext, open_method) in _JSON_OPEN_METHODS.items():
-            data = self._load_file(file_path + ext, open_method)
-            if data is not None:
-                return data
-        return None
+        full_path = file_path + '.json'
+        if not os.path.isfile(full_path):
+            return
+
+        # By default the file will be opened with locale encoding on Python 3.
+        # We specify "utf8" here to ensure the correct behavior.
+        with open(full_path, 'rb') as fp:
+            payload = fp.read().decode('utf-8')
+
+        logger.debug("Loading JSON file: %s", full_path)
+        return json.loads(payload, object_pairs_hook=OrderedDict)
 
 
 def create_loader(search_path_string=None):
@@ -221,7 +200,7 @@ def create_loader(search_path_string=None):
     return Loader(extra_search_paths=paths)
 
 
-class Loader:
+class Loader(object):
     """Find and load data models.
 
     This class will handle searching for and loading data models.
@@ -230,24 +209,17 @@ class Loader:
     convenience method over ``load_data`` and ``determine_latest_version``.
 
     """
-
     FILE_LOADER_CLASS = JSONFileLoader
     # The included models in botocore/data/ that we ship with botocore.
     BUILTIN_DATA_PATH = os.path.join(BOTOCORE_ROOT, 'data')
     # For convenience we automatically add ~/.aws/models to the data path.
-    CUSTOMER_DATA_PATH = os.path.join(
-        os.path.expanduser('~'), '.aws', 'models'
-    )
+    CUSTOMER_DATA_PATH = os.path.join(os.path.expanduser('~'),
+                                      '.aws', 'models')
     BUILTIN_EXTRAS_TYPES = ['sdk']
 
-    def __init__(
-        self,
-        extra_search_paths=None,
-        file_loader=None,
-        cache=None,
-        include_default_search_paths=True,
-        include_default_extras=True,
-    ):
+    def __init__(self, extra_search_paths=None, file_loader=None,
+                 cache=None, include_default_search_paths=True,
+                 include_default_extras=True):
         self._cache = {}
         if file_loader is None:
             file_loader = self.FILE_LOADER_CLASS()
@@ -257,9 +229,8 @@ class Loader:
         else:
             self._search_paths = []
         if include_default_search_paths:
-            self._search_paths.extend(
-                [self.CUSTOMER_DATA_PATH, self.BUILTIN_DATA_PATH]
-            )
+            self._search_paths.extend([self.CUSTOMER_DATA_PATH,
+                                       self.BUILTIN_DATA_PATH])
 
         self._extras_types = []
         if include_default_extras:
@@ -302,17 +273,15 @@ class Loader:
             # by searching for the corresponding type_name in each
             # potential directory.
             possible_services = [
-                d
-                for d in os.listdir(possible_path)
-                if os.path.isdir(os.path.join(possible_path, d))
-            ]
+                d for d in os.listdir(possible_path)
+                if os.path.isdir(os.path.join(possible_path, d))]
             for service_name in possible_services:
                 full_dirname = os.path.join(possible_path, service_name)
                 api_versions = os.listdir(full_dirname)
                 for api_version in api_versions:
-                    full_load_path = os.path.join(
-                        full_dirname, api_version, type_name
-                    )
+                    full_load_path = os.path.join(full_dirname,
+                                                  api_version,
+                                                  type_name)
                     if self.file_loader.exists(full_load_path):
                         services.add(service_name)
                         break
@@ -357,9 +326,9 @@ class Loader:
 
         """
         known_api_versions = set()
-        for possible_path in self._potential_locations(
-            service_name, must_exist=True, is_dir=True
-        ):
+        for possible_path in self._potential_locations(service_name,
+                                                       must_exist=True,
+                                                       is_dir=True):
             for dirname in os.listdir(possible_path):
                 full_path = os.path.join(possible_path, dirname, type_name)
                 # Only add to the known_api_versions if the directory
@@ -407,12 +376,10 @@ class Loader:
         if service_name not in known_services:
             raise UnknownServiceError(
                 service_name=service_name,
-                known_service_names=', '.join(sorted(known_services)),
-            )
+                known_service_names=', '.join(sorted(known_services)))
         if api_version is None:
             api_version = self.determine_latest_version(
-                service_name, type_name
-            )
+                service_name, type_name)
         full_path = os.path.join(service_name, api_version, type_name)
         model = self.load_data(full_path)
 
@@ -425,7 +392,7 @@ class Loader:
     def _find_extras(self, service_name, type_name, api_version):
         """Creates an iterator over all the extras data."""
         for extras_type in self.extras_types:
-            extras_name = f'{type_name}.{extras_type}-extras'
+            extras_name = '%s.%s-extras' % (type_name, extras_type)
             full_path = os.path.join(service_name, api_version, extras_name)
 
             try:
@@ -457,7 +424,8 @@ class Loader:
         # We didn't find anything that matched on any path.
         raise DataNotFoundError(data_path=name)
 
-    def _potential_locations(self, name=None, must_exist=False, is_dir=False):
+    def _potential_locations(self, name=None, must_exist=False,
+                             is_dir=False):
         # Will give an iterator over the full path of potential locations
         # according to the search path.
         for path in self.search_paths:
@@ -474,9 +442,8 @@ class Loader:
                         yield full_path
 
 
-class ExtrasProcessor:
+class ExtrasProcessor(object):
     """Processes data from extras files into service models."""
-
     def process(self, original_model, extra_models):
         """Processes data from a list of loaded extras files into a model
 

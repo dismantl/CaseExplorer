@@ -325,12 +325,6 @@
       "limit_key": "maxResults",
       "output_token": "nextToken",
       "result_key": "jobTemplates"
-    },
-    "ListMetricValues": {
-      "input_token": "nextToken",
-      "limit_key": "maxResults",
-      "output_token": "nextToken",
-      "result_key": "metricDatumList"
     }
   }
 }

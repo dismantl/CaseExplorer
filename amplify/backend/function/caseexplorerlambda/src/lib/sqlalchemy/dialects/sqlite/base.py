@@ -1,5 +1,5 @@
 # sqlite/base.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -1385,7 +1385,7 @@ class SQLiteCompiler(compiler.SQLCompiler):
                     value.type = c.type
             value_text = self.process(value.self_group(), use_schema=False)
 
-            key_text = self.preparer.quote(c.name)
+            key_text = self.preparer.quote(col_key)
             action_set_ops.append("%s = %s" % (key_text, value_text))
 
         # check for names that don't match columns
@@ -2414,8 +2414,7 @@ class SQLiteDialect(default.DefaultDialect):
         def parse_uqs():
             UNIQUE_PATTERN = r'(?:CONSTRAINT "?(.+?)"? +)?UNIQUE *\((.+?)\)'
             INLINE_UNIQUE_PATTERN = (
-                r'(?:(".+?")|(?:[\[`])?([a-z0-9_]+)(?:[\]`])?) '
-                r"+[a-z0-9_ ]+? +UNIQUE"
+                r'(?:(".+?")|([a-z0-9]+)) ' r"+[a-z0-9_ ]+? +UNIQUE"
             )
 
             for match in re.finditer(UNIQUE_PATTERN, table_data, re.I):
@@ -2449,21 +2448,17 @@ class SQLiteDialect(default.DefaultDialect):
         if not table_data:
             return []
 
-        CHECK_PATTERN = r"(?:CONSTRAINT (.+) +)?" r"CHECK *\( *(.+) *\),? *"
+        CHECK_PATTERN = r"(?:CONSTRAINT (\w+) +)?" r"CHECK *\( *(.+) *\),? *"
         check_constraints = []
         # NOTE: we aren't using re.S here because we actually are
         # taking advantage of each CHECK constraint being all on one
         # line in the table definition in order to delineate.  This
         # necessarily makes assumptions as to how the CREATE TABLE
         # was emitted.
-
         for match in re.finditer(CHECK_PATTERN, table_data, re.I):
-            name = match.group(1)
-
-            if name:
-                name = re.sub(r'^"|"$', "", name)
-
-            check_constraints.append({"sqltext": match.group(2), "name": name})
+            check_constraints.append(
+                {"sqltext": match.group(2), "name": match.group(1)}
+            )
 
         return check_constraints
 

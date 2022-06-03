@@ -16,7 +16,8 @@ import logging
 logger = logging.getLogger('bcdocs')
 
 
-class BaseStyle:
+class BaseStyle(object):
+
     def __init__(self, doc, indent_width=2):
         self.doc = doc
         self.indent_width = indent_width
@@ -64,6 +65,7 @@ class BaseStyle:
 
 
 class ReSTStyle(BaseStyle):
+
     def __init__(self, doc, indent_width=2):
         BaseStyle.__init__(self, doc, indent_width)
         self.do_p = True
@@ -121,12 +123,12 @@ class ReSTStyle(BaseStyle):
     def ref(self, title, link=None):
         if link is None:
             link = title
-        self.doc.write(f':doc:`{title} <{link}>`')
+        self.doc.write(':doc:`%s <%s>`' % (title, link))
 
     def _heading(self, s, border_char):
         border = border_char * len(s)
         self.new_paragraph()
-        self.doc.write(f'{border}\n{s}\n{border}')
+        self.doc.write('%s\n%s\n%s' % (border, s, border))
         self.new_paragraph()
 
     def h1(self, s):
@@ -217,13 +219,13 @@ class ReSTStyle(BaseStyle):
         self.doc.do_translation = True
 
     def link_target_definition(self, refname, link):
-        self.doc.writeln(f'.. _{refname}: {link}')
+        self.doc.writeln('.. _%s: %s' % (refname, link))
 
     def sphinx_reference_label(self, label, text=None):
         if text is None:
             text = label
         if self.doc.target == 'html':
-            self.doc.write(f':ref:`{text} <{label}>`')
+            self.doc.write(':ref:`%s <%s>`' % (text, label))
         else:
             self.doc.write(text)
 
@@ -405,12 +407,12 @@ class ReSTStyle(BaseStyle):
 
     def external_link(self, title, link):
         if self.doc.target == 'html':
-            self.doc.write(f'`{title} <{link}>`_')
+            self.doc.write('`%s <%s>`_' % (title, link))
         else:
             self.doc.write(title)
 
     def internal_link(self, title, page):
         if self.doc.target == 'html':
-            self.doc.write(f':doc:`{title} <{page}>`')
+            self.doc.write(':doc:`%s <%s>`' % (title, page))
         else:
             self.doc.write(title)

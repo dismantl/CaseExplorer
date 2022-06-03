@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 from decimal import Decimal as _Decimal
 
-from graphql.language.ast import StringValueNode, IntValueNode
+from graphql.language import ast
 
 from .scalars import Scalar
 
@@ -16,14 +16,14 @@ class Decimal(Scalar):
     def serialize(dec):
         if isinstance(dec, str):
             dec = _Decimal(dec)
-        assert isinstance(
-            dec, _Decimal
-        ), f'Received not compatible Decimal "{repr(dec)}"'
+        assert isinstance(dec, _Decimal), 'Received not compatible Decimal "{}"'.format(
+            repr(dec)
+        )
         return str(dec)
 
     @classmethod
-    def parse_literal(cls, node, _variables=None):
-        if isinstance(node, (StringValueNode, IntValueNode)):
+    def parse_literal(cls, node):
+        if isinstance(node, ast.StringValue):
             return cls.parse_value(node.value)
 
     @staticmethod

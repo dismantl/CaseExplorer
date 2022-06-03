@@ -109,30 +109,23 @@ class DotEnv():
         return None
 
 
-def get_key(
-    dotenv_path: Union[str, _PathLike],
-    key_to_get: str,
-    encoding: Optional[str] = "utf-8",
-) -> Optional[str]:
+def get_key(dotenv_path: Union[str, _PathLike], key_to_get: str) -> Optional[str]:
     """
-    Get the value of a given key from the given .env.
+    Gets the value of a given key from the given .env
 
-    Returns `None` if the key isn't found or doesn't have a value.
+    If the .env path given doesn't exist, fails
     """
-    return DotEnv(dotenv_path, verbose=True, encoding=encoding).get(key_to_get)
+    return DotEnv(dotenv_path, verbose=True).get(key_to_get)
 
 
 @contextmanager
-def rewrite(
-    path: Union[str, _PathLike],
-    encoding: Optional[str],
-) -> Iterator[Tuple[IO[str], IO[str]]]:
+def rewrite(path: Union[str, _PathLike]) -> Iterator[Tuple[IO[str], IO[str]]]:
     try:
         if not os.path.isfile(path):
-            with io.open(path, "w+", encoding=encoding) as source:
+            with io.open(path, "w+") as source:
                 source.write("")
-        with tempfile.NamedTemporaryFile(mode="w+", delete=False, encoding=encoding) as dest:
-            with io.open(path, encoding=encoding) as source:
+        with tempfile.NamedTemporaryFile(mode="w+", delete=False) as dest:
+            with io.open(path) as source:
                 yield (source, dest)  # type: ignore
     except BaseException:
         if os.path.isfile(dest.name):
@@ -148,7 +141,6 @@ def set_key(
     value_to_set: str,
     quote_mode: str = "always",
     export: bool = False,
-    encoding: Optional[str] = "utf-8",
 ) -> Tuple[Optional[bool], str, str]:
     """
     Adds or Updates a key/value to the given .env
@@ -173,19 +165,15 @@ def set_key(
     else:
         line_out = "{}={}\n".format(key_to_set, value_out)
 
-    with rewrite(dotenv_path, encoding=encoding) as (source, dest):
+    with rewrite(dotenv_path) as (source, dest):
         replaced = False
-        missing_newline = False
         for mapping in with_warn_for_invalid_lines(parse_stream(source)):
             if mapping.key == key_to_set:
                 dest.write(line_out)
                 replaced = True
             else:
                 dest.write(mapping.original.string)
-                missing_newline = not mapping.original.string.endswith("\n")
         if not replaced:
-            if missing_newline:
-                dest.write("\n")
             dest.write(line_out)
 
     return True, key_to_set, value_to_set
@@ -195,7 +183,6 @@ def unset_key(
     dotenv_path: Union[str, _PathLike],
     key_to_unset: str,
     quote_mode: str = "always",
-    encoding: Optional[str] = "utf-8",
 ) -> Tuple[Optional[bool], str]:
     """
     Removes a given key from the given .env
@@ -208,7 +195,7 @@ def unset_key(
         return None, key_to_unset
 
     removed = False
-    with rewrite(dotenv_path, encoding=encoding) as (source, dest):
+    with rewrite(dotenv_path) as (source, dest):
         for mapping in with_warn_for_invalid_lines(parse_stream(source)):
             if mapping.key == key_to_unset:
                 removed = True

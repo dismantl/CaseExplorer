@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 import json
 
-from graphql.language.ast import StringValueNode
+from graphql.language import ast
 
 from .scalars import Scalar
 
@@ -20,8 +20,8 @@ class JSONString(Scalar):
         return json.dumps(dt)
 
     @staticmethod
-    def parse_literal(node, _variables=None):
-        if isinstance(node, StringValueNode):
+    def parse_literal(node):
+        if isinstance(node, ast.StringValue):
             return json.loads(node.value)
 
     @staticmethod

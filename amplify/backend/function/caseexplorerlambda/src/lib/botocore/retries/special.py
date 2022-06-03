@@ -7,8 +7,8 @@ module.  Ideally we should be able to remove this module.
 """
 import logging
 from binascii import crc32
-
 from botocore.retries.base import BaseRetryableChecker
+
 
 logger = logging.getLogger(__name__)
 
@@ -41,12 +41,8 @@ class RetryDDBChecksumError(BaseRetryableChecker):
         checksum = context.http_response.headers.get(self._CHECKSUM_HEADER)
         if checksum is None:
             return False
-        actual_crc32 = crc32(context.http_response.content) & 0xFFFFFFFF
+        actual_crc32 = crc32(context.http_response.content) & 0xffffffff
         if actual_crc32 != int(checksum):
-            logger.debug(
-                "DynamoDB crc32 checksum does not match, "
-                "expected: %s, actual: %s",
-                checksum,
-                actual_crc32,
-            )
+            logger.debug("DynamoDB crc32 checksum does not match, "
+                         "expected: %s, actual: %s", checksum, actual_crc32)
             return True

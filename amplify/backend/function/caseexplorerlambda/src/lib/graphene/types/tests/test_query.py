@@ -1,13 +1,7 @@
 import json
 from functools import partial
 
-from graphql import (
-    GraphQLError,
-    GraphQLResolveInfo as ResolveInfo,
-    Source,
-    execute,
-    parse,
-)
+from graphql import GraphQLError, ResolveInfo, Source, execute, parse
 
 from ..context import Context
 from ..dynamic import Dynamic
@@ -34,7 +28,7 @@ def test_query():
 
 
 def test_query_source():
-    class Root:
+    class Root(object):
         _hello = "World"
 
         def hello(self):
@@ -51,10 +45,10 @@ def test_query_source():
 
 
 def test_query_union():
-    class one_object:
+    class one_object(object):
         pass
 
-    class two_object:
+    class two_object(object):
         pass
 
     class One(ObjectType):
@@ -89,10 +83,10 @@ def test_query_union():
 
 
 def test_query_interface():
-    class one_object:
+    class one_object(object):
         pass
 
-    class two_object:
+    class two_object(object):
         pass
 
     class MyInterface(Interface):
@@ -181,7 +175,7 @@ def test_query_wrong_default_value():
     assert len(executed.errors) == 1
     assert (
         executed.errors[0].message
-        == GraphQLError("Expected value of type 'MyType' but got: 'hello'.").message
+        == GraphQLError('Expected value of type "MyType" but got: str.').message
     )
     assert executed.data == {"hello": None}
 
@@ -285,7 +279,8 @@ def test_query_middlewares():
             return "other"
 
     def reversed_middleware(next, *args, **kwargs):
-        return next(*args, **kwargs)[::-1]
+        p = next(*args, **kwargs)
+        return p.then(lambda x: x[::-1])
 
     hello_schema = Schema(Query)
 
@@ -347,11 +342,10 @@ def test_big_list_query_compiled_query_benchmark(benchmark):
             return big_list
 
     hello_schema = Schema(Query)
-    graphql_schema = hello_schema.graphql_schema
     source = Source("{ allInts }")
     query_ast = parse(source)
 
-    big_list_query = partial(execute, graphql_schema, query_ast)
+    big_list_query = partial(execute, hello_schema, query_ast)
     result = benchmark(big_list_query)
     assert not result.errors
     assert result.data == {"allInts": list(big_list)}
@@ -454,15 +448,15 @@ def test_query_annotated_resolvers():
         info = String()
 
         def resolve_annotated(self, info, id):
-            return f"{self}-{id}"
+            return "{}-{}".format(self, id)
 
         def resolve_context(self, info):
             assert isinstance(info.context, Context)
-            return f"{self}-{info.context.key}"
+            return "{}-{}".format(self, info.context.key)
 
         def resolve_info(self, info):
             assert isinstance(info, ResolveInfo)
-            return f"{self}-{info.field_name}"
+            return "{}-{}".format(self, info.field_name)
 
     test_schema = Schema(Query)
 

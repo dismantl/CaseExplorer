@@ -1,132 +1,85 @@
-from typing import Any, Callable, NamedTuple, Optional, Union
+from collections import OrderedDict
 
-from graphql_relay.utils.base64 import base64, unbase64
+from six import text_type
 
-from graphql import (
+from graphql.type import (
     GraphQLArgument,
     GraphQLNonNull,
     GraphQLID,
     GraphQLField,
     GraphQLInterfaceType,
-    GraphQLList,
-    GraphQLResolveInfo,
-    GraphQLTypeResolver,
 )
 
-__all__ = [
-    "from_global_id",
-    "global_id_field",
-    "node_definitions",
-    "to_global_id",
-    "GraphQLNodeDefinitions",
-    "ResolvedGlobalId",
-]
+from ..utils import base64, unbase64
 
 
-class GraphQLNodeDefinitions(NamedTuple):
-
-    node_interface: GraphQLInterfaceType
-    node_field: GraphQLField
-    nodes_field: GraphQLField
-
-
-def node_definitions(
-    fetch_by_id: Callable[[str, GraphQLResolveInfo], Any],
-    type_resolver: Optional[GraphQLTypeResolver] = None,
-) -> GraphQLNodeDefinitions:
+def node_definitions(id_fetcher, type_resolver=None, id_resolver=None):
     """
     Given a function to map from an ID to an underlying object, and a function
     to map from an underlying object to the concrete GraphQLObjectType it
     corresponds to, constructs a `Node` interface that objects can implement,
-    and a field object to be used as a `node` root field.
+    and a field config for a `node` root field.
 
     If the type_resolver is omitted, object resolution on the interface will be
-    handled with the `is_type_of` method on object types, as with any GraphQL
-    interface without a provided `resolve_type` method.
+    handled with the `isTypeOf` method on object types, as with any GraphQL
+    interface without a provided `resolveType` method.
     """
     node_interface = GraphQLInterfaceType(
-        "Node",
-        description="An object with an ID",
-        fields=lambda: {
-            "id": GraphQLField(
-                GraphQLNonNull(GraphQLID), description="The id of the object."
-            )
-        },
-        resolve_type=type_resolver,
+        'Node',
+        description='An object with an ID',
+        fields=lambda: OrderedDict((
+            ('id', GraphQLField(
+                GraphQLNonNull(GraphQLID),
+                description='The id of the object.',
+                resolver=id_resolver,
+            )),
+        )),
+        resolve_type=type_resolver
     )
-
-    # noinspection PyShadowingBuiltins
     node_field = GraphQLField(
         node_interface,
-        description="Fetches an object given its ID",
-        args={
-            "id": GraphQLArgument(
-                GraphQLNonNull(GraphQLID), description="The ID of an object"
-            )
-        },
-        resolve=lambda _obj, info, id: fetch_by_id(id, info),
+        description='Fetches an object given its ID',
+        args=OrderedDict((
+            ('id', GraphQLArgument(
+                GraphQLNonNull(GraphQLID),
+                description='The ID of an object'
+            )),
+        )),
+        resolver=lambda _obj, info, id: id_fetcher(id, info)
     )
-
-    nodes_field = GraphQLField(
-        GraphQLNonNull(GraphQLList(node_interface)),
-        description="Fetches objects given their IDs",
-        args={
-            "ids": GraphQLArgument(
-                GraphQLNonNull(GraphQLList(GraphQLNonNull(GraphQLID))),
-                description="The IDs of objects",
-            )
-        },
-        resolve=lambda _obj, info, ids: [fetch_by_id(id_, info) for id_ in ids],
-    )
-
-    return GraphQLNodeDefinitions(node_interface, node_field, nodes_field)
+    return node_interface, node_field
 
 
-class ResolvedGlobalId(NamedTuple):
-
-    type: str
-    id: str
-
-
-def to_global_id(type_: str, id_: Union[str, int]) -> str:
+def to_global_id(type, id):
     """
     Takes a type name and an ID specific to that type name, and returns a
     "global ID" that is unique among all types.
     """
-    return base64(f"{type_}:{GraphQLID.serialize(id_)}")
+    return base64(':'.join([type, text_type(id)]))
 
 
-def from_global_id(global_id: str) -> ResolvedGlobalId:
+def from_global_id(global_id):
     """
-    Takes the "global ID" created by to_global_id, and returns the type name and ID
+    Takes the "global ID" created by toGlobalID, and returns the type name and ID
     used to create it.
     """
-    global_id = unbase64(global_id)
-    if ":" not in global_id:
-        return ResolvedGlobalId("", global_id)
-    return ResolvedGlobalId(*global_id.split(":", 1))
+    unbased_global_id = unbase64(global_id)
+    _type, _id = unbased_global_id.split(':', 1)
+    return _type, _id
 
 
-def global_id_field(
-    type_name: Optional[str] = None,
-    id_fetcher: Optional[Callable[[Any, GraphQLResolveInfo], str]] = None,
-) -> GraphQLField:
+def global_id_field(type_name, id_fetcher=None):
     """
     Creates the configuration for an id field on a node, using `to_global_id` to
-    construct the ID from the provided typename. The type-specific ID is fetched
+    construct the ID from the provided typename. The type-specific ID is fetcher
     by calling id_fetcher on the object, or if not provided, by accessing the `id`
-    attribute of the object, or the `id` if the object is a dict.
+    property on the object.
     """
-
-    def resolve(obj: Any, info: GraphQLResolveInfo, **_args: Any) -> str:
-        type_ = type_name or info.parent_type.name
-        id_ = (
-            id_fetcher(obj, info)
-            if id_fetcher
-            else (obj["id"] if isinstance(obj, dict) else obj.id)
-        )
-        return to_global_id(type_, id_)
-
     return GraphQLField(
-        GraphQLNonNull(GraphQLID), description="The ID of an object", resolve=resolve
+        GraphQLNonNull(GraphQLID),
+        description='The ID of an object',
+        resolver=lambda obj, info, **args: to_global_id(
+            type_name or info.parent_type.name,
+            id_fetcher(obj, info) if id_fetcher else obj.id
+        )
     )

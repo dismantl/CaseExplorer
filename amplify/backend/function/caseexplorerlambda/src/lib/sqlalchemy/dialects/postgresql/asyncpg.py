@@ -1,5 +1,5 @@
 # postgresql/asyncpg.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors <see AUTHORS
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors <see AUTHORS
 # file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -96,25 +96,6 @@ To disable the prepared statement cache, use a value of zero::
    stale, nor can it retry the statement as the PostgreSQL transaction is
    invalidated when these errors occur.
 
-Disabling the PostgreSQL JIT to improve ENUM datatype handling
----------------------------------------------------------------
-
-Asyncpg has an `issue <https://github.com/MagicStack/asyncpg/issues/727>`_ when
-using PostgreSQL ENUM datatypes, where upon the creation of new database
-connections, an expensive query may be emitted in order to retrieve metadata
-regarding custom types which has been shown to negatively affect performance.
-To mitigate this issue, the PostgreSQL "jit" setting may be disabled from the
-client using this setting passed to :func:`_asyncio.create_async_engine`::
-
-    engine = create_async_engine(
-        "postgresql+asyncpg://user:password@localhost/tmp",
-        connect_args={"server_settings": {"jit": "off"}},
-    )
-
-.. seealso::
-
-    https://github.com/MagicStack/asyncpg/issues/727
-
 """  # noqa
 
 import collections
@@ -155,10 +136,7 @@ except ImportError:
 
 class AsyncpgTime(sqltypes.Time):
     def get_dbapi_type(self, dbapi):
-        if self.timezone:
-            return dbapi.TIME_W_TZ
-        else:
-            return dbapi.TIME
+        return dbapi.TIME
 
 
 class AsyncpgDate(sqltypes.Date):
@@ -271,9 +249,6 @@ class AsyncpgUUID(UUID):
 
 
 class AsyncpgNumeric(sqltypes.Numeric):
-    def get_dbapi_type(self, dbapi):
-        return dbapi.NUMBER
-
     def bind_processor(self, dialect):
         return None
 
@@ -300,11 +275,6 @@ class AsyncpgNumeric(sqltypes.Numeric):
                 raise exc.InvalidRequestError(
                     "Unknown PG numeric type: %d" % coltype
                 )
-
-
-class AsyncpgFloat(AsyncpgNumeric):
-    def get_dbapi_type(self, dbapi):
-        return dbapi.FLOAT
 
 
 class AsyncpgREGCLASS(REGCLASS):
@@ -840,7 +810,6 @@ class AsyncAdapt_asyncpg_dbapi:
     TIMESTAMP = util.symbol("TIMESTAMP")
     TIMESTAMP_W_TZ = util.symbol("TIMESTAMP_W_TZ")
     TIME = util.symbol("TIME")
-    TIME_W_TZ = util.symbol("TIME_W_TZ")
     DATE = util.symbol("DATE")
     INTERVAL = util.symbol("INTERVAL")
     NUMBER = util.symbol("NUMBER")
@@ -866,7 +835,6 @@ _pg_types = {
     AsyncAdapt_asyncpg_dbapi.TIMESTAMP_W_TZ: "timestamp with time zone",
     AsyncAdapt_asyncpg_dbapi.DATE: "date",
     AsyncAdapt_asyncpg_dbapi.TIME: "time",
-    AsyncAdapt_asyncpg_dbapi.TIME_W_TZ: "time with time zone",
     AsyncAdapt_asyncpg_dbapi.INTERVAL: "interval",
     AsyncAdapt_asyncpg_dbapi.NUMBER: "numeric",
     AsyncAdapt_asyncpg_dbapi.FLOAT: "float",
@@ -915,7 +883,6 @@ class PGDialect_asyncpg(PGDialect):
             sqltypes.Integer: AsyncpgInteger,
             sqltypes.BigInteger: AsyncpgBigInteger,
             sqltypes.Numeric: AsyncpgNumeric,
-            sqltypes.Float: AsyncpgFloat,
             sqltypes.JSON: AsyncpgJSON,
             json.JSONB: AsyncpgJSONB,
             sqltypes.JSON.JSONPathType: AsyncpgJSONPathType,
@@ -1027,42 +994,8 @@ class PGDialect_asyncpg(PGDialect):
                 }
             )
 
-    async def setup_asyncpg_json_codec(self, conn):
-        """set up JSON codec for asyncpg.
-
-        This occurs for all new connections and
-        can be overridden by third party dialects.
-
-        .. versionadded:: 1.4.27
-
-        """
-
-        asyncpg_connection = conn._connection
-        deserializer = self._json_deserializer or _py_json.loads
-
-        def _json_decoder(bin_value):
-            return deserializer(bin_value.decode())
-
-        await asyncpg_connection.set_type_codec(
-            "json",
-            encoder=str.encode,
-            decoder=_json_decoder,
-            schema="pg_catalog",
-            format="binary",
-        )
-
-    async def setup_asyncpg_jsonb_codec(self, conn):
-        """set up JSONB codec for asyncpg.
-
-        This occurs for all new connections and
-        can be overridden by third party dialects.
-
-        .. versionadded:: 1.4.27
-
-        """
-
-        asyncpg_connection = conn._connection
-        deserializer = self._json_deserializer or _py_json.loads
+    def on_connect(self):
+        super_connect = super(PGDialect_asyncpg, self).on_connect()
 
         def _jsonb_encoder(str_value):
             # \x01 is the prefix for jsonb used by PostgreSQL.
@@ -1071,35 +1004,42 @@ class PGDialect_asyncpg(PGDialect):
 
         deserializer = self._json_deserializer or _py_json.loads
 
+        def _json_decoder(bin_value):
+            return deserializer(bin_value.decode())
+
         def _jsonb_decoder(bin_value):
             # the byte is the \x01 prefix for jsonb used by PostgreSQL.
             # asyncpg returns it when format='binary'
             return deserializer(bin_value[1:].decode())
 
-        await asyncpg_connection.set_type_codec(
-            "jsonb",
-            encoder=_jsonb_encoder,
-            decoder=_jsonb_decoder,
-            schema="pg_catalog",
-            format="binary",
-        )
+        async def _setup_type_codecs(conn):
+            """set up type decoders at the asyncpg level.
 
-    def on_connect(self):
-        """on_connect for asyncpg
+            these are set_type_codec() calls to normalize
+            There was a tentative decoder for the "char" datatype here
+            to have it return strings however this type is actually a binary
+            type that other drivers are likely mis-interpreting.
 
-        A major component of this for asyncpg is to set up type decoders at the
-        asyncpg level.
-
-        See https://github.com/MagicStack/asyncpg/issues/623 for
-        notes on JSON/JSONB implementation.
-
-        """
-
-        super_connect = super(PGDialect_asyncpg, self).on_connect()
+            See https://github.com/MagicStack/asyncpg/issues/623 for reference
+            on why it's set up this way.
+            """
+            await conn._connection.set_type_codec(
+                "json",
+                encoder=str.encode,
+                decoder=_json_decoder,
+                schema="pg_catalog",
+                format="binary",
+            )
+            await conn._connection.set_type_codec(
+                "jsonb",
+                encoder=_jsonb_encoder,
+                decoder=_jsonb_decoder,
+                schema="pg_catalog",
+                format="binary",
+            )
 
         def connect(conn):
-            conn.await_(self.setup_asyncpg_json_codec(conn))
-            conn.await_(self.setup_asyncpg_jsonb_codec(conn))
+            conn.await_(_setup_type_codecs(conn))
             if super_connect is not None:
                 super_connect(conn)
 

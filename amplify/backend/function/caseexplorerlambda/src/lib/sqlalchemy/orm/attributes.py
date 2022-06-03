@@ -1,5 +1,5 @@
 # orm/attributes.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -526,11 +526,6 @@ def create_proxied_attribute(descriptor):
 
         _is_internal_proxy = True
 
-        _cache_key_traversal = [
-            ("key", visitors.ExtendedInternalTraversal.dp_string),
-            ("_parententity", visitors.ExtendedInternalTraversal.dp_multi),
-        ]
-
         @property
         def _impl_uses_objects(self):
             return (
@@ -572,16 +567,6 @@ def create_proxied_attribute(descriptor):
                 self.descriptor,
                 self._comparator,
                 adapt_to_entity,
-            )
-
-        def _clone(self, **kw):
-            return self.__class__(
-                self.class_,
-                self.key,
-                self.descriptor,
-                self._comparator,
-                adapt_to_entity=self._adapt_to_entity,
-                original_property=self.original_property,
             )
 
         def __get__(self, instance, owner):

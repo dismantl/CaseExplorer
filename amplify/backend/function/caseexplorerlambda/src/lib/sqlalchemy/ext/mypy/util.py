@@ -1,4 +1,3 @@
-import re
 from typing import Any
 from typing import Iterable
 from typing import Iterator
@@ -81,10 +80,6 @@ class SQLAlchemyAttribute:
         data = data.copy()
         typ = deserialize_and_fixup_type(data.pop("type"), api)
         return cls(typ=typ, info=info, **data)
-
-
-def name_is_dunder(name):
-    return bool(re.match(r"^__.+?__$", name))
 
 
 def _set_info_metadata(info: TypeInfo, key: str, data: Any) -> None:

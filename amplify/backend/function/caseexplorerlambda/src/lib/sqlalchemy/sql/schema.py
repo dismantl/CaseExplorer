@@ -1,5 +1,5 @@
 # sql/schema.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -58,20 +58,11 @@ from .. import inspection
 from .. import util
 
 
-RETAIN_SCHEMA = util.symbol(
-    "retain_schema"
-    """Symbol indicating that a :class:`_schema.Table`, :class:`.Sequence`
-    or in some cases a :class:`_schema.ForeignKey` object, in situations
-    where the object is being copied for a :meth:`.Table.to_metadata`
-    operation, should retain the schema name that it already has.
-
-    """
-)
+RETAIN_SCHEMA = util.symbol("retain_schema")
 
 BLANK_SCHEMA = util.symbol(
     "blank_schema",
-    """Symbol indicating that a :class:`_schema.Table`, :class:`.Sequence`
-    or in some cases a :class:`_schema.ForeignKey` object
+    """Symbol indicating that a :class:`_schema.Table` or :class:`.Sequence`
     should have 'None' for its schema, even if the parent
     :class:`_schema.MetaData` has specified a schema.
 
@@ -772,12 +763,13 @@ class Table(DialectKWArgs, SchemaItem, TableClause):
             )
 
         include_columns = kwargs.pop("include_columns", None)
+
+        resolve_fks = kwargs.pop("resolve_fks", True)
+
         if include_columns is not None:
             for c in self.c:
                 if c.name not in include_columns:
                     self._columns.remove(c)
-
-        resolve_fks = kwargs.pop("resolve_fks", True)
 
         for key in ("quote", "quote_schema"):
             if key in kwargs:
@@ -785,12 +777,11 @@ class Table(DialectKWArgs, SchemaItem, TableClause):
                     "Can't redefine 'quote' or 'quote_schema' arguments"
                 )
 
-        # update `self` with these kwargs, if provided
-        self.comment = kwargs.pop("comment", self.comment)
-        self.implicit_returning = kwargs.pop(
-            "implicit_returning", self.implicit_returning
-        )
-        self.info = kwargs.pop("info", self.info)
+        if "comment" in kwargs:
+            self.comment = kwargs.pop("comment", None)
+
+        if "info" in kwargs:
+            self.info = kwargs.pop("info")
 
         if autoload:
             if not autoload_replace:
@@ -1056,14 +1047,7 @@ class Table(DialectKWArgs, SchemaItem, TableClause):
          target schema that we are changing to, the
          :class:`_schema.ForeignKeyConstraint` object, and the existing
          "target schema" of that constraint.  The function should return the
-         string schema name that should be applied.    To reset the schema
-         to "none", return the symbol :data:`.BLANK_SCHEMA`.  To effect no
-         change, return ``None`` or :data:`.RETAIN_SCHEMA`.
-
-         .. versionchanged:: 1.4.33  The ``referred_schema_fn`` function
-            may return the :data:`.BLANK_SCHEMA` or :data:`.RETAIN_SCHEMA`
-            symbols.
-
+         string schema name that should be applied.
          E.g.::
 
                 def referred_schema_fn(table, to_schema,
@@ -1218,63 +1202,22 @@ class Column(DialectKWArgs, SchemaItem, ColumnClause):
           equivalent keyword argument is available such as ``server_default``,
           ``default`` and ``unique``.
 
-        :param autoincrement: Set up "auto increment" semantics for an
-          **integer primary key column with no foreign key dependencies**
-          (see later in this docstring for a more specific definition).
-          This may influence the :term:`DDL` that will be emitted for
-          this column during a table create, as well as how the column
-          will be considered when INSERT statements are compiled and
-          executed.
+        :param autoincrement: Set up "auto increment" semantics for an integer
+          primary key column.  The default value is the string ``"auto"``
+          which indicates that a single-column primary key that is of
+          an INTEGER type with no stated client-side or python-side defaults
+          should receive auto increment semantics automatically;
+          all other varieties of primary key columns will not.  This
+          includes that :term:`DDL` such as PostgreSQL SERIAL or MySQL
+          AUTO_INCREMENT will be emitted for this column during a table
+          create, as well as that the column is assumed to generate new
+          integer primary key values when an INSERT statement invokes which
+          will be retrieved by the dialect.  When used in conjunction with
+          :class:`.Identity` on a dialect that supports it, this parameter
+          has no effect.
 
-          The default value is the string ``"auto"``,
-          which indicates that a single-column (i.e. non-composite) primary key
-          that is of an INTEGER type with no other client-side or server-side
-          default constructs indicated should receive auto increment semantics
-          automatically. Other values include ``True`` (force this column to
-          have auto-increment semantics for a :term:`composite primary key` as
-          well), ``False`` (this column should never have auto-increment
-          semantics), and the string ``"ignore_fk"`` (special-case for foreign
-          key columns, see below).
-
-          The term "auto increment semantics" refers both to the kind of DDL
-          that will be emitted for the column within a CREATE TABLE statement,
-          when methods such as :meth:`.MetaData.create_all` and
-          :meth:`.Table.create` are invoked, as well as how the column will be
-          considered when an INSERT statement is compiled and emitted to the
-          database:
-
-          * **DDL rendering** (i.e. :meth:`.MetaData.create_all`,
-            :meth:`.Table.create`): When used on a :class:`.Column` that has
-            no other
-            default-generating construct associated with it (such as a
-            :class:`.Sequence` or :class:`.Identity` construct), the parameter
-            will imply that database-specific keywords such as PostgreSQL
-            ``SERIAL``, MySQL ``AUTO_INCREMENT``, or ``IDENTITY`` on SQL Server
-            should also be rendered.  Not every database backend has an
-            "implied" default generator available; for example the Oracle
-            backend always needs an explicit construct such as
-            :class:`.Identity` to be included with a :class:`.Column` in order
-            for the DDL rendered to include auto-generating constructs to also
-            be produced in the database.
-
-          * **INSERT semantics** (i.e. when a :func:`_sql.insert` construct is
-            compiled into a SQL string and is then executed on a database using
-            :meth:`_engine.Connection.execute` or equivalent): A single-row
-            INSERT statement will be known to produce a new integer primary key
-            value automatically for this column, which will be accessible
-            after the statement is invoked via the
-            :attr:`.CursorResult.inserted_primary_key` attribute upon the
-            :class:`_result.Result` object.   This also applies towards use of the
-            ORM when ORM-mapped objects are persisted to the database,
-            indicating that a new integer primary key will be available to
-            become part of the :term:`identity key` for that object.  This
-            behavior takes place regardless of what DDL constructs are
-            associated with the :class:`_schema.Column` and is independent
-            of the "DDL Rendering" behavior discussed in the previous note
-            above.
-
-          The parameter may be set to ``True`` to indicate that a column which
-          is part of a composite (i.e. multi-column) primary key should
+          The flag may be set to ``True`` to indicate that a column which
+          is part of a composite (e.g. multi-column) primary key should
           have autoincrement semantics, though note that only one column
           within a primary key may have this setting.    It can also
           be set to ``True`` to indicate autoincrement semantics on a
@@ -1296,6 +1239,7 @@ class Column(DialectKWArgs, SchemaItem, ColumnClause):
              that has an explicit client-side or server-side default,
              subject to limitations of the backend database and dialect.
 
+
           The setting *only* has an effect for columns which are:
 
           * Integer derived (i.e. INT, SMALLINT, BIGINT).
@@ -1311,72 +1255,34 @@ class Column(DialectKWArgs, SchemaItem, ColumnClause):
                 Column('id', ForeignKey('other.id'),
                             primary_key=True, autoincrement='ignore_fk')
 
-          It is typically not desirable to have "autoincrement" enabled on a
-          column that refers to another via foreign key, as such a column is
-          required to refer to a value that originates from elsewhere.
+            It is typically not desirable to have "autoincrement" enabled on a
+            column that refers to another via foreign key, as such a column is
+            required to refer to a value that originates from elsewhere.
 
-          The setting has these effects on columns that meet the
+          The setting has these two effects on columns that meet the
           above criteria:
 
-          * DDL issued for the column, if the column does not already include
-            a default generating construct supported by the backend such as
-            :class:`.Identity`, will include database-specific
+          * DDL issued for the column will include database-specific
             keywords intended to signify this column as an
-            "autoincrement" column for specific backends.   Behavior for
-            primary SQLAlchemy dialects includes:
+            "autoincrement" column, such as AUTO INCREMENT on MySQL,
+            SERIAL on PostgreSQL, and IDENTITY on MS-SQL.  It does
+            *not* issue AUTOINCREMENT for SQLite since this is a
+            special SQLite flag that is not required for autoincrementing
+            behavior.
 
-            * AUTO INCREMENT on MySQL and MariaDB
-            * SERIAL on PostgreSQL
-            * IDENTITY on MS-SQL - this occurs even without the
-              :class:`.Identity` construct as the
-              :paramref:`.Column.autoincrement` parameter pre-dates this
-              construct.
-            * SQLite - SQLite integer primary key columns are implicitly
-              "auto incrementing" and no additional keywords are rendered;
-              to render the special SQLite keyword ``AUTOINCREMENT``
-              is not included as this is unnecessary and not recommended
-              by the database vendor.  See the section
-              :ref:`sqlite_autoincrement` for more background.
-            * Oracle - The Oracle dialect has no default "autoincrement"
-              feature available at this time, instead the :class:`.Identity`
-              construct is recommended to achieve this (the :class:`.Sequence`
-              construct may also be used).
-            * Third-party dialects - consult those dialects' documentation
-              for details on their specific behaviors.
+            .. seealso::
 
-          * When a single-row :func:`_sql.insert` construct is compiled and
-            executed, which does not set the :meth:`_sql.Insert.inline`
-            modifier, newly generated primary key values for this column
-            will be automatically retrieved upon statement execution
-            using a method specific to the database driver in use:
+                :ref:`sqlite_autoincrement`
 
-            * MySQL, SQLite - calling upon ``cursor.lastrowid()``
-              (see
-              `https://www.python.org/dev/peps/pep-0249/#lastrowid
-              <https://www.python.org/dev/peps/pep-0249/#lastrowid>`_)
-            * PostgreSQL, SQL Server, Oracle - use RETURNING or an equivalent
-              construct when rendering an INSERT statement, and then retrieving
-              the newly generated primary key values after execution
-            * PostgreSQL, Oracle for :class:`_schema.Table` objects that
-              set :paramref:`_schema.Table.implicit_returning` to False -
-              for a :class:`.Sequence` only, the :class:`.Sequence` is invoked
-              explicitly before the INSERT statement takes place so that the
-              newly generated primary key value is available to the client
-            * SQL Server for :class:`_schema.Table` objects that
-              set :paramref:`_schema.Table.implicit_returning` to False -
-              the ``SELECT scope_identity()`` construct is used after the
-              INSERT statement is invoked to retrieve the newly generated
-              primary key value.
-            * Third-party dialects - consult those dialects' documentation
-              for details on their specific behaviors.
+          * The column will be considered to be available using an
+            "autoincrement" method specific to the backend database, such
+            as calling upon ``cursor.lastrowid``, using RETURNING in an
+            INSERT statement to get at a sequence-generated value, or using
+            special functions such as "SELECT scope_identity()".
+            These methods are highly specific to the DBAPIs and databases in
+            use and vary greatly, so care should be taken when associating
+            ``autoincrement=True`` with a custom default generation function.
 
-          * For multiple-row :func:`_sql.insert` constructs invoked with
-            a list of parameters (i.e. "executemany" semantics), primary-key
-            retrieving behaviors are generally disabled, however there may
-            be special APIs that may be used to retrieve lists of new
-            primary key values for an "executemany", such as the psycopg2
-            "fast insertmany" feature.  Such features are very new and
-            may not yet be well covered in documentation.
 
         :param default: A scalar, Python callable, or
             :class:`_expression.ColumnElement` expression representing the
@@ -1660,7 +1566,7 @@ class Column(DialectKWArgs, SchemaItem, ColumnClause):
                 parameter to :class:`_schema.Column`.
 
 
-        """  # noqa: E501, RST201, RST202
+        """  # noqa E501
 
         name = kwargs.pop("name", None)
         type_ = kwargs.pop("type_", None)
@@ -2307,14 +2213,11 @@ class ForeignKey(DialectKWArgs, SchemaItem):
         argument first passed to the object's constructor.
 
         """
-        if schema not in (None, RETAIN_SCHEMA):
+        if schema:
             _schema, tname, colname = self._column_tokens
             if table_name is not None:
                 tname = table_name
-            if schema is BLANK_SCHEMA:
-                return "%s.%s" % (tname, colname)
-            else:
-                return "%s.%s.%s" % (schema, tname, colname)
+            return "%s.%s.%s" % (schema, tname, colname)
         elif table_name:
             schema, tname, colname = self._column_tokens
             if schema:
@@ -2432,6 +2335,10 @@ class ForeignKey(DialectKWArgs, SchemaItem):
         return parenttable, tablekey, colname
 
     def _link_to_col_by_colstring(self, parenttable, table, colname):
+        if not hasattr(self.constraint, "_referred_table"):
+            self.constraint._referred_table = table
+        else:
+            assert self.constraint._referred_table is table
 
         _column = None
         if colname is None:
@@ -2439,12 +2346,8 @@ class ForeignKey(DialectKWArgs, SchemaItem):
             # was specified as table name only, in which case we
             # match the column name to the same column on the
             # parent.
-            # this use case wasn't working in later 1.x series
-            # as it had no test coverage; fixed in 2.0
-            parent = self.parent
-            assert parent is not None
-            key = parent.key
-            _column = table.c.get(key, None)
+            key = self.parent
+            _column = table.c.get(self.parent.key, None)
         elif self.link_to_name:
             key = colname
             for c in table.c:
@@ -2464,10 +2367,10 @@ class ForeignKey(DialectKWArgs, SchemaItem):
                 key,
             )
 
-        return _column
+        self._set_target_column(_column)
 
     def _set_target_column(self, column):
-        assert self.parent is not None
+        assert isinstance(self.parent.table, Table)
 
         # propagate TypeEngine to parent if it didn't have one
         if self.parent.type._isnull:
@@ -2517,11 +2420,14 @@ class ForeignKey(DialectKWArgs, SchemaItem):
                     "parent MetaData" % parenttable
                 )
             else:
-                table = parenttable.metadata.tables[tablekey]
-                return self._link_to_col_by_colstring(
-                    parenttable, table, colname
+                raise exc.NoReferencedColumnError(
+                    "Could not initialize target column for "
+                    "ForeignKey '%s' on table '%s': "
+                    "table '%s' has no column named '%s'"
+                    % (self._colspec, parenttable.name, tablekey, colname),
+                    tablekey,
+                    colname,
                 )
-
         elif hasattr(self._colspec, "__clause_element__"):
             _column = self._colspec.__clause_element__()
             return _column
@@ -2541,11 +2447,6 @@ class ForeignKey(DialectKWArgs, SchemaItem):
     def _set_remote_table(self, table):
         parenttable, tablekey, colname = self._resolve_col_tokens()
         self._link_to_col_by_colstring(parenttable, table, colname)
-
-        _column = self._link_to_col_by_colstring(parenttable, table, colname)
-        self._set_target_column(_column)
-        assert self.constraint is not None
-
         self.constraint._validate_dest_table(table)
 
     def _remove_from_metadata(self, metadata):
@@ -2584,14 +2485,10 @@ class ForeignKey(DialectKWArgs, SchemaItem):
             if table_key in parenttable.metadata.tables:
                 table = parenttable.metadata.tables[table_key]
                 try:
-                    _column = self._link_to_col_by_colstring(
-                        parenttable, table, colname
-                    )
+                    self._link_to_col_by_colstring(parenttable, table, colname)
                 except exc.NoReferencedColumnError:
                     # this is OK, we'll try later
                     pass
-                else:
-                    self._set_target_column(_column)
             parenttable.metadata._fk_memos[fk_key].append(self)
         elif hasattr(self._colspec, "__clause_element__"):
             _column = self._colspec.__clause_element__()
@@ -4607,12 +4504,6 @@ class MetaData(SchemaItem):
             engine = create_engine("someurl://")
             metadata.bind = engine
 
-        .. deprecated :: 1.4
-
-            The metadata.bind attribute, as part of the deprecated system
-            of "implicit execution", is itself deprecated and will be
-            removed in SQLAlchemy 2.0.
-
         .. seealso::
 
            :ref:`dbengine_implicit` - background on "bound metadata"
@@ -5000,7 +4891,7 @@ class Computed(FetchedValue, SchemaItem):
 
         from sqlalchemy import Computed
 
-        Table('square', metadata_obj,
+        Table('square', meta,
             Column('side', Float, nullable=False),
             Column('area', Float, Computed('side * side'))
         )
@@ -5097,7 +4988,7 @@ class Identity(IdentityOptions, FetchedValue, SchemaItem):
 
         from sqlalchemy import Identity
 
-        Table('foo', metadata_obj,
+        Table('foo', meta,
             Column('id', Integer, Identity())
             Column('description', Text),
         )

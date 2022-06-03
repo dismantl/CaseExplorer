@@ -23,7 +23,7 @@ class Union(UnmountedType, BaseType):
     The schema in this example can take a search text and return any of the GraphQL object types
     indicated: Human, Droid or Startship.
 
-    Ambiguous return types can be resolved on each ObjectType through ``Meta.possible_types``
+    Ambigous return types can be resolved on each ObjectType through ``Meta.possible_types``
     attribute or ``is_type_of`` method. Or by implementing ``resolve_type`` class method on the
     Union.
 
@@ -53,7 +53,7 @@ class Union(UnmountedType, BaseType):
     def __init_subclass_with_meta__(cls, types=None, **options):
         assert (
             isinstance(types, (list, tuple)) and len(types) > 0
-        ), f"Must provide types for Union {cls.__name__}."
+        ), "Must provide types for Union {name}.".format(name=cls.__name__)
 
         _meta = UnionOptions(cls)
         _meta.types = types

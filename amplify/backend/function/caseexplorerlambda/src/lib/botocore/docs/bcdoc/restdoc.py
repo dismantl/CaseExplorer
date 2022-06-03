@@ -19,7 +19,8 @@ from botocore.docs.bcdoc.style import ReSTStyle
 LOG = logging.getLogger('bcdocs')
 
 
-class ReSTDocument:
+class ReSTDocument(object):
+
     def __init__(self, target='man'):
         self.style = ReSTStyle(self)
         self.target = target
@@ -45,7 +46,7 @@ class ReSTDocument:
         """
         Write content on a newline.
         """
-        self._write(f'{self.style.spaces()}{content}\n')
+        self._write('%s%s\n' % (self.style.spaces(), content))
 
     def peek_write(self):
         """
@@ -116,7 +117,7 @@ class DocumentStructure(ReSTDocument):
         :param context: A dictionary of data to store with the strucuture. These
             are only stored per section not the entire structure.
         """
-        super().__init__(target=target)
+        super(DocumentStructure, self).__init__(target=target)
         self._name = name
         self._structure = OrderedDict()
         self._path = [self._name]
@@ -171,9 +172,8 @@ class DocumentStructure(ReSTDocument):
             to the document structure it was instantiated from.
         """
         # Add a new section
-        section = self.__class__(
-            name=name, target=self.target, context=context
-        )
+        section = self.__class__(name=name, target=self.target,
+                                 context=context)
         section.path = self.path + [name]
         # Indent the section apporpriately as well
         section.style.indentation = self.style.indentation

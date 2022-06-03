@@ -19,7 +19,10 @@ def get_version(version=None):
     sub = ""
     if version[3] == "alpha" and version[4] == 0:
         git_changeset = get_git_changeset()
-        sub = ".dev%s" % git_changeset if git_changeset else ".dev"
+        if git_changeset:
+            sub = ".dev%s" % git_changeset
+        else:
+            sub = ".dev"
     elif version[3] != "final":
         mapping = {"alpha": "a", "beta": "b", "rc": "rc"}
         sub = mapping[version[3]] + str(version[4])

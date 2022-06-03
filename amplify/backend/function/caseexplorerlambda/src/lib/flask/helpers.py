@@ -5,11 +5,13 @@ import sys
 import typing as t
 import warnings
 from datetime import datetime
+from datetime import timedelta
 from functools import lru_cache
 from functools import update_wrapper
 from threading import RLock
 
 import werkzeug.utils
+from werkzeug.exceptions import NotFound
 from werkzeug.routing import BuildError
 from werkzeug.urls import url_quote
 
@@ -186,7 +188,7 @@ def make_response(*args: t.Any) -> "Response":
         return current_app.response_class()
     if len(args) == 1:
         args = args[0]
-    return current_app.make_response(args)  # type: ignore
+    return current_app.make_response(args)
 
 
 def url_for(endpoint: str, **values: t.Any) -> str:
@@ -452,7 +454,7 @@ def _prepare_send_file_kwargs(
         warnings.warn(
             "The 'attachment_filename' parameter has been renamed to"
             " 'download_name'. The old name will be removed in Flask"
-            " 2.2.",
+            " 2.1.",
             DeprecationWarning,
             stacklevel=3,
         )
@@ -461,7 +463,7 @@ def _prepare_send_file_kwargs(
     if cache_timeout is not None:
         warnings.warn(
             "The 'cache_timeout' parameter has been renamed to"
-            " 'max_age'. The old name will be removed in Flask 2.2.",
+            " 'max_age'. The old name will be removed in Flask 2.1.",
             DeprecationWarning,
             stacklevel=3,
         )
@@ -470,7 +472,7 @@ def _prepare_send_file_kwargs(
     if add_etags is not None:
         warnings.warn(
             "The 'add_etags' parameter has been renamed to 'etag'. The"
-            " old name will be removed in Flask 2.2.",
+            " old name will be removed in Flask 2.1.",
             DeprecationWarning,
             stacklevel=3,
         )
@@ -625,6 +627,29 @@ def send_file(
     )
 
 
+def safe_join(directory: str, *pathnames: str) -> str:
+    """Safely join zero or more untrusted path components to a base
+    directory to avoid escaping the base directory.
+
+    :param directory: The trusted base directory.
+    :param pathnames: The untrusted path components relative to the
+        base directory.
+    :return: A safe path, otherwise ``None``.
+    """
+    warnings.warn(
+        "'flask.helpers.safe_join' is deprecated and will be removed in"
+        " Flask 2.1. Use 'werkzeug.utils.safe_join' instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    path = werkzeug.utils.safe_join(directory, *pathnames)
+
+    if path is None:
+        raise NotFound()
+
+    return path
+
+
 def send_from_directory(
     directory: t.Union[os.PathLike, str],
     path: t.Union[os.PathLike, str],
@@ -666,7 +691,7 @@ def send_from_directory(
     if filename is not None:
         warnings.warn(
             "The 'filename' parameter has been renamed to 'path'. The"
-            " old name will be removed in Flask 2.2.",
+            " old name will be removed in Flask 2.1.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -689,7 +714,7 @@ def get_root_path(import_name: str) -> str:
     # Module already imported and has a file attribute. Use that first.
     mod = sys.modules.get(import_name)
 
-    if mod is not None and hasattr(mod, "__file__") and mod.__file__ is not None:
+    if mod is not None and hasattr(mod, "__file__"):
         return os.path.dirname(os.path.abspath(mod.__file__))
 
     # Next attempt: check the loader.
@@ -758,6 +783,27 @@ class locked_cached_property(werkzeug.utils.cached_property):
     def __delete__(self, obj: object) -> None:
         with self.lock:
             super().__delete__(obj)
+
+
+def total_seconds(td: timedelta) -> int:
+    """Returns the total seconds from a timedelta object.
+
+    :param timedelta td: the timedelta to be converted in seconds
+
+    :returns: number of seconds
+    :rtype: int
+
+    .. deprecated:: 2.0
+        Will be removed in Flask 2.1. Use
+        :meth:`timedelta.total_seconds` instead.
+    """
+    warnings.warn(
+        "'total_seconds' is deprecated and will be removed in Flask"
+        " 2.1. Use 'timedelta.total_seconds' instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return td.days * 60 * 60 * 24 + td.seconds
 
 
 def is_ip(value: str) -> bool:

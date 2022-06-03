@@ -1,5 +1,5 @@
 # ext/asyncio/scoping.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -36,7 +36,6 @@ from ...util import ScopedRegistry
         "get",
         "get_bind",
         "is_modified",
-        "invalidate",
         "merge",
         "refresh",
         "rollback",
@@ -85,7 +84,7 @@ class async_scoped_session(ScopedSessionMixin):
          the current scope.   A function such as ``asyncio.current_task``
          may be useful here.
 
-        """  # noqa: E501
+        """  # noqa E501
 
         self.session_factory = session_factory
         self.registry = ScopedRegistry(session_factory, scopefunc)

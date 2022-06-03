@@ -1,5 +1,5 @@
 # orm/collections.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -1273,7 +1273,7 @@ def _list_decorators():
 
     def extend(fn):
         def extend(self, iterable):
-            for value in list(iterable):
+            for value in iterable:
                 self.append(value)
 
         _tidy(extend)
@@ -1283,7 +1283,7 @@ def _list_decorators():
         def __iadd__(self, iterable):
             # list.__iadd__ takes any iterable and seems to let TypeError
             # raise as-is instead of returning NotImplemented
-            for value in list(iterable):
+            for value in iterable:
                 self.append(value)
             return self
 

@@ -1,11 +1,11 @@
 """This module implements token buckets used for client side throttling."""
-import threading
 import time
+import threading
 
 from botocore.exceptions import CapacityNotAvailableError
 
 
-class Clock:
+class Clock(object):
     def __init__(self):
         pass
 
@@ -16,7 +16,7 @@ class Clock:
         return time.time()
 
 
-class TokenBucket:
+class TokenBucket(object):
 
     _MIN_RATE = 0.5
 
@@ -52,7 +52,8 @@ class TokenBucket:
             # If we're scaling down, we also can't have a capacity that's
             # more than our max_capacity.
             self._current_capacity = min(
-                self._current_capacity, self._max_capacity
+                self._current_capacity,
+                self._max_capacity
             )
             self._new_fill_rate_condition.notify()
 

@@ -1,5 +1,5 @@
 # mysql/mysqldb.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -120,6 +120,10 @@ class MySQLCompiler_mysqldb(MySQLCompiler):
     pass
 
 
+class MySQLIdentifierPreparer_mysqldb(MySQLIdentifierPreparer):
+    pass
+
+
 class MySQLDialect_mysqldb(MySQLDialect):
     driver = "mysqldb"
     supports_statement_cache = True
@@ -132,7 +136,7 @@ class MySQLDialect_mysqldb(MySQLDialect):
     default_paramstyle = "format"
     execution_ctx_cls = MySQLExecutionContext_mysqldb
     statement_compiler = MySQLCompiler_mysqldb
-    preparer = MySQLIdentifierPreparer
+    preparer = MySQLIdentifierPreparer_mysqldb
 
     def __init__(self, **kwargs):
         super(MySQLDialect_mysqldb, self).__init__(**kwargs)

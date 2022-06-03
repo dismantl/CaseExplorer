@@ -1,5 +1,5 @@
 # orm/query.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -1557,21 +1557,12 @@ class Query(
         automatically if the :meth:`~sqlalchemy.orm.query.Query.yield_per()`
         method or execution option is used.
 
-        .. versionadded:: 1.4 - added ORM options to
-           :meth:`_orm.Query.execution_options`
-
         The execution options may also be specified on a per execution basis
         when using :term:`2.0 style` queries via the
         :paramref:`_orm.Session.execution_options` parameter.
 
-        .. warning:: The
-           :paramref:`_engine.Connection.execution_options.stream_results`
-           parameter should not be used at the level of individual ORM
-           statement executions, as the :class:`_orm.Session` will not track
-           objects from different schema translate maps within a single
-           session.  For multiple schema translate maps within the scope of a
-           single :class:`_orm.Session`, see :ref:`examples_sharding`.
-
+        .. versionadded:: 1.4 - added ORM options to
+           :meth:`_orm.Query.execution_options`
 
         .. seealso::
 
@@ -1610,15 +1601,6 @@ class Query(
         The above query on a PostgreSQL backend will render like::
 
             SELECT users.id AS users_id FROM users FOR UPDATE OF users NOWAIT
-
-        .. warning::
-
-            Using ``with_for_update`` in the context of eager loading
-            relationships is not officially supported or recommended by
-            SQLAlchemy and may not work with certain queries on various
-            database backends.  When ``with_for_update`` is successfully used
-            with a query that involves :func:`_orm.joinedload`, SQLAlchemy will
-            attempt to emit SQL that locks all involved tables.
 
         .. note::  It is generally a good idea to combine the use of the
            :meth:`_orm.Query.populate_existing` method when using the
@@ -1725,43 +1707,12 @@ class Query(
             return None
 
     def _filter_by_zero(self):
-        """for the filter_by() method, return the target entity for which
-        we will attempt to derive an expression from based on string name.
-
-        """
-
         if self._legacy_setup_joins:
             _last_joined_entity = self._last_joined_entity
             if _last_joined_entity is not None:
                 return _last_joined_entity
 
-        # discussion related to #7239
-        # special check determines if we should try to derive attributes
-        # for filter_by() from the "from object", i.e., if the user
-        # called query.select_from(some selectable).filter_by(some_attr=value).
-        # We don't want to do that in the case that methods like
-        # from_self(), select_entity_from(), or a set op like union() were
-        # called; while these methods also place a
-        # selectable in the _from_obj collection, they also set up
-        # the _set_base_alias boolean which turns on the whole "adapt the
-        # entity to this selectable" thing, meaning the query still continues
-        # to construct itself in terms of the lead entity that was passed
-        # to query(), e.g. query(User).from_self() is still in terms of User,
-        # and not the subquery that from_self() created.   This feature of
-        # "implicitly adapt all occurrences of entity X to some arbitrary
-        # subquery" is the main thing I am trying to do away with in 2.0 as
-        # users should now used aliased() for that, but I can't entirely get
-        # rid of it due to query.union() and other set ops relying upon it.
-        #
-        # compare this to the base Select()._filter_by_zero() which can
-        # just return self._from_obj[0] if present, because there is no
-        # "_set_base_alias" feature.
-        #
-        # IOW, this conditional essentially detects if
-        # "select_from(some_selectable)" has been called, as opposed to
-        # "select_entity_from()", "from_self()"
-        # or "union() / some_set_op()".
-        if self._from_obj and not self._compile_options._set_base_alias:
+        if self._from_obj:
             return self._from_obj[0]
 
         return self._raw_columns[0]
@@ -1808,19 +1759,11 @@ class Query(
     @_generative
     @_assertions(_no_statement_condition, _no_limit_offset)
     def order_by(self, *clauses):
-        """Apply one or more ORDER BY criteria to the query and return
+        """Apply one or more ORDER BY criterion to the query and return
         the newly resulting :class:`_query.Query`.
 
-        e.g.::
-
-            q = session.query(Entity).order_by(Entity.id, Entity.name)
-
-        All existing ORDER BY criteria may be cancelled by passing
-        ``None`` by itself.  New ORDER BY criteria may then be added by
-        invoking :meth:`_orm.Query.order_by` again, e.g.::
-
-            # will erase all ORDER BY and ORDER BY new_col alone
-            q = q.order_by(None).order_by(new_col)
+        All existing ORDER BY settings can be suppressed by  passing
+        ``None``.
 
         .. seealso::
 
@@ -2973,15 +2916,6 @@ class Query(
                 }
             ]
 
-        .. seealso::
-
-            This API is available using :term:`2.0 style` queries as well,
-            documented at:
-
-            * :ref:`queryguide_inspection`
-
-            * :attr:`.Select.column_descriptions`
-
         """
 
         return _column_descriptions(self, legacy=True)
@@ -3020,13 +2954,6 @@ class Query(
 
         return result
 
-    @util.deprecated_20(
-        ":meth:`_orm.Query.merge_result`",
-        alternative="The method is superseded by the "
-        ":func:`_orm.merge_frozen_result` function.",
-        becomes_legacy=True,
-        enable_warnings=False,  # warnings occur via loading.merge_result
-    )
     def merge_result(self, iterator, load=True):
         """Merge a result into this :class:`_query.Query` object's Session.
 
@@ -3442,8 +3369,6 @@ class AliasOption(interfaces.LoaderOption):
         that the main table has been aliased.
 
         """
-
-    inherit_cache = False
 
     def process_compile_state(self, compile_state):
         pass

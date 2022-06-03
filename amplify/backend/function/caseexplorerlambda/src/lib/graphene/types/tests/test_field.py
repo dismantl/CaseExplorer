@@ -1,6 +1,6 @@
 from functools import partial
 
-from pytest import raises
+import pytest
 
 from ..argument import Argument
 from ..field import Field
@@ -9,7 +9,7 @@ from ..structures import NonNull
 from .utils import MyLazyType
 
 
-class MyInstance:
+class MyInstance(object):
     value = "value"
     value_func = staticmethod(lambda: "value_func")
 
@@ -66,13 +66,6 @@ def test_field_source():
     assert field.resolver(MyInstance(), None) == MyInstance.value
 
 
-def test_field_source_dict_or_attr():
-    MyType = object()
-    field = Field(MyType, source="value")
-    assert field.resolver(MyInstance(), None) == MyInstance.value
-    assert field.resolver({"value": MyInstance.value}, None) == MyInstance.value
-
-
 def test_field_with_lazy_type():
     MyType = object()
     field = Field(lambda: MyType)
@@ -92,7 +85,7 @@ def test_field_with_string_type():
 
 def test_field_not_source_and_resolver():
     MyType = object()
-    with raises(Exception) as exc_info:
+    with pytest.raises(Exception) as exc_info:
         Field(MyType, source="value", resolver=lambda: None)
     assert (
         str(exc_info.value)
@@ -129,7 +122,7 @@ def test_field_name_as_argument():
 def test_field_source_argument_as_kw():
     MyType = object()
     field = Field(MyType, b=NonNull(True), c=Argument(None), a=NonNull(False))
-    assert list(field.args) == ["b", "c", "a"]
+    assert list(field.args.keys()) == ["b", "c", "a"]
     assert isinstance(field.args["b"], Argument)
     assert isinstance(field.args["b"].type, NonNull)
     assert field.args["b"].type.of_type is True

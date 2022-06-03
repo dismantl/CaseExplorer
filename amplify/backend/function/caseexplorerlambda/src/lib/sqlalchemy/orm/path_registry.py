@@ -1,5 +1,5 @@
 # orm/path_registry.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -398,15 +398,15 @@ class PropRegistry(PathRegistry):
 
     @util.memoized_property
     def has_entity(self):
-        return self.prop._links_to_entity
+        return hasattr(self.prop, "mapper")
 
     @util.memoized_property
     def entity(self):
-        return self.prop.entity
+        return self.prop.mapper
 
     @property
     def mapper(self):
-        return self.prop.mapper
+        return self.entity
 
     @property
     def entity_path(self):

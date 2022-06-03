@@ -1,5 +1,5 @@
 # sql/selectable.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -889,7 +889,7 @@ LABEL_STYLE_NONE = util.symbol(
 
     .. versionadded:: 1.4
 
-""",  # noqa: E501
+""",  # noqa E501
 )
 
 LABEL_STYLE_TABLENAME_PLUS_COL = util.symbol(
@@ -901,7 +901,7 @@ LABEL_STYLE_TABLENAME_PLUS_COL = util.symbol(
 
     Below, all column names are given a label so that the two same-named
     columns ``columna`` are disambiguated as ``table1_columna`` and
-    ``table2_columna``::
+    ``table2_columna`::
 
         >>> from sqlalchemy import table, column, select, true, LABEL_STYLE_TABLENAME_PLUS_COL
         >>> table1 = table("table1", column("columna"), column("columnb"))
@@ -919,7 +919,7 @@ LABEL_STYLE_TABLENAME_PLUS_COL = util.symbol(
 
     .. versionadded:: 1.4
 
-""",  # noqa: E501
+""",  # noqa E501
 )
 
 
@@ -1757,14 +1757,13 @@ class TableValuedAlias(Alias):
 
         :ref:`tutorial_functions_table_valued` - in the :ref:`unified_tutorial`
 
-    """  # noqa: E501
+    """  # noqa E501
 
     __visit_name__ = "table_valued_alias"
 
     _supports_derived_columns = True
     _render_derived = False
     _render_derived_w_types = False
-    joins_implicitly = False
 
     _traverse_internals = [
         ("element", InternalTraversal.dp_clauseelement),
@@ -1774,16 +1773,9 @@ class TableValuedAlias(Alias):
         ("_render_derived_w_types", InternalTraversal.dp_boolean),
     ]
 
-    def _init(
-        self,
-        selectable,
-        name=None,
-        table_value_type=None,
-        joins_implicitly=False,
-    ):
+    def _init(self, selectable, name=None, table_value_type=None):
         super(TableValuedAlias, self)._init(selectable, name=name)
 
-        self.joins_implicitly = joins_implicitly
         self._tableval_type = (
             type_api.TABLEVALUE
             if table_value_type is None
@@ -1820,17 +1812,10 @@ class TableValuedAlias(Alias):
 
         """
 
-        tva = TableValuedAlias._construct(
-            self,
-            name=name,
-            table_value_type=self._tableval_type,
-            joins_implicitly=self.joins_implicitly,
-        )
-
+        tva = TableValuedAlias._construct(self, name=name)
         if self._render_derived:
             tva._render_derived = True
             tva._render_derived_w_types = self._render_derived_w_types
-
         return tva
 
     def lateral(self, name=None):
@@ -1884,22 +1869,14 @@ class TableValuedAlias(Alias):
          datatype specification with each column. This is a special syntax
          currently known to be required by PostgreSQL for some SQL functions.
 
-        """  # noqa: E501
+        """  # noqa E501
 
         # note: don't use the @_generative system here, keep a reference
         # to the original object.  otherwise you can have re-use of the
         # python id() of the original which can cause name conflicts if
         # a new anon-name grabs the same identifier as the local anon-name
         # (just saw it happen on CI)
-
-        # construct against original to prevent memory growth
-        # for repeated generations
-        new_alias = TableValuedAlias._construct(
-            self.element,
-            name=name,
-            table_value_type=self._tableval_type,
-            joins_implicitly=self.joins_implicitly,
-        )
+        new_alias = TableValuedAlias._construct(self, name=name)
         new_alias._render_derived = True
         new_alias._render_derived_w_types = with_types
         return new_alias
@@ -2144,23 +2121,9 @@ class CTE(
             _suffixes=self._suffixes,
         )
 
-    def union(self, *other):
-        r"""Return a new :class:`_expression.CTE` with a SQL ``UNION``
-        of the original CTE against the given selectables provided
-        as positional arguments.
-
-        :param \*other: one or more elements with which to create a
-         UNION.
-
-         .. versionchanged:: 1.4.28 multiple elements are now accepted.
-
-        .. seealso::
-
-            :meth:`_sql.HasCTE.cte` - examples of calling styles
-
-        """
+    def union(self, other):
         return CTE._construct(
-            self.element.union(*other),
+            self.element.union(other),
             name=self.name,
             recursive=self.recursive,
             nesting=self.nesting,
@@ -2169,23 +2132,9 @@ class CTE(
             _suffixes=self._suffixes,
         )
 
-    def union_all(self, *other):
-        r"""Return a new :class:`_expression.CTE` with a SQL ``UNION ALL``
-        of the original CTE against the given selectables provided
-        as positional arguments.
-
-        :param \*other: one or more elements with which to create a
-         UNION.
-
-         .. versionchanged:: 1.4.28 multiple elements are now accepted.
-
-        .. seealso::
-
-            :meth:`_sql.HasCTE.cte` - examples of calling styles
-
-        """
+    def union_all(self, other):
         return CTE._construct(
-            self.element.union_all(*other),
+            self.element.union_all(other),
             name=self.name,
             recursive=self.recursive,
             nesting=self.nesting,
@@ -2447,7 +2396,7 @@ class HasCTE(roles.HasCTERole):
 
             connection.execute(upsert)
 
-        Example 4, Nesting CTE (SQLAlchemy 1.4.24 and above)::
+        Example 4, Nesting CTE::
 
             value_a = select(
                 literal("root").label("n")
@@ -2476,44 +2425,6 @@ class HasCTE(roles.HasCTERole):
                     SELECT value_a.n AS n FROM value_a)
             SELECT value_a.n AS a, value_b.n AS b
             FROM value_a, value_b
-
-        Example 5, Non-Linear CTE (SQLAlchemy 1.4.28 and above)::
-
-            edge = Table(
-                "edge",
-                metadata,
-                Column("id", Integer, primary_key=True),
-                Column("left", Integer),
-                Column("right", Integer),
-            )
-
-            root_node = select(literal(1).label("node")).cte(
-                "nodes", recursive=True
-            )
-
-            left_edge = select(edge.c.left).join(
-                root_node, edge.c.right == root_node.c.node
-            )
-            right_edge = select(edge.c.right).join(
-                root_node, edge.c.left == root_node.c.node
-            )
-
-            subgraph_cte = root_node.union(left_edge, right_edge)
-
-            subgraph = select(subgraph_cte)
-
-        The above query will render 2 UNIONs inside the recursive CTE::
-
-            WITH RECURSIVE nodes(node) AS (
-                    SELECT 1 AS node
-                UNION
-                    SELECT edge."left" AS "left"
-                    FROM edge JOIN nodes ON edge."right" = nodes.node
-                UNION
-                    SELECT edge."right" AS "right"
-                    FROM edge JOIN nodes ON edge."left" = nodes.node
-            )
-            SELECT nodes.node FROM nodes
 
         .. seealso::
 
@@ -3870,18 +3781,11 @@ class GenerativeSelect(DeprecatedSelectBaseGenerations, SelectBase):
     @_generative
     def order_by(self, *clauses):
         r"""Return a new selectable with the given list of ORDER BY
-        criteria applied.
+        criterion applied.
 
         e.g.::
 
             stmt = select(table).order_by(table.c.id, table.c.name)
-
-        All existing ORDER BY criteria may be cancelled by passing
-        ``None`` by itself.  New ORDER BY criteria may then be added by
-        invoking :meth:`_sql.Select.order_by` again, e.g.::
-
-            # will erase all ORDER BY and ORDER BY new_col alone
-            stmt = stmt.order_by(None).order_by(new_col)
 
         :param \*clauses: a series of :class:`_expression.ColumnElement`
          constructs
@@ -3907,8 +3811,6 @@ class GenerativeSelect(DeprecatedSelectBaseGenerations, SelectBase):
     def group_by(self, *clauses):
         r"""Return a new selectable with the given list of GROUP BY
         criterion applied.
-
-        All existing GROUP BY settings can be suppressed by passing ``None``.
 
         e.g.::
 
@@ -4403,16 +4305,7 @@ class SelectState(util.MemoizedSlots, CompileState):
 
     @classmethod
     def get_column_descriptions(cls, statement):
-        return [
-            {
-                "name": name,
-                "type": element.type,
-                "expr": element,
-            }
-            for _, name, _, element, _ in (
-                statement._generate_columns_plus_names(False)
-            )
-        ]
+        cls._plugin_not_implemented()
 
     @classmethod
     def from_statement(cls, statement, from_statement):
@@ -4593,7 +4486,7 @@ class SelectState(util.MemoizedSlots, CompileState):
 
     def _memoized_attr__label_resolve_dict(self):
         with_cols = dict(
-            (c._tq_label or c.key, c)
+            (c._resolve_label or c._tq_label or c.key, c)
             for c in self.statement._all_selected_columns
             if c._allow_label_resolve
         )
@@ -4805,8 +4698,7 @@ class _MemoizedSelectEntities(
     def _clone(self, **kw):
         c = self.__class__.__new__(self.__class__)
         c.__dict__ = {k: v for k, v in self.__dict__.items()}
-
-        c._is_clone_of = self.__dict__.get("_is_clone_of", self)
+        c._is_clone_of = self
         return c
 
     @classmethod
@@ -5355,43 +5247,8 @@ class Select(
 
     @property
     def column_descriptions(self):
-        """Return a :term:`plugin-enabled` 'column descriptions' structure
-        referring to the columns which are SELECTed by this statement.
-
-        This attribute is generally useful when using the ORM, as an
-        extended structure which includes information about mapped
-        entities is returned.  The section :ref:`queryguide_inspection`
-        contains more background.
-
-        For a Core-only statement, the structure returned by this accessor
-        is derived from the same objects that are returned by the
-        :attr:`.Select.selected_columns` accessor, formatted as a list of
-        dictionaries which contain the keys ``name``, ``type`` and ``expr``,
-        which indicate the column expressions to be selected::
-
-            >>> stmt = select(user_table)
-            >>> stmt.column_descriptions
-            [
-                {
-                    'name': 'id',
-                    'type': Integer(),
-                    'expr': Column('id', Integer(), ...)},
-                {
-                    'name': 'name',
-                    'type': String(length=30),
-                    'expr': Column('name', String(length=30), ...)}
-            ]
-
-        .. versionchanged:: 1.4.33 The :attr:`.Select.column_descriptions`
-           attribute returns a structure for a Core-only set of entities,
-           not just ORM-only entities.
-
-        .. seealso::
-
-            :attr:`.UpdateBase.entity_description` - entity information for
-            an :func:`.insert`, :func:`.update`, or :func:`.delete`
-
-            :ref:`queryguide_inspection` - ORM background
+        """Return a 'column descriptions' structure which may be
+        :term:`plugin-specific`.
 
         """
         meth = SelectState.get_plugin_class(self).get_column_descriptions
@@ -5897,7 +5754,7 @@ class Select(
 
          .. versionadded:: 1.4.23
 
-        """  # noqa: E501
+        """  # noqa E501
 
         # memoizations should be cleared here as of
         # I95c560ffcbfa30b26644999412fb6a385125f663 , asserting this
@@ -6404,107 +6261,47 @@ class Select(
         else:
             return SelectStatementGrouping(self)
 
-    def union(self, *other, **kwargs):
-        r"""Return a SQL ``UNION`` of this select() construct against
-        the given selectables provided as positional arguments.
-
-        :param \*other: one or more elements with which to create a
-         UNION.
-
-         .. versionchanged:: 1.4.28
-
-            multiple elements are now accepted.
-
-        :param \**kwargs: keyword arguments are forwarded to the constructor
-         for the newly created :class:`_sql.CompoundSelect` object.
+    def union(self, other, **kwargs):
+        """Return a SQL ``UNION`` of this select() construct against
+        the given selectable.
 
         """
-        return CompoundSelect._create_union(self, *other, **kwargs)
+        return CompoundSelect._create_union(self, other, **kwargs)
 
-    def union_all(self, *other, **kwargs):
-        r"""Return a SQL ``UNION ALL`` of this select() construct against
-        the given selectables provided as positional arguments.
-
-        :param \*other: one or more elements with which to create a
-         UNION.
-
-         .. versionchanged:: 1.4.28
-
-            multiple elements are now accepted.
-
-        :param \**kwargs: keyword arguments are forwarded to the constructor
-         for the newly created :class:`_sql.CompoundSelect` object.
+    def union_all(self, other, **kwargs):
+        """Return a SQL ``UNION ALL`` of this select() construct against
+        the given selectable.
 
         """
-        return CompoundSelect._create_union_all(self, *other, **kwargs)
+        return CompoundSelect._create_union_all(self, other, **kwargs)
 
-    def except_(self, *other, **kwargs):
-        r"""Return a SQL ``EXCEPT`` of this select() construct against
-        the given selectable provided as positional arguments.
-
-        :param \*other: one or more elements with which to create a
-         UNION.
-
-         .. versionchanged:: 1.4.28
-
-            multiple elements are now accepted.
-
-        :param \**kwargs: keyword arguments are forwarded to the constructor
-         for the newly created :class:`_sql.CompoundSelect` object.
+    def except_(self, other, **kwargs):
+        """Return a SQL ``EXCEPT`` of this select() construct against
+        the given selectable.
 
         """
-        return CompoundSelect._create_except(self, *other, **kwargs)
+        return CompoundSelect._create_except(self, other, **kwargs)
 
-    def except_all(self, *other, **kwargs):
-        r"""Return a SQL ``EXCEPT ALL`` of this select() construct against
-        the given selectables provided as positional arguments.
-
-        :param \*other: one or more elements with which to create a
-         UNION.
-
-         .. versionchanged:: 1.4.28
-
-            multiple elements are now accepted.
-
-        :param \**kwargs: keyword arguments are forwarded to the constructor
-         for the newly created :class:`_sql.CompoundSelect` object.
+    def except_all(self, other, **kwargs):
+        """Return a SQL ``EXCEPT ALL`` of this select() construct against
+        the given selectable.
 
         """
-        return CompoundSelect._create_except_all(self, *other, **kwargs)
+        return CompoundSelect._create_except_all(self, other, **kwargs)
 
-    def intersect(self, *other, **kwargs):
-        r"""Return a SQL ``INTERSECT`` of this select() construct against
-        the given selectables provided as positional arguments.
-
-        :param \*other: one or more elements with which to create a
-         UNION.
-
-         .. versionchanged:: 1.4.28
-
-            multiple elements are now accepted.
-
-        :param \**kwargs: keyword arguments are forwarded to the constructor
-         for the newly created :class:`_sql.CompoundSelect` object.
+    def intersect(self, other, **kwargs):
+        """Return a SQL ``INTERSECT`` of this select() construct against
+        the given selectable.
 
         """
-        return CompoundSelect._create_intersect(self, *other, **kwargs)
+        return CompoundSelect._create_intersect(self, other, **kwargs)
 
-    def intersect_all(self, *other, **kwargs):
-        r"""Return a SQL ``INTERSECT ALL`` of this select() construct
-        against the given selectables provided as positional arguments.
-
-        :param \*other: one or more elements with which to create a
-         UNION.
-
-         .. versionchanged:: 1.4.28
-
-            multiple elements are now accepted.
-
-        :param \**kwargs: keyword arguments are forwarded to the constructor
-         for the newly created :class:`_sql.CompoundSelect` object.
+    def intersect_all(self, other, **kwargs):
+        """Return a SQL ``INTERSECT ALL`` of this select() construct
+        against the given selectable.
 
         """
-        return CompoundSelect._create_intersect_all(self, *other, **kwargs)
+        return CompoundSelect._create_intersect_all(self, other, **kwargs)
 
     @property
     @util.deprecated_20(
@@ -6665,9 +6462,6 @@ class Exists(UnaryExpression):
 
     See :func:`_sql.exists` for a description of usage.
 
-    An ``EXISTS`` clause can also be constructed from a :func:`_sql.select`
-    instance by calling :meth:`_sql.SelectBase.exists`.
-
     """
 
     _from_objects = []
@@ -6706,10 +6500,7 @@ class Exists(UnaryExpression):
 
             :ref:`tutorial_exists` - in the :term:`2.0 style` tutorial.
 
-            :meth:`_sql.SelectBase.exists` - method to transform a ``SELECT`` to an
-            ``EXISTS`` clause.
-
-        """  # noqa: E501
+        """  # noqa E501
         if args and isinstance(args[0], (SelectBase, ScalarSelect)):
             s = args[0]
         else:
@@ -6823,7 +6614,7 @@ class Exists(UnaryExpression):
         e.element = self._regroup(lambda element: element.select_from(*froms))
         return e
 
-    def where(self, *clause):
+    def where(self, clause):
         """Return a new :func:`_expression.exists` construct with the
         given expression added to
         its WHERE clause, joined to the existing clause via AND, if any.
@@ -6836,7 +6627,7 @@ class Exists(UnaryExpression):
 
         """
         e = self._clone()
-        e.element = self._regroup(lambda element: element.where(*clause))
+        e.element = self._regroup(lambda element: element.where(clause))
         return e
 
 

@@ -1,5 +1,5 @@
 # orm/properties.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -20,6 +20,7 @@ from .descriptor_props import SynonymProperty
 from .interfaces import PropComparator
 from .interfaces import StrategizedProperty
 from .relationships import RelationshipProperty
+from .util import _orm_full_deannotate
 from .. import log
 from .. import util
 from ..sql import coercions
@@ -45,9 +46,9 @@ class ColumnProperty(StrategizedProperty):
 
     strategy_wildcard_key = "column"
     inherit_cache = True
-    _links_to_entity = False
 
     __slots__ = (
+        "_orig_columns",
         "columns",
         "group",
         "deferred",
@@ -153,8 +154,14 @@ class ColumnProperty(StrategizedProperty):
 
         """
         super(ColumnProperty, self).__init__()
-        self.columns = [
+        self._orig_columns = [
             coercions.expect(roles.LabeledColumnExprRole, c) for c in columns
+        ]
+        self.columns = [
+            coercions.expect(
+                roles.LabeledColumnExprRole, _orm_full_deannotate(c)
+            )
+            for c in columns
         ]
         self.group = kwargs.pop("group", None)
         self.deferred = kwargs.pop("deferred", False)

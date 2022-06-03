@@ -1,5 +1,5 @@
 # orm/dynamic.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -302,10 +302,7 @@ class AppenderMixin(object):
             # is in the FROM.  So we purposely put the mapper selectable
             # in _from_obj[0] to ensure a user-defined join() later on
             # doesn't fail, and secondary is then in _from_obj[1].
-
-            # note also, we are using the official ORM-annotated selectable
-            # from __clause_element__(), see #7868
-            self._from_obj = (prop.mapper.__clause_element__(), prop.secondary)
+            self._from_obj = (prop.mapper.selectable, prop.secondary)
 
         self._where_criteria = (
             prop._with_parent(instance, alias_secondary=False),

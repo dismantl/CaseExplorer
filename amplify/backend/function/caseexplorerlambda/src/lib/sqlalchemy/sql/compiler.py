@@ -1,5 +1,5 @@
 # sql/compiler.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -670,21 +670,6 @@ class SQLCompiler(Compiled):
 
     """
 
-    positiontup = None
-    """for a compiled construct that uses a positional paramstyle, will be
-    a sequence of strings, indicating the names of bound parameters in order.
-
-    This is used in order to render bound parameters in their correct order,
-    and is combined with the :attr:`_sql.Compiled.params` dictionary to
-    render parameters.
-
-    .. seealso::
-
-        :ref:`faq_sql_expression_string` - includes a usage example for
-        debugging use cases.
-
-    """
-
     inline = False
 
     def __init__(
@@ -898,12 +883,8 @@ class SQLCompiler(Compiled):
 
     @util.memoized_property
     def _bind_processors(self):
-
         return dict(
-            (
-                key,
-                value,
-            )
+            (key, value)
             for key, value in (
                 (
                     self.bind_names[bindparam],
@@ -935,6 +916,8 @@ class SQLCompiler(Compiled):
     ):
         """return a dictionary of bind parameter keys and values"""
 
+        has_escaped_names = bool(self.escaped_bind_names)
+
         if extracted_parameters:
             # related the bound parameters collected in the original cache key
             # to those collected in the incoming cache key.  They will not have
@@ -965,10 +948,16 @@ class SQLCompiler(Compiled):
         if params:
             pd = {}
             for bindparam, name in self.bind_names.items():
+                escaped_name = (
+                    self.escaped_bind_names.get(name, name)
+                    if has_escaped_names
+                    else name
+                )
+
                 if bindparam.key in params:
-                    pd[name] = params[bindparam.key]
+                    pd[escaped_name] = params[bindparam.key]
                 elif name in params:
-                    pd[name] = params[name]
+                    pd[escaped_name] = params[name]
 
                 elif _check and bindparam.required:
                     if _group_number:
@@ -993,13 +982,19 @@ class SQLCompiler(Compiled):
                         value_param = bindparam
 
                     if bindparam.callable:
-                        pd[name] = value_param.effective_value
+                        pd[escaped_name] = value_param.effective_value
                     else:
-                        pd[name] = value_param.value
+                        pd[escaped_name] = value_param.value
             return pd
         else:
             pd = {}
             for bindparam, name in self.bind_names.items():
+                escaped_name = (
+                    self.escaped_bind_names.get(name, name)
+                    if has_escaped_names
+                    else name
+                )
+
                 if _check and bindparam.required:
                     if _group_number:
                         raise exc.InvalidRequestError(
@@ -1021,9 +1016,9 @@ class SQLCompiler(Compiled):
                     value_param = bindparam
 
                 if bindparam.callable:
-                    pd[name] = value_param.effective_value
+                    pd[escaped_name] = value_param.effective_value
                 else:
-                    pd[name] = value_param.value
+                    pd[escaped_name] = value_param.value
             return pd
 
     @util.memoized_instancemethod
@@ -1096,14 +1091,7 @@ class SQLCompiler(Compiled):
     @property
     def params(self):
         """Return the bind param dictionary embedded into this
-        compiled object, for those values that are present.
-
-        .. seealso::
-
-            :ref:`faq_sql_expression_string` - includes a usage example for
-            debugging use cases.
-
-        """
+        compiled object, for those values that are present."""
         return self.construct_params(_check=False)
 
     def _process_parameters_for_postcompile(
@@ -1121,7 +1109,6 @@ class SQLCompiler(Compiled):
           N as a bound parameter.
 
         """
-
         if parameters is None:
             parameters = self.construct_params()
 
@@ -1164,11 +1151,10 @@ class SQLCompiler(Compiled):
                 if self.escaped_bind_names
                 else name
             )
-
             parameter = self.binds[name]
             if parameter in self.literal_execute_params:
                 if escaped_name not in replacement_expressions:
-                    value = parameters.pop(name)
+                    value = parameters.pop(escaped_name)
 
                 replacement_expressions[
                     escaped_name
@@ -1187,12 +1173,7 @@ class SQLCompiler(Compiled):
                     # process it. the single name is being replaced with
                     # individual numbered parameters for each value in the
                     # param.
-                    #
-                    # note we are also inserting *escaped* parameter names
-                    # into the given dictionary.   default dialect will
-                    # use these param names directly as they will not be
-                    # in the escaped_bind_names dictionary.
-                    values = parameters.pop(name)
+                    values = parameters.pop(escaped_name)
 
                     leep = self._literal_execute_expanding_parameter
                     to_update, replacement_expr = leep(
@@ -1245,7 +1226,7 @@ class SQLCompiler(Compiled):
             return expr
 
         statement = re.sub(
-            r"__\[POSTCOMPILE_(\S+?)(~~.+?~~)?\]",
+            r"\[POSTCOMPILE_(\S+?)(~~.+?~~)?\]",
             process_expanding,
             self.string,
         )
@@ -1288,20 +1269,15 @@ class SQLCompiler(Compiled):
         )
 
     @util.memoized_property
-    def _within_exec_param_key_getter(self):
-        getter = self._key_getters_for_crud_column[2]
-        return getter
-
-    @util.memoized_property
     @util.preload_module("sqlalchemy.engine.result")
     def _inserted_primary_key_from_lastrowid_getter(self):
         result = util.preloaded.engine_result
 
-        param_key_getter = self._within_exec_param_key_getter
+        key_getter = self._key_getters_for_crud_column[2]
         table = self.statement.table
 
         getters = [
-            (operator.methodcaller("get", param_key_getter(col), None), col)
+            (operator.methodcaller("get", key_getter(col), None), col)
             for col in table.primary_key
         ]
 
@@ -1317,12 +1293,6 @@ class SQLCompiler(Compiled):
         row_fn = result.result_tuple([col.key for col in table.primary_key])
 
         def get(lastrowid, parameters):
-            """given cursor.lastrowid value and the parameters used for INSERT,
-            return a "row" that represents the primary key, either by
-            using the "lastrowid" or by extracting values from the parameters
-            that were sent along with the INSERT.
-
-            """
             if proc is not None:
                 lastrowid = proc(lastrowid)
 
@@ -1341,7 +1311,7 @@ class SQLCompiler(Compiled):
     def _inserted_primary_key_from_returning_getter(self):
         result = util.preloaded.engine_result
 
-        param_key_getter = self._within_exec_param_key_getter
+        key_getter = self._key_getters_for_crud_column[2]
         table = self.statement.table
 
         ret = {col: idx for idx, col in enumerate(self.returning)}
@@ -1349,10 +1319,7 @@ class SQLCompiler(Compiled):
         getters = [
             (operator.itemgetter(ret[col]), True)
             if col in ret
-            else (
-                operator.methodcaller("get", param_key_getter(col), None),
-                False,
-            )
+            else (operator.methodcaller("get", key_getter(col), None), False)
             for col in table.primary_key
         ]
 
@@ -1610,17 +1577,6 @@ class SQLCompiler(Compiled):
         toplevel = not self.stack
         entry = self._default_stack_entry if toplevel else self.stack[-1]
 
-        new_entry = {
-            "correlate_froms": set(),
-            "asfrom_froms": set(),
-            "selectable": taf,
-        }
-        self.stack.append(new_entry)
-
-        if taf._independent_ctes:
-            for cte in taf._independent_ctes:
-                cte._compiler_dispatch(self, **kw)
-
         populate_result_map = (
             toplevel
             or (
@@ -1648,14 +1604,7 @@ class SQLCompiler(Compiled):
                     add_to_result_map=self._add_to_result_map,
                 )
 
-        text = self.process(taf.element, **kw)
-        if self.ctes:
-            nesting_level = len(self.stack) if not toplevel else None
-            text = self._render_cte_clause(nesting_level=nesting_level) + text
-
-        self.stack.pop(-1)
-
-        return text
+        return self.process(taf.element, **kw)
 
     def visit_null(self, expr, **kw):
         return "NULL"
@@ -2054,14 +2003,8 @@ class SQLCompiler(Compiled):
                     [parameter.type], parameter.expand_op
                 )
 
-        elif typ_dialect_impl._is_tuple_type or (
-            typ_dialect_impl._isnull
-            and isinstance(values[0], util.collections_abc.Sequence)
-            and not isinstance(
-                values[0], util.string_types + util.binary_types
-            )
-        ):
-
+        elif isinstance(values[0], (tuple, list)):
+            assert typ_dialect_impl._is_tuple_type
             replacement_expression = (
                 "VALUES " if self.dialect.tuple_in_values else ""
             ) + ", ".join(
@@ -2077,6 +2020,7 @@ class SQLCompiler(Compiled):
                 for i, tuple_element in enumerate(values)
             )
         else:
+            assert not typ_dialect_impl._is_tuple_type
             replacement_expression = ", ".join(
                 self.render_literal_value(value, parameter.type)
                 for value in values
@@ -2105,14 +2049,10 @@ class SQLCompiler(Compiled):
                     [parameter.type], parameter.expand_op
                 )
 
-        elif typ_dialect_impl._is_tuple_type or (
-            typ_dialect_impl._isnull
-            and isinstance(values[0], util.collections_abc.Sequence)
-            and not isinstance(
-                values[0], util.string_types + util.binary_types
-            )
+        elif (
+            isinstance(values[0], (tuple, list))
+            and not typ_dialect_impl._is_array
         ):
-            assert not typ_dialect_impl._is_array
             to_update = [
                 ("%s_%s_%s" % (name, i, j), value)
                 for i, tuple_element in enumerate(values, 1)
@@ -2404,9 +2344,9 @@ class SQLCompiler(Compiled):
                     # for postcompile w/ expanding, move the "wrapped" part
                     # of this into the inside
                     m = re.match(
-                        r"^(.*)\(__\[POSTCOMPILE_(\S+?)\]\)(.*)$", wrapped
+                        r"^(.*)\(\[POSTCOMPILE_(\S+?)\]\)(.*)$", wrapped
                     )
-                    wrapped = "(__[POSTCOMPILE_%s~~%s~~REPL~~%s~~])" % (
+                    wrapped = "([POSTCOMPILE_%s~~%s~~REPL~~%s~~])" % (
                         m.group(2),
                         m.group(1),
                         m.group(3),
@@ -2448,15 +2388,6 @@ class SQLCompiler(Compiled):
                     raise exc.CompileError(
                         "Bind parameter '%s' conflicts with "
                         "unique bind parameter of the same name" % name
-                    )
-                elif existing.expanding != bindparam.expanding:
-                    raise exc.CompileError(
-                        "Can't reuse bound parameter name '%s' in both "
-                        "'expanding' (e.g. within an IN expression) and "
-                        "non-expanding contexts.  If this parameter is to "
-                        "receive a list/array value, set 'expanding=True' on "
-                        "it for expressions that aren't IN, otherwise use "
-                        "a different parameter name." % (name,)
                     )
                 elif existing._is_crud or bindparam._is_crud:
                     raise exc.CompileError(
@@ -2621,7 +2552,7 @@ class SQLCompiler(Compiled):
                 self.escaped_bind_names = {}
             self.escaped_bind_names[escaped_from] = name
         if post_compile:
-            return "__[POSTCOMPILE_%s]" % name
+            return "[POSTCOMPILE_%s]" % name
         else:
             return self.bindtemplate % {"name": name}
 
@@ -2803,8 +2734,6 @@ class SQLCompiler(Compiled):
                 return self.preparer.format_alias(cte, cte_name)
 
     def visit_table_valued_alias(self, element, **kw):
-        if element.joins_implicitly:
-            kw["from_linter"] = None
         if element._is_lateral:
             return self.visit_lateral(element, **kw)
         else:
@@ -3257,9 +3186,6 @@ class SQLCompiler(Compiled):
         # passed in.  for ORM use this will convert from an ORM-state
         # SELECT to a regular "Core" SELECT.  other composed operations
         # such as computation of joins will be performed.
-
-        kwargs["within_columns_clause"] = False
-
         compile_state = select_stmt._compile_state_factory(
             select_stmt, self, **kwargs
         )
@@ -3928,7 +3854,14 @@ class SQLCompiler(Compiled):
                 [value for c, expr, value in crud_params]
             )
             text += " VALUES (%s)" % insert_single_values_expr
-            if toplevel:
+            if toplevel and insert_stmt._post_values_clause is None:
+                # don't assign insert_single_values_expr if _post_values_clause
+                # is present.  what this means concretely is that the
+                # "fast insert executemany helper" won't be used, in other
+                # words we won't convert "executemany()" of many parameter
+                # sets into a single INSERT with many elements in VALUES.
+                # We can't apply that optimization safely if for example the
+                # statement includes a clause like "ON CONFLICT DO UPDATE"
                 self.insert_single_values_expr = insert_single_values_expr
 
         if insert_stmt._post_values_clause is not None:
@@ -5074,7 +5007,7 @@ class IdentifierPreparer(object):
                         "in schema translate name '%s'" % name
                     )
                 return quoted_name(
-                    "__[SCHEMA_%s]" % (name or "_none"), quote=False
+                    "[SCHEMA_%s]" % (name or "_none"), quote=False
                 )
             else:
                 return obj.schema
@@ -5100,7 +5033,7 @@ class IdentifierPreparer(object):
                     )
             return self.quote_schema(effective_schema)
 
-        return re.sub(r"(__\[SCHEMA_([^\]]+)\])", replace, statement)
+        return re.sub(r"(\[SCHEMA_([^\]]+)\])", replace, statement)
 
     def _escape_identifier(self, value):
         """Escape an identifier.

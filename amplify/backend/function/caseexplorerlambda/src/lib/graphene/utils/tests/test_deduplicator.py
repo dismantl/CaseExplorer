@@ -94,7 +94,6 @@ TEST_DATA = {
     ],
     "movies": {
         "1198359": {
-            "id": "1198359",
             "name": "King Arthur: Legend of the Sword",
             "synopsis": (
                 "When the child Arthur's father is murdered, Vortigern, "
@@ -151,8 +150,8 @@ def test_example_end_to_end():
     result = schema.execute(query)
     assert not result.errors
 
-    data = deflate(result.data)
-    assert data == {
+    result.data = deflate(result.data)
+    assert result.data == {
         "events": [
             {
                 "__typename": "Event",
@@ -160,7 +159,7 @@ def test_example_end_to_end():
                 "date": "2017-05-19",
                 "movie": {
                     "__typename": "Movie",
-                    "id": "TW92aWU6MTE5ODM1OQ==",
+                    "id": "TW92aWU6Tm9uZQ==",
                     "name": "King Arthur: Legend of the Sword",
                     "synopsis": (
                         "When the child Arthur's father is murdered, Vortigern, "
@@ -173,7 +172,7 @@ def test_example_end_to_end():
                 "__typename": "Event",
                 "id": "RXZlbnQ6MjM0",
                 "date": "2017-05-20",
-                "movie": {"__typename": "Movie", "id": "TW92aWU6MTE5ODM1OQ=="},
+                "movie": {"__typename": "Movie", "id": "TW92aWU6Tm9uZQ=="},
             },
         ]
     }

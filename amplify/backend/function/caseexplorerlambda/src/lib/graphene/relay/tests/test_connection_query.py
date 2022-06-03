@@ -1,6 +1,7 @@
-from pytest import mark
+from collections import OrderedDict
 
 from graphql_relay.utils import base64
+from promise import Promise
 
 from ...types import ObjectType, Schema, String
 from ..connection import Connection, ConnectionField, PageInfo
@@ -24,15 +25,15 @@ class LetterConnection(Connection):
 class Query(ObjectType):
     letters = ConnectionField(LetterConnection)
     connection_letters = ConnectionField(LetterConnection)
-    async_letters = ConnectionField(LetterConnection)
+    promise_letters = ConnectionField(LetterConnection)
 
     node = Node.Field()
 
     def resolve_letters(self, info, **args):
         return list(letters.values())
 
-    async def resolve_async_letters(self, info, **args):
-        return list(letters.values())
+    def resolve_promise_letters(self, info, **args):
+        return Promise.resolve(list(letters.values()))
 
     def resolve_connection_letters(self, info, **args):
         return LetterConnection(
@@ -45,7 +46,9 @@ class Query(ObjectType):
 
 schema = Schema(Query)
 
-letters = {letter: Letter(id=i, letter=letter) for i, letter in enumerate(letter_chars)}
+letters = OrderedDict()
+for i, letter in enumerate(letter_chars):
+    letters[letter] = Letter(id=i, letter=letter)
 
 
 def edges(selected_letters):
@@ -63,10 +66,11 @@ def cursor_for(ltr):
     return base64("arrayconnection:%s" % letter.id)
 
 
-async def execute(args=""):
+def execute(args=""):
     if args:
         args = "(" + args + ")"
-    return await schema.execute_async(
+
+    return schema.execute(
         """
     {
         letters%s {
@@ -90,8 +94,8 @@ async def execute(args=""):
     )
 
 
-async def check(args, letters, has_previous_page=False, has_next_page=False):
-    result = await execute(args)
+def check(args, letters, has_previous_page=False, has_next_page=False):
+    result = execute(args)
     expected_edges = edges(letters)
     expected_page_info = {
         "hasPreviousPage": has_previous_page,
@@ -106,126 +110,114 @@ async def check(args, letters, has_previous_page=False, has_next_page=False):
     }
 
 
-@mark.asyncio
-async def test_returns_all_elements_without_filters():
-    await check("", "ABCDE")
+def test_returns_all_elements_without_filters():
+    check("", "ABCDE")
 
 
-@mark.asyncio
-async def test_respects_a_smaller_first():
-    await check("first: 2", "AB", has_next_page=True)
+def test_respects_a_smaller_first():
+    check("first: 2", "AB", has_next_page=True)
 
 
-@mark.asyncio
-async def test_respects_an_overly_large_first():
-    await check("first: 10", "ABCDE")
+def test_respects_an_overly_large_first():
+    check("first: 10", "ABCDE")
 
 
-@mark.asyncio
-async def test_respects_a_smaller_last():
-    await check("last: 2", "DE", has_previous_page=True)
+def test_respects_a_smaller_last():
+    check("last: 2", "DE", has_previous_page=True)
 
 
-@mark.asyncio
-async def test_respects_an_overly_large_last():
-    await check("last: 10", "ABCDE")
+def test_respects_an_overly_large_last():
+    check("last: 10", "ABCDE")
 
 
-@mark.asyncio
-async def test_respects_first_and_after():
-    await check(f'first: 2, after: "{cursor_for("B")}"', "CD", has_next_page=True)
+def test_respects_first_and_after():
+    check('first: 2, after: "{}"'.format(cursor_for("B")), "CD", has_next_page=True)
 
 
-@mark.asyncio
-async def test_respects_first_and_after_with_long_first():
-    await check(f'first: 10, after: "{cursor_for("B")}"', "CDE")
+def test_respects_first_and_after_with_long_first():
+    check('first: 10, after: "{}"'.format(cursor_for("B")), "CDE")
 
 
-@mark.asyncio
-async def test_respects_last_and_before():
-    await check(f'last: 2, before: "{cursor_for("D")}"', "BC", has_previous_page=True)
+def test_respects_last_and_before():
+    check('last: 2, before: "{}"'.format(cursor_for("D")), "BC", has_previous_page=True)
 
 
-@mark.asyncio
-async def test_respects_last_and_before_with_long_last():
-    await check(f'last: 10, before: "{cursor_for("D")}"', "ABC")
+def test_respects_last_and_before_with_long_last():
+    check('last: 10, before: "{}"'.format(cursor_for("D")), "ABC")
 
 
-@mark.asyncio
-async def test_respects_first_and_after_and_before_too_few():
-    await check(
-        f'first: 2, after: "{cursor_for("A")}", before: "{cursor_for("E")}"',
+def test_respects_first_and_after_and_before_too_few():
+    check(
+        'first: 2, after: "{}", before: "{}"'.format(cursor_for("A"), cursor_for("E")),
         "BC",
         has_next_page=True,
     )
 
 
-@mark.asyncio
-async def test_respects_first_and_after_and_before_too_many():
-    await check(
-        f'first: 4, after: "{cursor_for("A")}", before: "{cursor_for("E")}"', "BCD"
+def test_respects_first_and_after_and_before_too_many():
+    check(
+        'first: 4, after: "{}", before: "{}"'.format(cursor_for("A"), cursor_for("E")),
+        "BCD",
     )
 
 
-@mark.asyncio
-async def test_respects_first_and_after_and_before_exactly_right():
-    await check(
-        f'first: 3, after: "{cursor_for("A")}", before: "{cursor_for("E")}"', "BCD"
+def test_respects_first_and_after_and_before_exactly_right():
+    check(
+        'first: 3, after: "{}", before: "{}"'.format(cursor_for("A"), cursor_for("E")),
+        "BCD",
     )
 
 
-@mark.asyncio
-async def test_respects_last_and_after_and_before_too_few():
-    await check(
-        f'last: 2, after: "{cursor_for("A")}", before: "{cursor_for("E")}"',
+def test_respects_last_and_after_and_before_too_few():
+    check(
+        'last: 2, after: "{}", before: "{}"'.format(cursor_for("A"), cursor_for("E")),
         "CD",
         has_previous_page=True,
     )
 
 
-@mark.asyncio
-async def test_respects_last_and_after_and_before_too_many():
-    await check(
-        f'last: 4, after: "{cursor_for("A")}", before: "{cursor_for("E")}"', "BCD"
+def test_respects_last_and_after_and_before_too_many():
+    check(
+        'last: 4, after: "{}", before: "{}"'.format(cursor_for("A"), cursor_for("E")),
+        "BCD",
     )
 
 
-@mark.asyncio
-async def test_respects_last_and_after_and_before_exactly_right():
-    await check(
-        f'last: 3, after: "{cursor_for("A")}", before: "{cursor_for("E")}"', "BCD"
+def test_respects_last_and_after_and_before_exactly_right():
+    check(
+        'last: 3, after: "{}", before: "{}"'.format(cursor_for("A"), cursor_for("E")),
+        "BCD",
     )
 
 
-@mark.asyncio
-async def test_returns_no_elements_if_first_is_0():
-    await check("first: 0", "", has_next_page=True)
+def test_returns_no_elements_if_first_is_0():
+    check("first: 0", "", has_next_page=True)
 
 
-@mark.asyncio
-async def test_returns_all_elements_if_cursors_are_invalid():
-    await check('before: "invalid" after: "invalid"', "ABCDE")
+def test_returns_all_elements_if_cursors_are_invalid():
+    check('before: "invalid" after: "invalid"', "ABCDE")
 
 
-@mark.asyncio
-async def test_returns_all_elements_if_cursors_are_on_the_outside():
-    await check(
-        f'before: "{base64("arrayconnection:%s" % 6)}" after: "{base64("arrayconnection:%s" % -1)}"',
+def test_returns_all_elements_if_cursors_are_on_the_outside():
+    check(
+        'before: "{}" after: "{}"'.format(
+            base64("arrayconnection:%s" % 6), base64("arrayconnection:%s" % -1)
+        ),
         "ABCDE",
     )
 
 
-@mark.asyncio
-async def test_returns_no_elements_if_cursors_cross():
-    await check(
-        f'before: "{base64("arrayconnection:%s" % 2)}" after: "{base64("arrayconnection:%s" % 4)}"',
+def test_returns_no_elements_if_cursors_cross():
+    check(
+        'before: "{}" after: "{}"'.format(
+            base64("arrayconnection:%s" % 2), base64("arrayconnection:%s" % 4)
+        ),
         "",
     )
 
 
-@mark.asyncio
-async def test_connection_type_nodes():
-    result = await schema.execute_async(
+def test_connection_type_nodes():
+    result = schema.execute(
         """
     {
         connectionLetters {
@@ -256,12 +248,11 @@ async def test_connection_type_nodes():
     }
 
 
-@mark.asyncio
-async def test_connection_async():
-    result = await schema.execute_async(
+def test_connection_promise():
+    result = schema.execute(
         """
     {
-        asyncLetters(first:1) {
+        promiseLetters(first:1) {
             edges {
                 node {
                     id
@@ -279,7 +270,7 @@ async def test_connection_async():
 
     assert not result.errors
     assert result.data == {
-        "asyncLetters": {
+        "promiseLetters": {
             "edges": [{"node": {"id": "TGV0dGVyOjA=", "letter": "A"}}],
             "pageInfo": {"hasPreviousPage": False, "hasNextPage": True},
         }

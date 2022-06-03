@@ -1,6 +1,6 @@
 # https://github.com/graphql-python/graphene/issues/356
 
-from pytest import raises
+import pytest
 
 import graphene
 from graphene import relay
@@ -23,11 +23,10 @@ def test_issue():
     class Query(graphene.ObjectType):
         things = relay.ConnectionField(MyUnion)
 
-    with raises(Exception) as exc_info:
+    with pytest.raises(Exception) as exc_info:
         graphene.Schema(query=Query)
 
     assert str(exc_info.value) == (
-        "Query fields cannot be resolved."
-        " IterableConnectionField type has to be a subclass of Connection."
-        ' Received "MyUnion".'
+        "IterableConnectionField type have to be a subclass of Connection. "
+        'Received "MyUnion".'
     )

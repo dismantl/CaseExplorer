@@ -12,16 +12,17 @@
 # language governing permissions and limitations under the License.
 import logging
 
+
 HISTORY_RECORDER = None
 logger = logging.getLogger(__name__)
 
 
-class BaseHistoryHandler:
+class BaseHistoryHandler(object):
     def emit(self, event_type, payload, source):
         raise NotImplementedError('emit()')
 
 
-class HistoryRecorder:
+class HistoryRecorder(object):
     def __init__(self):
         self._enabled = False
         self._handlers = []
@@ -43,9 +44,8 @@ class HistoryRecorder:
                 except Exception:
                     # Never let the process die because we had a failure in
                     # a record collection handler.
-                    logger.debug(
-                        "Exception raised in %s.", handler, exc_info=True
-                    )
+                    logger.debug("Exception raised in %s.", handler,
+                                 exc_info=True)
 
 
 def get_global_history_recorder():

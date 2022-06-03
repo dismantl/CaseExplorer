@@ -1,5 +1,5 @@
 # mysql/pyodbc.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -43,11 +43,11 @@ Pass through exact pyodbc connection string::
 """  # noqa
 
 import re
+import sys
 
 from .base import MySQLDialect
 from .base import MySQLExecutionContext
 from .types import TIME
-from ... import exc
 from ... import util
 from ...connectors.pyodbc import PyODBCConnector
 from ...sql.sqltypes import Time
@@ -88,24 +88,19 @@ class MySQLDialect_pyodbc(PyODBCConnector, MySQLDialect):
         #
         # If it's decided that issuing that sort of SQL leaves you SOL, then
         # this can prefer the driver value.
-
-        # set this to None as _fetch_setting attempts to use it (None is OK)
-        self._connection_charset = None
-        try:
-            value = self._fetch_setting(connection, "character_set_client")
-            if value:
-                return value
-        except exc.DBAPIError:
-            pass
+        rs = connection.exec_driver_sql(
+            "SHOW VARIABLES LIKE 'character_set%%'"
+        )
+        opts = {row[0]: row[1] for row in self._compat_fetchall(rs)}
+        for key in ("character_set_connection", "character_set"):
+            if opts.get(key, None):
+                return opts[key]
 
         util.warn(
             "Could not detect the connection character set.  "
             "Assuming latin1."
         )
         return "latin1"
-
-    def _get_server_version_info(self, connection):
-        return MySQLDialect._get_server_version_info(self, connection)
 
     def _extract_error_code(self, exception):
         m = re.compile(r"\((\d+)\)").search(str(exception.args))
@@ -126,9 +121,15 @@ class MySQLDialect_pyodbc(PyODBCConnector, MySQLDialect):
             #   https://github.com/mkleehammer/pyodbc/wiki/Unicode
             pyodbc_SQL_CHAR = 1  # pyodbc.SQL_CHAR
             pyodbc_SQL_WCHAR = -8  # pyodbc.SQL_WCHAR
-            conn.setdecoding(pyodbc_SQL_CHAR, encoding="utf-8")
-            conn.setdecoding(pyodbc_SQL_WCHAR, encoding="utf-8")
-            conn.setencoding(encoding="utf-8")
+            if sys.version_info.major > 2:
+                conn.setdecoding(pyodbc_SQL_CHAR, encoding="utf-8")
+                conn.setdecoding(pyodbc_SQL_WCHAR, encoding="utf-8")
+                conn.setencoding(encoding="utf-8")
+            else:
+                conn.setdecoding(pyodbc_SQL_CHAR, encoding="utf-8")
+                conn.setdecoding(pyodbc_SQL_WCHAR, encoding="utf-8")
+                conn.setencoding(str, encoding="utf-8")
+                conn.setencoding(unicode, encoding="utf-8")  # noqa: F821
 
         return on_connect
 

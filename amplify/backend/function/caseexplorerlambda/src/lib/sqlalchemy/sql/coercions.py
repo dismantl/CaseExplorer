@@ -1,5 +1,5 @@
 # sql/coercions.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -11,7 +11,6 @@ import re
 from . import operators
 from . import roles
 from . import visitors
-from .base import ExecutableOption
 from .base import Options
 from .traversals import HasCacheKey
 from .visitors import Visitable
@@ -459,21 +458,6 @@ class HasCacheKeyImpl(RoleImpl):
         return element
 
 
-class ExecutableOptionImpl(RoleImpl):
-    __slots__ = ()
-
-    def _implicit_coercions(
-        self, original_element, resolved, argname=None, **kw
-    ):
-        if isinstance(original_element, ExecutableOption):
-            return original_element
-        else:
-            self._raise_for_expected(original_element, argname, resolved)
-
-    def _literal_coercion(self, element, **kw):
-        return element
-
-
 class ExpressionElementImpl(_ColumnCoercions, RoleImpl):
     __slots__ = ()
 
@@ -524,11 +508,9 @@ class BinaryElementImpl(ExpressionElementImpl, RoleImpl):
         except exc.ArgumentError as err:
             self._raise_for_expected(element, err=err)
 
-    def _post_coercion(self, resolved, expr, bindparam_type=None, **kw):
+    def _post_coercion(self, resolved, expr, **kw):
         if resolved.type._isnull and not expr.type._isnull:
-            resolved = resolved._with_binary_element_type(
-                bindparam_type if bindparam_type is not None else expr.type
-            )
+            resolved = resolved._with_binary_element_type(expr.type)
         return resolved
 
 

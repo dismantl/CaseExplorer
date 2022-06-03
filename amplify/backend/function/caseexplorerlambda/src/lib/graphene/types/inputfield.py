@@ -1,5 +1,3 @@
-from graphql import Undefined
-
 from .mountedtype import MountedType
 from .structures import NonNull
 from .utils import get_type
@@ -40,7 +38,7 @@ class InputField(MountedType):
         deprecation_reason (optional, str): Setting this value indicates that the field is
             depreciated and may provide instruction or reason on how for clients to proceed.
         description (optional, str): Description of the GraphQL field in the schema.
-        required (optional, bool): Indicates this input field as not null in the graphql schema.
+        required (optional, bool): Indicates this input field as not null in the graphql scehma.
             Raises a validation error if argument not provided. Same behavior as graphene.NonNull.
             Default False.
         **extra_args (optional, Dict): Not used.
@@ -48,9 +46,9 @@ class InputField(MountedType):
 
     def __init__(
         self,
-        type_,
+        type,
         name=None,
-        default_value=Undefined,
+        default_value=None,
         deprecation_reason=None,
         description=None,
         required=False,
@@ -60,8 +58,8 @@ class InputField(MountedType):
         super(InputField, self).__init__(_creation_counter=_creation_counter)
         self.name = name
         if required:
-            type_ = NonNull(type_)
-        self._type = type_
+            type = NonNull(type)
+        self._type = type
         self.deprecation_reason = deprecation_reason
         self.default_value = default_value
         self.description = description

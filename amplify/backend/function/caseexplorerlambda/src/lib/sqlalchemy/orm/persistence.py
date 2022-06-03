@@ -1,5 +1,5 @@
 # orm/persistence.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -40,7 +40,6 @@ from ..sql.base import _entity_namespace_key
 from ..sql.base import CompileState
 from ..sql.base import Options
 from ..sql.dml import DeleteDMLState
-from ..sql.dml import InsertDMLState
 from ..sql.dml import UpdateDMLState
 from ..sql.elements import BooleanClauseList
 from ..sql.selectable import LABEL_STYLE_TABLENAME_PLUS_COL
@@ -1178,22 +1177,6 @@ def _emit_insert_statements(
                         c.inserted_primary_key_rows,
                         c.returned_defaults_rows or (),
                     ):
-                        if inserted_primary_key is None:
-                            # this is a real problem and means that we didn't
-                            # get back as many PK rows.  we can't continue
-                            # since this indicates PK rows were missing, which
-                            # means we likely mis-populated records starting
-                            # at that point with incorrectly matched PK
-                            # values.
-                            raise orm_exc.FlushError(
-                                "Multi-row INSERT statement for %s did not "
-                                "produce "
-                                "the correct number of INSERTed rows for "
-                                "RETURNING.  Ensure there are no triggers or "
-                                "special driver issues preventing INSERT from "
-                                "functioning properly." % mapper_rec
-                            )
-
                         for pk, col in zip(
                             inserted_primary_key,
                             mapper._pks_by_table[table],
@@ -1242,15 +1225,6 @@ def _emit_insert_statements(
                         )
 
                     primary_key = result.inserted_primary_key
-                    if primary_key is None:
-                        raise orm_exc.FlushError(
-                            "Single-row INSERT statement for %s "
-                            "did not produce a "
-                            "new primary key result "
-                            "being invoked.  Ensure there are no triggers or "
-                            "special driver issues preventing INSERT from "
-                            "functioning properly." % (mapper_rec,)
-                        )
                     for pk, col in zip(
                         primary_key, mapper._pks_by_table[table]
                     ):
@@ -2138,92 +2112,8 @@ class BulkUDCompileState(CompileState):
         }
 
 
-class ORMDMLState:
-    @classmethod
-    def get_entity_description(cls, statement):
-        ext_info = statement.table._annotations["parententity"]
-        mapper = ext_info.mapper
-        if ext_info.is_aliased_class:
-            _label_name = ext_info.name
-        else:
-            _label_name = mapper.class_.__name__
-
-        return {
-            "name": _label_name,
-            "type": mapper.class_,
-            "expr": ext_info.entity,
-            "entity": ext_info.entity,
-            "table": mapper.local_table,
-        }
-
-    @classmethod
-    def get_returning_column_descriptions(cls, statement):
-        def _ent_for_col(c):
-            return c._annotations.get("parententity", None)
-
-        def _attr_for_col(c, ent):
-            if ent is None:
-                return c
-            proxy_key = c._annotations.get("proxy_key", None)
-            if not proxy_key:
-                return c
-            else:
-                return getattr(ent.entity, proxy_key, c)
-
-        return [
-            {
-                "name": c.key,
-                "type": c.type,
-                "expr": _attr_for_col(c, ent),
-                "aliased": ent.is_aliased_class,
-                "entity": ent.entity,
-            }
-            for c, ent in [
-                (c, _ent_for_col(c)) for c in statement._all_selected_columns
-            ]
-        ]
-
-
-@CompileState.plugin_for("orm", "insert")
-class ORMInsert(ORMDMLState, InsertDMLState):
-    @classmethod
-    def orm_pre_session_exec(
-        cls,
-        session,
-        statement,
-        params,
-        execution_options,
-        bind_arguments,
-        is_reentrant_invoke,
-    ):
-        bind_arguments["clause"] = statement
-        try:
-            plugin_subject = statement._propagate_attrs["plugin_subject"]
-        except KeyError:
-            assert False, "statement had 'orm' plugin but no plugin_subject"
-        else:
-            bind_arguments["mapper"] = plugin_subject.mapper
-
-        return (
-            statement,
-            util.immutabledict(execution_options),
-        )
-
-    @classmethod
-    def orm_setup_cursor_result(
-        cls,
-        session,
-        statement,
-        params,
-        execution_options,
-        bind_arguments,
-        result,
-    ):
-        return result
-
-
 @CompileState.plugin_for("orm", "update")
-class BulkORMUpdate(ORMDMLState, UpdateDMLState, BulkUDCompileState):
+class BulkORMUpdate(UpdateDMLState, BulkUDCompileState):
     @classmethod
     def create_for_statement(cls, statement, compiler, **kw):
 
@@ -2441,7 +2331,7 @@ class BulkORMUpdate(ORMDMLState, UpdateDMLState, BulkUDCompileState):
 
 
 @CompileState.plugin_for("orm", "delete")
-class BulkORMDelete(ORMDMLState, DeleteDMLState, BulkUDCompileState):
+class BulkORMDelete(DeleteDMLState, BulkUDCompileState):
     @classmethod
     def create_for_statement(cls, statement, compiler, **kw):
         self = cls.__new__(cls)

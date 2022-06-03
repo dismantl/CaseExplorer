@@ -47,23 +47,6 @@
         "shape": "CreateChannelResponse"
       }
     },
-    "CreateLiveSource": {
-      "documentation": "<p>Creates name for a specific live source in a source location.</p>",
-      "errors": [],
-      "http": {
-        "method": "POST",
-        "requestUri": "/sourceLocation/{sourceLocationName}/liveSource/{liveSourceName}",
-        "responseCode": 200
-      },
-      "input": {
-        "shape": "CreateLiveSourceRequest"
-      },
-      "name": "CreateLiveSource",
-      "output": {
-        "documentation": "<p>Success.</p>",
-        "shape": "CreateLiveSourceResponse"
-      }
-    },
     "CreatePrefetchSchedule": {
       "documentation": "<p>Creates a new prefetch schedule for the specified playback configuration.</p>",
       "errors": [],
@@ -166,23 +149,6 @@
         "shape": "DeleteChannelPolicyResponse"
       }
     },
-    "DeleteLiveSource": {
-      "documentation": "<p>Deletes a specific live source in a specific source location.</p>",
-      "errors": [],
-      "http": {
-        "method": "DELETE",
-        "requestUri": "/sourceLocation/{sourceLocationName}/liveSource/{liveSourceName}",
-        "responseCode": 200
-      },
-      "input": {
-        "shape": "DeleteLiveSourceRequest"
-      },
-      "name": "DeleteLiveSource",
-      "output": {
-        "documentation": "<p>Success.</p>",
-        "shape": "DeleteLiveSourceResponse"
-      }
-    },
     "DeletePlaybackConfiguration": {
       "documentation": "<p>Deletes the playback configuration for the specified name.</p>  ",
       "errors": [],
@@ -283,23 +249,6 @@
       "output": {
         "documentation": "<p>Success.</p>",
         "shape": "DescribeChannelResponse"
-      }
-    },
-    "DescribeLiveSource": {
-      "documentation": "<p>Provides details about a specific live source in a specific source location.</p>",
-      "errors": [],
-      "http": {
-        "method": "GET",
-        "requestUri": "/sourceLocation/{sourceLocationName}/liveSource/{liveSourceName}",
-        "responseCode": 200
-      },
-      "input": {
-        "shape": "DescribeLiveSourceRequest"
-      },
-      "name": "DescribeLiveSource",
-      "output": {
-        "documentation": "<p>Success.</p>",
-        "shape": "DescribeLiveSourceResponse"
       }
     },
     "DescribeProgram": {
@@ -453,23 +402,6 @@
       "output": {
         "documentation": "<p>Success.</p>",
         "shape": "ListChannelsResponse"
-      }
-    },
-    "ListLiveSources": {
-      "documentation": "<p>lists all the live sources in a source location.</p>",
-      "errors": [],
-      "http": {
-        "method": "GET",
-        "requestUri": "/sourceLocation/{sourceLocationName}/liveSources",
-        "responseCode": 200
-      },
-      "input": {
-        "shape": "ListLiveSourcesRequest"
-      },
-      "name": "ListLiveSources",
-      "output": {
-        "documentation": "<p>Success.</p>",
-        "shape": "ListLiveSourcesResponse"
       }
     },
     "ListPlaybackConfigurations": {
@@ -683,23 +615,6 @@
         "shape": "UpdateChannelResponse"
       }
     },
-    "UpdateLiveSource": {
-      "documentation": "<p>Updates a specific live source in a specific source location.</p>",
-      "errors": [],
-      "http": {
-        "method": "PUT",
-        "requestUri": "/sourceLocation/{sourceLocationName}/liveSource/{liveSourceName}",
-        "responseCode": 200
-      },
-      "input": {
-        "shape": "UpdateLiveSourceRequest"
-      },
-      "name": "UpdateLiveSource",
-      "output": {
-        "documentation": "<p>Success.</p>",
-        "shape": "UpdateLiveSourceResponse"
-      }
-    },
     "UpdateSourceLocation": {
       "documentation": "<p>Updates a source location on a specific channel.</p>",
       "errors": [],
@@ -885,7 +800,7 @@
       "documentation": "<p>The configuration for using a content delivery network (CDN), like Amazon CloudFront, for content and ad segment management.</p>",
       "members": {
         "AdSegmentUrlPrefix": {
-          "documentation": "<p>A non-default content delivery network (CDN) to serve ad segments. By default, AWS Elemental MediaTailor uses Amazon CloudFront with default cache settings as its CDN for ad segments. To set up an alternate CDN, create a rule in your CDN for the origin ads.mediatailor.&amp;lt;region>.amazonaws.com. Then specify the rule's name in this AdSegmentUrlPrefix. When AWS Elemental MediaTailor serves a manifest, it reports your CDN as the source for ad segments.</p>",
+          "documentation": "<p>A non-default content delivery network (CDN) to serve ad segments. By default, AWS Elemental MediaTailor uses Amazon CloudFront with default cache settings as its CDN for ad segments. To set up an alternate CDN, create a rule in your CDN for the origin ads.mediatailor.&amp;lt;region&gt;.amazonaws.com. Then specify the rule's name in this AdSegmentUrlPrefix. When AWS Elemental MediaTailor serves a manifest, it reports your CDN as the source for ad segments.</p>",
           "shape": "__string"
         },
         "ContentSegmentUrlPrefix": {
@@ -915,7 +830,7 @@
           "shape": "__timestampUnix"
         },
         "FillerSlate": {
-          "documentation": "<p>The slate used to fill gaps between programs in the schedule. You must configure filler slate if your channel uses the LINEAR PlaybackMode. MediaTailor doesn't support filler slate for channels using the LOOP PlaybackMode.</p>",
+          "documentation": "<p>Contains information about the slate used to fill gaps between programs in the schedule. You must configure FillerSlate if your channel uses an LINEAR PlaybackMode.</p>",
           "shape": "SlateSource"
         },
         "LastModifiedTime": {
@@ -934,16 +849,11 @@
           "documentation": "<p>The tags to assign to the channel.</p>",
           "locationName": "tags",
           "shape": "__mapOf__string"
-        },
-        "Tier": {
-          "documentation": "<p>The tier for this channel. STANDARD tier channels can contain live programs.</p>",
-          "shape": "__string"
         }
       },
       "required": [
         "ChannelState",
         "ChannelName",
-        "Tier",
         "Outputs",
         "Arn",
         "PlaybackMode"
@@ -1021,7 +931,7 @@
           "shape": "__string"
         },
         "FillerSlate": {
-          "documentation": "<p>The slate used to fill gaps between programs in the schedule. You must configure filler slate if your channel uses the LINEAR PlaybackMode. MediaTailor doesn't support filler slate for channels using the LOOP PlaybackMode.</p>",
+          "documentation": "<p>The slate used to fill gaps between programs in the schedule. You must configure filler slate if your channel uses a LINEAR PlaybackMode.</p>",
           "shape": "SlateSource"
         },
         "Outputs": {
@@ -1036,10 +946,6 @@
           "documentation": "<p>The tags to assign to the channel.</p>",
           "locationName": "tags",
           "shape": "__mapOf__string"
-        },
-        "Tier": {
-          "documentation": "<p>The tier of the channel.</p>",
-          "shape": "Tier"
         }
       },
       "required": [
@@ -1087,75 +993,6 @@
           "documentation": "<p>The tags assigned to the channel.</p>",
           "locationName": "tags",
           "shape": "__mapOf__string"
-        },
-        "Tier": {
-          "documentation": "<p>The channel's tier.</p>",
-          "shape": "__string"
-        }
-      },
-      "type": "structure"
-    },
-    "CreateLiveSourceRequest": {
-      "members": {
-        "HttpPackageConfigurations": {
-          "documentation": "<p>A list of HTTP package configuration parameters for this live source.</p>",
-          "shape": "HttpPackageConfigurations"
-        },
-        "LiveSourceName": {
-          "documentation": "<p>The identifier for the live source you are working on.</p>",
-          "location": "uri",
-          "locationName": "liveSourceName",
-          "shape": "__string"
-        },
-        "SourceLocationName": {
-          "documentation": "<p>The identifier for the source location you are working on.</p>",
-          "location": "uri",
-          "locationName": "sourceLocationName",
-          "shape": "__string"
-        },
-        "Tags": {
-          "documentation": "<p>The tags to assign to the live source.</p>",
-          "locationName": "tags",
-          "shape": "__mapOf__string"
-        }
-      },
-      "required": [
-        "SourceLocationName",
-        "LiveSourceName",
-        "HttpPackageConfigurations"
-      ],
-      "type": "structure"
-    },
-    "CreateLiveSourceResponse": {
-      "members": {
-        "Arn": {
-          "documentation": "<p>The ARN of the live source.</p>",
-          "shape": "__string"
-        },
-        "CreationTime": {
-          "documentation": "<p>The timestamp that indicates when the live source was created.</p>",
-          "shape": "__timestampUnix"
-        },
-        "HttpPackageConfigurations": {
-          "documentation": "<p>The HTTP package configurations.</p>",
-          "shape": "HttpPackageConfigurations"
-        },
-        "LastModifiedTime": {
-          "documentation": "<p>The timestamp that indicates when the live source was modified.</p>",
-          "shape": "__timestampUnix"
-        },
-        "LiveSourceName": {
-          "documentation": "<p>The name of the live source.</p>",
-          "shape": "__string"
-        },
-        "SourceLocationName": {
-          "documentation": "<p>The name of the source location associated with the VOD source.</p>",
-          "shape": "__string"
-        },
-        "Tags": {
-          "documentation": "<p>The tags assigned to the live source.</p>",
-          "locationName": "tags",
-          "shape": "__mapOf__string"
         }
       },
       "type": "structure"
@@ -1190,8 +1027,8 @@
       "required": [
         "Name",
         "PlaybackConfigurationName",
-        "Retrieval",
-        "Consumption"
+        "Consumption",
+        "Retrieval"
       ],
       "type": "structure"
     },
@@ -1236,10 +1073,6 @@
           "locationName": "channelName",
           "shape": "__string"
         },
-        "LiveSourceName": {
-          "documentation": "<p>The name of the LiveSource for this Program.</p>",
-          "shape": "__string"
-        },
         "ProgramName": {
           "documentation": "<p>The identifier for the program you are working on.</p>",
           "location": "uri",
@@ -1262,8 +1095,9 @@
       "required": [
         "ChannelName",
         "ProgramName",
-        "SourceLocationName",
-        "ScheduleConfiguration"
+        "VodSourceName",
+        "ScheduleConfiguration",
+        "SourceLocationName"
       ],
       "type": "structure"
     },
@@ -1284,10 +1118,6 @@
         "CreationTime": {
           "documentation": "<p>The timestamp of when the program was created.</p>",
           "shape": "__timestampUnix"
-        },
-        "LiveSourceName": {
-          "documentation": "<p>The name of the LiveSource for this Program.</p>",
-          "shape": "__string"
         },
         "ProgramName": {
           "documentation": "<p>The name of the program.</p>",
@@ -1321,10 +1151,6 @@
         "HttpConfiguration": {
           "documentation": "<p>The source's HTTP package configurations.</p>",
           "shape": "HttpConfiguration"
-        },
-        "SegmentDeliveryConfigurations": {
-          "documentation": "<p>A list of the segment delivery configurations associated with this resource.</p>",
-          "shape": "__listOfSegmentDeliveryConfiguration"
         },
         "SourceLocationName": {
           "documentation": "<p>The identifier for the source location you are working on.</p>",
@@ -1370,10 +1196,6 @@
           "documentation": "<p>The timestamp that indicates when the source location was last modified.</p>",
           "shape": "__timestampUnix"
         },
-        "SegmentDeliveryConfigurations": {
-          "documentation": "<p>A list of the segment delivery configurations associated with this resource.</p>",
-          "shape": "__listOfSegmentDeliveryConfiguration"
-        },
         "SourceLocationName": {
           "documentation": "<p>The name of the source location.</p>",
           "shape": "__string"
@@ -1389,7 +1211,7 @@
     "CreateVodSourceRequest": {
       "members": {
         "HttpPackageConfigurations": {
-          "documentation": "<p>A list of HTTP package configuration parameters for this VOD source.</p>",
+          "documentation": "<p>An array of HTTP package configuration parameters for this VOD source.</p>",
           "shape": "HttpPackageConfigurations"
         },
         "SourceLocationName": {
@@ -1432,7 +1254,7 @@
           "shape": "HttpPackageConfigurations"
         },
         "LastModifiedTime": {
-          "documentation": "<p>The last modified time of the VOD source.</p>",
+          "documentation": "<p>The ARN for the VOD source.</p>",
           "shape": "__timestampUnix"
         },
         "SourceLocationName": {
@@ -1548,31 +1370,6 @@
       "type": "structure"
     },
     "DeleteChannelResponse": {
-      "members": {},
-      "type": "structure"
-    },
-    "DeleteLiveSourceRequest": {
-      "members": {
-        "LiveSourceName": {
-          "documentation": "<p>The identifier for the live source you are working on.</p>",
-          "location": "uri",
-          "locationName": "liveSourceName",
-          "shape": "__string"
-        },
-        "SourceLocationName": {
-          "documentation": "<p>The identifier for the source location you are working on.</p>",
-          "location": "uri",
-          "locationName": "sourceLocationName",
-          "shape": "__string"
-        }
-      },
-      "required": [
-        "SourceLocationName",
-        "LiveSourceName"
-      ],
-      "type": "structure"
-    },
-    "DeleteLiveSourceResponse": {
       "members": {},
       "type": "structure"
     },
@@ -1739,65 +1536,6 @@
           "documentation": "<p>The tags assigned to the channel.</p>",
           "locationName": "tags",
           "shape": "__mapOf__string"
-        },
-        "Tier": {
-          "documentation": "<p>The channel's tier.</p>",
-          "shape": "__string"
-        }
-      },
-      "type": "structure"
-    },
-    "DescribeLiveSourceRequest": {
-      "members": {
-        "LiveSourceName": {
-          "documentation": "<p>The identifier for the live source you are working on.</p>",
-          "location": "uri",
-          "locationName": "liveSourceName",
-          "shape": "__string"
-        },
-        "SourceLocationName": {
-          "documentation": "<p>The identifier for the source location you are working on.</p>",
-          "location": "uri",
-          "locationName": "sourceLocationName",
-          "shape": "__string"
-        }
-      },
-      "required": [
-        "SourceLocationName",
-        "LiveSourceName"
-      ],
-      "type": "structure"
-    },
-    "DescribeLiveSourceResponse": {
-      "members": {
-        "Arn": {
-          "documentation": "<p>The ARN of the live source.</p>",
-          "shape": "__string"
-        },
-        "CreationTime": {
-          "documentation": "<p>The timestamp that indicates when the live source was created.</p>",
-          "shape": "__timestampUnix"
-        },
-        "HttpPackageConfigurations": {
-          "documentation": "<p>The HTTP package configurations.</p>",
-          "shape": "HttpPackageConfigurations"
-        },
-        "LastModifiedTime": {
-          "documentation": "<p>The timestamp that indicates when the live source was modified.</p>",
-          "shape": "__timestampUnix"
-        },
-        "LiveSourceName": {
-          "documentation": "<p>The name of the live source.</p>",
-          "shape": "__string"
-        },
-        "SourceLocationName": {
-          "documentation": "<p>The name of the source location associated with the VOD source.</p>",
-          "shape": "__string"
-        },
-        "Tags": {
-          "documentation": "<p>The tags assigned to the live source.</p>",
-          "locationName": "tags",
-          "shape": "__mapOf__string"
         }
       },
       "type": "structure"
@@ -1840,10 +1578,6 @@
         "CreationTime": {
           "documentation": "<p>The timestamp of when the program was created.</p>",
           "shape": "__timestampUnix"
-        },
-        "LiveSourceName": {
-          "documentation": "<p>The name of the LiveSource for this Program.</p>",
-          "shape": "__string"
         },
         "ProgramName": {
           "documentation": "<p>The name of the program.</p>",
@@ -1904,10 +1638,6 @@
           "documentation": "<p>The timestamp that indicates when the source location was last modified.</p>",
           "shape": "__timestampUnix"
         },
-        "SegmentDeliveryConfigurations": {
-          "documentation": "<p>A list of the segment delivery configurations associated with this resource.</p>",
-          "shape": "__listOfSegmentDeliveryConfiguration"
-        },
         "SourceLocationName": {
           "documentation": "<p>The name of the source location.</p>",
           "shape": "__string"
@@ -1956,7 +1686,7 @@
           "shape": "HttpPackageConfigurations"
         },
         "LastModifiedTime": {
-          "documentation": "<p>The last modified time of the VOD source.</p>",
+          "documentation": "<p>The ARN for the VOD source.</p>",
           "shape": "__timestampUnix"
         },
         "SourceLocationName": {
@@ -2033,7 +1763,7 @@
     "GetChannelScheduleResponse": {
       "members": {
         "Items": {
-          "documentation": "<p>A list of schedule entries for the channel.</p>",
+          "documentation": "<p>An array of schedule entries for the channel.</p>",
           "shape": "__listOfScheduleEntry"
         },
         "NextToken": {
@@ -2281,7 +2011,7 @@
     "ListAlertsResponse": {
       "members": {
         "Items": {
-          "documentation": "<p>A list of alerts that are associated with this resource.</p>",
+          "documentation": "<p>An array of alerts that are associated with this resource.</p>",
           "shape": "__listOfAlert"
         },
         "NextToken": {
@@ -2311,50 +2041,11 @@
     "ListChannelsResponse": {
       "members": {
         "Items": {
-          "documentation": "<p>A list of channels that are associated with this account.</p>",
+          "documentation": "<p>An array of channels that are associated with this account.</p>",
           "shape": "__listOfChannel"
         },
         "NextToken": {
           "documentation": "<p>Pagination token returned by the list request when results exceed the maximum allowed. Use the token to fetch the next page of results.</p>",
-          "shape": "__string"
-        }
-      },
-      "type": "structure"
-    },
-    "ListLiveSourcesRequest": {
-      "members": {
-        "MaxResults": {
-          "documentation": "<p>Upper bound on number of records to return. The maximum number of results is 100.</p>",
-          "location": "querystring",
-          "locationName": "maxResults",
-          "shape": "MaxResults"
-        },
-        "NextToken": {
-          "documentation": "<p>Pagination token from the GET list request. Use the token to fetch the next page of results.</p>",
-          "location": "querystring",
-          "locationName": "nextToken",
-          "shape": "__string"
-        },
-        "SourceLocationName": {
-          "documentation": "<p>The identifier for the source location you are working on.</p>",
-          "location": "uri",
-          "locationName": "sourceLocationName",
-          "shape": "__string"
-        }
-      },
-      "required": [
-        "SourceLocationName"
-      ],
-      "type": "structure"
-    },
-    "ListLiveSourcesResponse": {
-      "members": {
-        "Items": {
-          "documentation": "<p>Lists the live sources.</p>",
-          "shape": "__listOfLiveSource"
-        },
-        "NextToken": {
-          "documentation": "<p>Pagination token from the list request. Use the token to fetch the next page of results.</p>",
           "shape": "__string"
         }
       },
@@ -2449,7 +2140,7 @@
     "ListSourceLocationsResponse": {
       "members": {
         "Items": {
-          "documentation": "<p>A list of source locations.</p>",
+          "documentation": "<p>An array of source locations.</p>",
           "shape": "__listOfSourceLocation"
         },
         "NextToken": {
@@ -2534,47 +2225,6 @@
           "shape": "__integer"
         }
       },
-      "type": "structure"
-    },
-    "LiveSource": {
-      "documentation": "<p>Live source configuration parameters.</p>",
-      "members": {
-        "Arn": {
-          "documentation": "<p>The ARN for the live source.</p>",
-          "shape": "__string"
-        },
-        "CreationTime": {
-          "documentation": "<p>The timestamp that indicates when the live source was created.</p>",
-          "shape": "__timestampUnix"
-        },
-        "HttpPackageConfigurations": {
-          "documentation": "<p>The HTTP package configurations for the live source.</p>",
-          "shape": "HttpPackageConfigurations"
-        },
-        "LastModifiedTime": {
-          "documentation": "<p>The timestamp that indicates when the live source was last modified.</p>",
-          "shape": "__timestampUnix"
-        },
-        "LiveSourceName": {
-          "documentation": "<p>The name that's used to refer to a live source.</p>",
-          "shape": "__string"
-        },
-        "SourceLocationName": {
-          "documentation": "<p>The name of the source location.</p>",
-          "shape": "__string"
-        },
-        "Tags": {
-          "documentation": "<p>The tags assigned to the live source.</p>",
-          "locationName": "tags",
-          "shape": "__mapOf__string"
-        }
-      },
-      "required": [
-        "SourceLocationName",
-        "LiveSourceName",
-        "HttpPackageConfigurations",
-        "Arn"
-      ],
       "type": "structure"
     },
     "LogConfiguration": {
@@ -3098,10 +2748,6 @@
           "documentation": "<p>The name of the channel that uses this schedule.</p>",
           "shape": "__string"
         },
-        "LiveSourceName": {
-          "documentation": "<p>The name of the live source used for the program.</p>",
-          "shape": "__string"
-        },
         "ProgramName": {
           "documentation": "<p>The name of the program.</p>",
           "shape": "__string"
@@ -3124,8 +2770,9 @@
         }
       },
       "required": [
-        "SourceLocationName",
+        "VodSourceName",
         "ChannelName",
+        "SourceLocationName",
         "Arn",
         "ProgramName"
       ],
@@ -3151,20 +2798,6 @@
         },
         "SecretStringKey": {
           "documentation": "<p>The AWS Secrets Manager <a href=\"https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_CreateSecret.html#SecretsManager-CreateSecret-request-SecretString.html\">SecretString</a> key associated with the access token. MediaTailor uses the key to look up SecretString key and value pair containing the access token.</p>",
-          "shape": "__string"
-        }
-      },
-      "type": "structure"
-    },
-    "SegmentDeliveryConfiguration": {
-      "documentation": "<p>The base URL of the host or path of the segment delivery server that you're using to serve segments. This is typically a content delivery network (CDN). The URL can be absolute or relative. To use an absolute URL include the protocol, such as https://example.com/some/path. To use a relative URL specify the relative path, such as /some/path*.</p>",
-      "members": {
-        "BaseUrl": {
-          "documentation": "<p>The base URL of the host or path of the segment delivery server that you're using to serve segments. This is typically a content delivery network (CDN). The URL can be absolute or relative. To use an absolute URL include the protocol, such as https://example.com/some/path. To use a relative URL specify the relative path, such as /some/path*.</p>",
-          "shape": "__string"
-        },
-        "Name": {
-          "documentation": "<p>A unique identifier used to distinguish between multiple segment delivery configurations in a source location.</p>",
           "shape": "__string"
         }
       },
@@ -3210,10 +2843,6 @@
         "LastModifiedTime": {
           "documentation": "<p>The timestamp that indicates when the source location was last modified.</p>",
           "shape": "__timestampUnix"
-        },
-        "SegmentDeliveryConfigurations": {
-          "documentation": "<p>The segment delivery configurations for the source location.</p>",
-          "shape": "__listOfSegmentDeliveryConfiguration"
         },
         "SourceLocationName": {
           "documentation": "<p>The name of the source location.</p>",
@@ -3310,20 +2939,9 @@
       ],
       "type": "structure"
     },
-    "Tier": {
-      "enum": [
-        "BASIC",
-        "STANDARD"
-      ],
-      "type": "string"
-    },
     "Transition": {
       "documentation": "<p>Program transition configuration.</p>",
       "members": {
-        "DurationMillis": {
-          "documentation": "<p>The duration of the live program in seconds.</p>",
-          "shape": "__long"
-        },
         "RelativePosition": {
           "documentation": "<p>The position where this program will be inserted relative to the RelativePosition.</p>",
           "shape": "RelativePosition"
@@ -3383,10 +3001,6 @@
           "locationName": "channelName",
           "shape": "__string"
         },
-        "FillerSlate": {
-          "documentation": "<p>The slate used to fill gaps between programs in the schedule. You must configure filler slate if your channel uses the LINEAR PlaybackMode. MediaTailor doesn't support filler slate for channels using the LOOP PlaybackMode.</p>",
-          "shape": "SlateSource"
-        },
         "Outputs": {
           "documentation": "<p>The channel's output properties.</p>",
           "shape": "RequestOutputs"
@@ -3436,70 +3050,6 @@
           "documentation": "<p>The tags assigned to the channel.</p>",
           "locationName": "tags",
           "shape": "__mapOf__string"
-        },
-        "Tier": {
-          "documentation": "<p>The channel's tier.</p>",
-          "shape": "__string"
-        }
-      },
-      "type": "structure"
-    },
-    "UpdateLiveSourceRequest": {
-      "members": {
-        "HttpPackageConfigurations": {
-          "documentation": "<p>A list of HTTP package configurations for the live source on this account.</p>",
-          "shape": "HttpPackageConfigurations"
-        },
-        "LiveSourceName": {
-          "documentation": "<p>The identifier for the live source you are working on.</p>",
-          "location": "uri",
-          "locationName": "liveSourceName",
-          "shape": "__string"
-        },
-        "SourceLocationName": {
-          "documentation": "<p>The identifier for the source location you are working on.</p>",
-          "location": "uri",
-          "locationName": "sourceLocationName",
-          "shape": "__string"
-        }
-      },
-      "required": [
-        "SourceLocationName",
-        "LiveSourceName",
-        "HttpPackageConfigurations"
-      ],
-      "type": "structure"
-    },
-    "UpdateLiveSourceResponse": {
-      "members": {
-        "Arn": {
-          "documentation": "<p>The ARN of the live source.</p>",
-          "shape": "__string"
-        },
-        "CreationTime": {
-          "documentation": "<p>The timestamp that indicates when the live source was created.</p>",
-          "shape": "__timestampUnix"
-        },
-        "HttpPackageConfigurations": {
-          "documentation": "<p>The HTTP package configurations.</p>",
-          "shape": "HttpPackageConfigurations"
-        },
-        "LastModifiedTime": {
-          "documentation": "<p>The timestamp that indicates when the live source was modified.</p>",
-          "shape": "__timestampUnix"
-        },
-        "LiveSourceName": {
-          "documentation": "<p>The name of the live source.</p>",
-          "shape": "__string"
-        },
-        "SourceLocationName": {
-          "documentation": "<p>The name of the source location associated with the VOD source.</p>",
-          "shape": "__string"
-        },
-        "Tags": {
-          "documentation": "<p>The tags assigned to the live source.</p>",
-          "locationName": "tags",
-          "shape": "__mapOf__string"
         }
       },
       "type": "structure"
@@ -3517,10 +3067,6 @@
         "HttpConfiguration": {
           "documentation": "<p>The HTTP configuration for the source location.</p>",
           "shape": "HttpConfiguration"
-        },
-        "SegmentDeliveryConfigurations": {
-          "documentation": "<p>A list of the segment delivery configurations associated with this resource.</p>",
-          "shape": "__listOfSegmentDeliveryConfiguration"
         },
         "SourceLocationName": {
           "documentation": "<p>The identifier for the source location you are working on.</p>",
@@ -3561,10 +3107,6 @@
           "documentation": "<p>The timestamp that indicates when the source location was last modified.</p>",
           "shape": "__timestampUnix"
         },
-        "SegmentDeliveryConfigurations": {
-          "documentation": "<p>A list of the segment delivery configurations associated with this resource.</p>",
-          "shape": "__listOfSegmentDeliveryConfiguration"
-        },
         "SourceLocationName": {
           "documentation": "<p>The name of the source location.</p>",
           "shape": "__string"
@@ -3580,7 +3122,7 @@
     "UpdateVodSourceRequest": {
       "members": {
         "HttpPackageConfigurations": {
-          "documentation": "<p>A list of HTTP package configurations for the VOD source on this account.</p>",
+          "documentation": "<p>An array of HTTP package configurations for the VOD source on this account.</p>",
           "shape": "HttpPackageConfigurations"
         },
         "SourceLocationName": {
@@ -3618,7 +3160,7 @@
           "shape": "HttpPackageConfigurations"
         },
         "LastModifiedTime": {
-          "documentation": "<p>The last modified time of the VOD source.</p>",
+          "documentation": "<p>The ARN for the VOD source.</p>",
           "shape": "__timestampUnix"
         },
         "SourceLocationName": {
@@ -3717,12 +3259,6 @@
       },
       "type": "list"
     },
-    "__listOfLiveSource": {
-      "member": {
-        "shape": "LiveSource"
-      },
-      "type": "list"
-    },
     "__listOfPlaybackConfiguration": {
       "member": {
         "shape": "PlaybackConfiguration"
@@ -3744,12 +3280,6 @@
     "__listOfScheduleEntry": {
       "member": {
         "shape": "ScheduleEntry"
-      },
-      "type": "list"
-    },
-    "__listOfSegmentDeliveryConfiguration": {
-      "member": {
-        "shape": "SegmentDeliveryConfiguration"
       },
       "type": "list"
     },

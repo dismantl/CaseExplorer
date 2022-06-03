@@ -1,5 +1,5 @@
 # testing/assertions.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -86,7 +86,7 @@ def expect_deprecated(*messages, **kw):
 
 
 def expect_deprecated_20(*messages, **kw):
-    return _expect_warnings(sa_exc.Base20DeprecationWarning, messages, **kw)
+    return _expect_warnings(sa_exc.RemovedIn20Warning, messages, **kw)
 
 
 def emits_warning_on(db, *messages):
@@ -143,16 +143,14 @@ def _expect_warnings(
     exc_cls,
     messages,
     regex=True,
-    search_msg=False,
     assert_=True,
     py2konly=False,
     raise_on_any_unexpected=False,
-    squelch_other_warnings=False,
 ):
 
     global _FILTERS, _SEEN, _EXC_CLS
 
-    if regex or search_msg:
+    if regex:
         filters = [re.compile(msg, re.I | re.S) for msg in messages]
     else:
         filters = list(messages)
@@ -190,25 +188,19 @@ def _expect_warnings(
                 exception = None
 
             if not exception or not issubclass(exception, _EXC_CLS):
-                if not squelch_other_warnings:
-                    return real_warn(msg, *arg, **kw)
-                else:
-                    return
+                return real_warn(msg, *arg, **kw)
 
             if not filters and not raise_on_any_unexpected:
                 return
 
             for filter_ in filters:
-                if (
-                    (search_msg and filter_.search(msg))
-                    or (regex and filter_.match(msg))
-                    or (not regex and filter_ == msg)
+                if (regex and filter_.match(msg)) or (
+                    not regex and filter_ == msg
                 ):
                     seen.discard(filter_)
                     break
             else:
-                if not squelch_other_warnings:
-                    real_warn(msg, *arg, **kw)
+                real_warn(msg, *arg, **kw)
 
         with mock.patch("warnings.warn", our_warn), mock.patch(
             "sqlalchemy.util.SQLALCHEMY_WARN_20", True
@@ -365,40 +357,6 @@ def assert_raises_message(except_cls, msg, callable_, *args, **kwargs):
     )
 
 
-def assert_warns(except_cls, callable_, *args, **kwargs):
-    """legacy adapter function for functions that were previously using
-    assert_raises with SAWarning or similar.
-
-    has some workarounds to accommodate the fact that the callable completes
-    with this approach rather than stopping at the exception raise.
-
-
-    """
-    with _expect_warnings(except_cls, [".*"], squelch_other_warnings=True):
-        return callable_(*args, **kwargs)
-
-
-def assert_warns_message(except_cls, msg, callable_, *args, **kwargs):
-    """legacy adapter function for functions that were previously using
-    assert_raises with SAWarning or similar.
-
-    has some workarounds to accommodate the fact that the callable completes
-    with this approach rather than stopping at the exception raise.
-
-    Also uses regex.search() to match the given message to the error string
-    rather than regex.match().
-
-    """
-    with _expect_warnings(
-        except_cls,
-        [msg],
-        search_msg=True,
-        regex=False,
-        squelch_other_warnings=True,
-    ):
-        return callable_(*args, **kwargs)
-
-
 def assert_raises_message_context_ok(
     except_cls, msg, callable_, *args, **kwargs
 ):
@@ -420,15 +378,6 @@ class _ErrorContainer(object):
 
 @contextlib.contextmanager
 def _expect_raises(except_cls, msg=None, check_context=False):
-    if (
-        isinstance(except_cls, type)
-        and issubclass(except_cls, Warning)
-        or isinstance(except_cls, Warning)
-    ):
-        raise TypeError(
-            "Use expect_warnings for warnings, not "
-            "expect_raises / assert_raises"
-        )
     ec = _ErrorContainer()
     if check_context:
         are_we_already_in_a_traceback = sys.exc_info()[0]
@@ -602,15 +551,6 @@ class AssertsCompiledSQL(object):
         # as anything can be nested.  ensure constructs don't assume they
         # are the "self.statement" element
         c = CheckCompilerAccess(clause).compile(dialect=dialect, **kw)
-
-        if isinstance(clause, sqltypes.TypeEngine):
-            cache_key_no_warnings = clause._static_cache_key
-            if cache_key_no_warnings:
-                hash(cache_key_no_warnings)
-        else:
-            cache_key_no_warnings = clause._generate_cache_key()
-            if cache_key_no_warnings:
-                hash(cache_key_no_warnings[0])
 
         param_str = repr(getattr(c, "params", {}))
         if util.py3k:

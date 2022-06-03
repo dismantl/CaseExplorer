@@ -1,5 +1,5 @@
 # sql/base.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -768,12 +768,10 @@ class CacheableOptions(Options, HasCacheKey):
         return HasCacheKey._generate_cache_key_for_object(self)
 
 
-class ExecutableOption(HasCopyInternals):
+class ExecutableOption(HasCopyInternals, HasCacheKey):
     _annotations = util.EMPTY_DICT
 
     __visit_name__ = "executable_option"
-
-    _is_has_cache_key = False
 
     def _clone(self, **kw):
         """Create a shallow copy of this ExecutableOption."""
@@ -848,8 +846,7 @@ class Executable(roles.StatementRole, Generative):
 
         """
         self._with_options += tuple(
-            coercions.expect(roles.ExecutableOptionRole, opt)
-            for opt in options
+            coercions.expect(roles.HasCacheKeyRole, opt) for opt in options
         )
 
     @_generative

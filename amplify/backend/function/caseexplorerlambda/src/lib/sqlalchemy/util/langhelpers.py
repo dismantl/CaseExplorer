@@ -1,5 +1,5 @@
 # util/langhelpers.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -668,7 +668,7 @@ def create_proxy_methods(
             else:
                 code = (
                     "def %(name)s(%(args)s):\n"
-                    "    return %(self_arg)s._proxied.%(name)s(%(apply_kw_proxied)s)"  # noqa: E501
+                    "    return %(self_arg)s._proxied.%(name)s(%(apply_kw_proxied)s)"  # noqa E501
                     % metadata
                 )
 
@@ -1167,11 +1167,7 @@ class HasMemoized(object):
         self._memoized_keys |= {key}
 
     class memoized_attribute(object):
-        """A read-only @property that is only evaluated once.
-
-        :meta private:
-
-        """
+        """A read-only @property that is only evaluated once."""
 
         def __init__(self, fget, doc=None):
             self.fget = fget
@@ -1936,9 +1932,9 @@ def repr_tuple_names(names):
 
 def has_compiled_ext():
     try:
-        from sqlalchemy import cimmutabledict  # noqa: F401
-        from sqlalchemy import cprocessors  # noqa: F401
-        from sqlalchemy import cresultproxy  # noqa: F401
+        from sqlalchemy import cimmutabledict  # noqa F401
+        from sqlalchemy import cprocessors  # noqa F401
+        from sqlalchemy import cresultproxy  # noqa F401
 
         return True
     except ImportError:

@@ -1,4 +1,5 @@
-class BaseRetryBackoff:
+class BaseRetryBackoff(object):
+
     def delay_amount(self, context):
         """Calculate how long we should delay before retrying.
 
@@ -8,7 +9,7 @@ class BaseRetryBackoff:
         raise NotImplementedError("delay_amount")
 
 
-class BaseRetryableChecker:
+class BaseRetryableChecker(object):
     """Base class for determining if a retry should happen.
 
     This base class checks for specific retryable conditions.

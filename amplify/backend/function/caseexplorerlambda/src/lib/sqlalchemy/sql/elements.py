@@ -1,5 +1,5 @@
 # sql/elements.py
-# Copyright (C) 2005-2022 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2021 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -248,8 +248,8 @@ class ClauseElement(
         # process leaves around a lot of remnants of the previous clause
         # typically in the form of column expressions still attached to the
         # old table.
-        cc = self._is_clone_of
-        c._is_clone_of = cc if cc is not None else self
+        c._is_clone_of = self
+
         return c
 
     def _negate_in_binary(self, negated_op, original_op):
@@ -358,7 +358,6 @@ class ClauseElement(
         return self._replace_params(False, optionaldict, kwargs)
 
     def _replace_params(self, unique, optionaldict, kwargs):
-
         if len(optionaldict) == 1:
             kwargs.update(optionaldict[0])
         elif len(optionaldict) > 1:
@@ -374,9 +373,7 @@ class ClauseElement(
                 bind._convert_to_unique()
 
         return cloned_traverse(
-            self,
-            {"maintain_key": True, "detect_subquery_cols": True},
-            {"bindparam": visit_bindparam},
+            self, {"maintain_key": True}, {"bindparam": visit_bindparam}
         )
 
     def compare(self, other, **kw):
@@ -793,13 +790,22 @@ class ColumnElement(
 
     """
 
-    _allow_label_resolve = True
-    """A flag that can be flipped to prevent a column from being resolvable
-    by string label name.
+    _resolve_label = None
+    """The name that should be used to identify this ColumnElement in a
+    select() object when "label resolution" logic is used; this refers
+    to using a string name in an expression like order_by() or group_by()
+    that wishes to target a labeled expression in the columns clause.
 
-    The joined eager loader strategy in the ORM uses this, for example.
+    The name is distinct from that of .name or ._label to account for the case
+    where anonymizing logic may be used to change the name that's actually
+    rendered at compile time; this attribute should hold onto the original
+    name that was user-assigned when producing a .label() construct.
 
     """
+
+    _allow_label_resolve = True
+    """A flag that can be flipped to prevent a column from being resolvable
+    by string label name."""
 
     _is_implicitly_boolean = False
 
@@ -1229,7 +1235,6 @@ class BindParameter(roles.InElementRole, ColumnElement):
         ("type", InternalTraversal.dp_type),
         ("callable", InternalTraversal.dp_plain_dict),
         ("value", InternalTraversal.dp_plain_obj),
-        ("literal_execute", InternalTraversal.dp_boolean),
     ]
 
     _is_crud = False
@@ -1458,7 +1463,7 @@ class BindParameter(roles.InElementRole, ColumnElement):
              supports empty lists.
 
 
-          .. seealso::
+        .. seealso::
 
             :ref:`coretutorial_bind_param`
 
@@ -1632,15 +1637,6 @@ class BindParameter(roles.InElementRole, ColumnElement):
 
     def _clone(self, maintain_key=False, **kw):
         c = ClauseElement._clone(self, **kw)
-        # ensure all the BindParameter objects stay in cloned set.
-        # in #7823, we changed "clone" so that a clone only keeps a reference
-        # to the "original" element, since for column correspondence, that's
-        # all we need.   However, for BindParam, _cloned_set is used by
-        # the "cache key bind match" lookup, which means if any of those
-        # interim BindParameter objects became part of a cache key in the
-        # cache, we need it.  So here, make sure all clones keep carrying
-        # forward.
-        c._cloned_set.update(self._cloned_set)
         if not maintain_key and self.unique:
             c.key = _anonymous_label.safe_construct(
                 id(c), c._orig_key or "param", sanitize_key=True
@@ -1672,7 +1668,6 @@ class BindParameter(roles.InElementRole, ColumnElement):
             self.__class__,
             self.type._static_cache_key,
             self.key % anon_map if self._key_is_anon else self.key,
-            self.literal_execute,
         )
 
     def _convert_to_unique(self):
@@ -1788,7 +1783,7 @@ class TextClause(
 
     # help in those cases where text() is
     # interpreted in a column expression situation
-    key = _label = None
+    key = _label = _resolve_label = None
 
     _allow_label_resolve = False
 
@@ -2957,18 +2952,28 @@ class Case(ColumnElement):
             pass
 
         value = kw.pop("value", None)
-
-        whenlist = [
-            (
-                coercions.expect(
-                    roles.ExpressionElementRole,
-                    c,
-                    apply_propagate_attrs=self,
-                ).self_group(),
-                coercions.expect(roles.ExpressionElementRole, r),
-            )
-            for (c, r) in whens
-        ]
+        if value is not None:
+            whenlist = [
+                (
+                    coercions.expect(
+                        roles.ExpressionElementRole,
+                        c,
+                        apply_propagate_attrs=self,
+                    ).self_group(),
+                    coercions.expect(roles.ExpressionElementRole, r),
+                )
+                for (c, r) in whens
+            ]
+        else:
+            whenlist = [
+                (
+                    coercions.expect(
+                        roles.ColumnArgumentRole, c, apply_propagate_attrs=self
+                    ).self_group(),
+                    coercions.expect(roles.ExpressionElementRole, r),
+                )
+                for (c, r) in whens
+            ]
 
         if whenlist:
             type_ = list(whenlist[-1])[-1].type
@@ -3668,8 +3673,6 @@ class CollectionAggregate(UnaryExpression):
 
     """
 
-    inherit_cache = True
-
     @classmethod
     def _create_any(cls, expr):
         """Produce an ANY expression.
@@ -3977,7 +3980,7 @@ class IndexExpression(BinaryExpression):
     """Represent the class of expressions that are like an "index"
     operation."""
 
-    inherit_cache = True
+    pass
 
 
 class GroupedElement(ClauseElement):
@@ -4530,6 +4533,10 @@ class Label(roles.LabeledColumnExprRole, ColumnElement):
 
         if name:
             self.name = name
+
+            # TODO: nothing fails if this is removed.  this is related
+            # to the order_by() string feature tested in test_text.py.
+            self._resolve_label = self.name
         else:
             self.name = _anonymous_label.safe_construct(
                 id(self), getattr(element, "name", "anon")
@@ -4594,7 +4601,7 @@ class Label(roles.LabeledColumnExprRole, ColumnElement):
         self._reset_memoizations()
         self._element = clone(self._element, **kw)
         if anonymize_labels:
-            self.name = _anonymous_label.safe_construct(
+            self.name = self._resolve_label = _anonymous_label.safe_construct(
                 id(self), getattr(self.element, "name", "anon")
             )
             self.key = self._tq_label = self._tq_key_label = self.name
@@ -4894,19 +4901,6 @@ class ColumnClause(
         else:
             return super(ColumnClause, self).entity_namespace
 
-    def _clone(self, detect_subquery_cols=False, **kw):
-        if (
-            detect_subquery_cols
-            and self.table is not None
-            and self.table._is_subquery
-        ):
-            clone = kw.pop("clone")
-            table = clone(self.table, **kw)
-            new = table.c.corresponding_column(self)
-            return new
-
-        return super(ColumnClause, self)._clone(**kw)
-
     @HasMemoized.memoized_attribute
     def _from_objects(self):
         t = self.table
@@ -5083,17 +5077,14 @@ class _IdentifiedClause(Executable, ClauseElement):
 
 class SavepointClause(_IdentifiedClause):
     __visit_name__ = "savepoint"
-    inherit_cache = False
 
 
 class RollbackToSavepointClause(_IdentifiedClause):
     __visit_name__ = "rollback_to_savepoint"
-    inherit_cache = False
 
 
 class ReleaseSavepointClause(_IdentifiedClause):
     __visit_name__ = "release_savepoint"
-    inherit_cache = False
 
 
 class quoted_name(util.MemoizedSlots, util.text_type):

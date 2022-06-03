@@ -353,7 +353,21 @@ class Engine(_LegacyEngine):
             execution_options=legacy_engine._execution_options,
         )
 
-    @util.contextmanager
+    class _trans_ctx(object):
+        def __init__(self, conn):
+            self.conn = conn
+
+        def __enter__(self):
+            self.transaction = self.conn.begin()
+            self.transaction.__enter__()
+            return self.conn
+
+        def __exit__(self, type_, value, traceback):
+            try:
+                self.transaction.__exit__(type_, value, traceback)
+            finally:
+                self.conn.close()
+
     def begin(self):
         """Return a :class:`_future.Connection` object with a transaction
         begun.
@@ -376,9 +390,8 @@ class Engine(_LegacyEngine):
             :meth:`_future.Connection.begin`
 
         """
-        with self.connect() as conn:
-            with conn.begin():
-                yield conn
+        conn = self.connect()
+        return self._trans_ctx(conn)
 
     def connect(self):
         """Return a new :class:`_future.Connection` object.
