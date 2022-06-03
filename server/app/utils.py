@@ -1,5 +1,7 @@
 from .models import DSCRRelatedPerson
 import logging
+from decimal import Decimal
+from sqlalchemy.engine.row import Row
 from logging.handlers import RotatingFileHandler
 from sqlalchemy.orm import relation, selectinload, lazyload, sessionmaker
 from contextlib import contextmanager
@@ -104,3 +106,12 @@ def get_case_numbers_by_officer_sequence_number(sequence_number):
 
 def snake_to_title(string):
     return string.replace('_', ' ').title()
+
+def decimal_to_float(obj):
+    if isinstance(obj, Decimal):
+        return float(obj)
+    elif isinstance(obj, list) or isinstance(obj, Row):
+        return [ decimal_to_float(x) for x in obj ]
+    elif isinstance(obj, dict):
+        return { k: decimal_to_float(v) for k, v in obj.items() }
+    return obj

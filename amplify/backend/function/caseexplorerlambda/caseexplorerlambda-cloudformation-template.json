@@ -8,16 +8,10 @@
     "VpcSecurityGroup": {
       "Type": "String"
     },
-    "VpcSubnet1": {
-      "Type": "String"
-    },
-    "VpcSubnet2": {
-      "Type": "String"
-    },
-    "VpcRouteTable": {
-      "Type": "String"
-    },
     "VpcId": {
+      "Type": "String"
+    },
+    "VpcInternetGatewayId": {
       "Type": "String"
     },
     "deploymentBucketName": {
@@ -38,6 +32,66 @@
     }
   },
   "Resources": {
+    "VpcSubnet1": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "CidrBlock": "10.0.2.0/24",
+        "VpcId": {
+          "Ref": "VpcId"
+        }
+      }
+    },
+    "VpcSubnet2": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "CidrBlock": "10.0.3.0/24",
+        "VpcId": {
+          "Ref": "VpcId"
+        }
+      }
+    },
+    "VpcRouteTable": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VpcId"
+        }
+      }
+    },
+    "VpcRoute": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "VpcInternetGatewayId"
+        },
+        "RouteTableId": {
+          "Ref": "VpcRouteTable"
+        }
+      }
+    },
+    "VpcSubnetRouteTableAssociation1": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "VpcRouteTable"
+        },
+        "SubnetId": {
+          "Ref": "VpcSubnet1"
+        }
+      }
+    },
+    "VpcSubnetRouteTableAssociation2": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "VpcRouteTable"
+        },
+        "SubnetId": {
+          "Ref": "VpcSubnet2"
+        }
+      }
+    },
     "LambdaFunction": {
       "Type": "AWS::Lambda::Function",
       "Metadata": {
@@ -167,7 +221,8 @@
                   "Action": [
                     "ec2:CreateNetworkInterface",
                     "ec2:DescribeNetworkInterfaces",
-                    "ec2:DeleteNetworkInterface"
+                    "ec2:DeleteNetworkInterface",
+                    "ec2:DetachNetworkInterface"
                   ],
                   "Resource": "*"
                 }
@@ -178,9 +233,6 @@
       }
     },
     "lambdaexecutionpolicy": {
-      "DependsOn": [
-        "LambdaExecutionRole"
-      ],
       "Type": "AWS::IAM::Policy",
       "Properties": {
         "PolicyName": "lambda-execution-policy",

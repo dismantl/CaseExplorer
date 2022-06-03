@@ -5,6 +5,7 @@ import Amplify from 'aws-amplify';
 import awsmobile from './aws-exports';
 import './index.css';
 import ServerSideGrid from './ServerSideGrid';
+import BailExplorer from './BailExplorer';
 import CaseRenderer from './CaseDetails';
 import GraphiQLClient from './GraphiQL';
 import { initializeIcons } from '@fluentui/react/lib/Icons';
@@ -48,6 +49,8 @@ const getTitle = metadata => {
     title = 'REST API';
   } else if (table === 'graphql') {
     title = 'GraphQL API';
+  } else if (table === 'bail') {
+    title = 'Bail Statistics';
   } else if (metadata.tables[table] != null) {
     title = metadata.tables[table].description;
   } else {
@@ -149,6 +152,9 @@ const App = props => {
             <Switch>
               <Route path="/case/:case_number" key="/case/:case_number">
                 <CaseRenderer apiName={apiName} />
+              </Route>
+              <Route path="/bail" key="/bail">
+                <BailExplorer metadata={metadata} />
               </Route>
               <Route
                 path="/graphql"
