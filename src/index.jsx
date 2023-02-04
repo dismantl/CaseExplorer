@@ -18,6 +18,8 @@ import apiName from './ApiName';
 import { useEffect } from 'react';
 import SwaggerUI from 'swagger-ui-react';
 import 'swagger-ui-react/swagger-ui.css';
+import ArchiveModal from './ArchiveModal';
+import { CookiesProvider } from 'react-cookie';
 
 export const version = '0.2';
 
@@ -143,6 +145,7 @@ const App = props => {
   } else {
     return (
       <>
+        <ArchiveModal />
         <Router>
           <Header title={title} version={version} />
           <div className="navbar">
@@ -175,5 +178,10 @@ const App = props => {
 
 if (document.getElementById('root')) {
   initializeIcons();
-  ReactDOM.render(<App />, document.getElementById('root'));
+  ReactDOM.render(
+    <CookiesProvider>
+      <App />
+    </CookiesProvider>,
+    document.getElementById('root')
+  );
 }

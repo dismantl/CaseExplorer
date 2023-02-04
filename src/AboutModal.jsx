@@ -1,6 +1,14 @@
 import React, { Component } from 'react';
-import { getTheme, mergeStyleSets, FontWeights, Modal } from '@fluentui/react';
+import {
+  getTheme,
+  mergeStyleSets,
+  FontWeights,
+  Modal,
+  MessageBar,
+  MessageBarType
+} from '@fluentui/react';
 import { IconButton } from '@fluentui/react/lib/Button';
+import { ArchiveAnnouncement } from './ArchiveModal';
 
 const theme = getTheme();
 const cancelIcon = { iconName: 'Cancel' };
@@ -75,6 +83,9 @@ export default class AboutModal extends Component {
             />
           </div>
           <div className={contentStyles.body}>
+            <MessageBar messageBarType={MessageBarType.warning}>
+              <ArchiveAnnouncement />
+            </MessageBar>
             <p>
               Case Explorer is a web application and set of APIs for exploring
               data scraped from the{' '}
