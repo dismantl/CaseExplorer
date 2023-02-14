@@ -8,7 +8,7 @@ import {
   MessageBarType
 } from '@fluentui/react';
 import { IconButton } from '@fluentui/react/lib/Button';
-import { ArchiveAnnouncement } from './ArchiveModal';
+import { Announcement } from './AnnouncementModal';
 
 const theme = getTheme();
 const cancelIcon = { iconName: 'Cancel' };
@@ -84,7 +84,7 @@ export default class AboutModal extends Component {
           </div>
           <div className={contentStyles.body}>
             <MessageBar messageBarType={MessageBarType.warning}>
-              <ArchiveAnnouncement />
+              <Announcement />
             </MessageBar>
             <p>
               Case Explorer is a web application and set of APIs for exploring
