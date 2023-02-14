@@ -18,8 +18,8 @@ import apiName from './ApiName';
 import { useEffect } from 'react';
 import SwaggerUI from 'swagger-ui-react';
 import 'swagger-ui-react/swagger-ui.css';
-import ArchiveModal from './ArchiveModal';
 import { CookiesProvider } from 'react-cookie';
+import AnnouncementModal from './AnnouncementModal';
 
 export const version = '0.2';
 
@@ -145,7 +145,7 @@ const App = props => {
   } else {
     return (
       <>
-        <ArchiveModal />
+        <AnnouncementModal />
         <Router>
           <Header title={title} version={version} />
           <div className="navbar">
