@@ -83,9 +83,9 @@ export default class AboutModal extends Component {
             />
           </div>
           <div className={contentStyles.body}>
-            <MessageBar messageBarType={MessageBarType.warning}>
+            {/* <MessageBar messageBarType={MessageBarType.warning}>
               <Announcement />
-            </MessageBar>
+            </MessageBar> */}
             <p>
               Case Explorer is a web application and set of APIs for exploring
               data scraped from the{' '}
