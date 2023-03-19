@@ -145,7 +145,7 @@ const App = props => {
   } else {
     return (
       <>
-        <AnnouncementModal />
+        {/* <AnnouncementModal /> */}
         <Router>
           <Header title={title} version={version} />
           <div className="navbar">
