@@ -246,22 +246,24 @@ type Case {
   last_parse: AWSDateTime
   active: Boolean
   scrape_exempt: Boolean
-  pg: PG
-  mccr: MCCR
-  dscivil: DSCIVIL
-  odycvcit: ODYCVCIT
-  mcci: MCCI
+  dsk8: DSK8
+  odycosa: ODYCOSA
   odytraf: ODYTRAF
   k: K
-  dv: DV
-  pgv: PGV
-  odycrim: ODYCRIM
-  cc: CC
-  dscp: DSCP
   dstraf: DSTRAF
-  odycivil: ODYCIVIL
-  dsk8: DSK8
+  mccr: MCCR
+  odycrim: ODYCRIM
+  pgv: PGV
+  dscp: DSCP
+  dv: DV
+  odycvcit: ODYCVCIT
+  pg: PG
+  dscivil: DSCIVIL
+  mcci: MCCI
+  cc: CC
   dscr: DSCR
+  odycivil: ODYCIVIL
+  odycoa: ODYCOA
 }
 
 type CaseResultsResponse {
@@ -609,6 +611,7 @@ type DSCRCharge {
   suspended_term_months: Int
   suspended_term_days: Int
   credit_time_served: String
+  notes: String
   case_number: String
 }
 
@@ -926,6 +929,7 @@ type DSTRAFDisposition {
   addiiton_para: String
   addition_code: String
   addition_amended_charge: String
+  notes: String
   case_number: String
 }
 
@@ -1752,6 +1756,8 @@ type ODYCIVIL {
   filing_date: AWSDate
   filing_date_str: String
   case_status: String
+  magistrate: String
+  judicial_officer: String
   case_number: String
 }
 
@@ -1798,6 +1804,7 @@ type ODYCIVILBondSetting {
   bail_date_str: String
   bail_setting_type: String
   bail_amount: Float
+  judge: String
   case_number: String
 }
 
@@ -1828,6 +1835,7 @@ type ODYCIVILCourtSchedule {
   date_str: String
   time: AWSTime
   time_str: String
+  judge: String
   location: String
   room: String
   result: String
@@ -1898,6 +1906,7 @@ type ODYCIVILJudgment {
   judgment_type: String
   judgment_description: String
   judgment_event_type: String
+  judge: String
   judgment_against: String
   judgment_in_favor_of: String
   judgment_for: String
@@ -1907,6 +1916,7 @@ type ODYCIVILJudgment {
   judgment_entry_date_str: String
   judgment_expiration_date: AWSDate
   judgment_expiration_date_str: String
+  judgment_details: String
   postjudgment_interest: String
   principal_amount: Float
   prejudgment_interest: Float
@@ -2006,6 +2016,7 @@ type ODYCIVILJudgmentStatus {
   judgment_status: String
   judgment_date: AWSDate
   judgment_date_str: String
+  comment: String
   judgment_id: Int
   case_number: String
 }
@@ -2035,10 +2046,209 @@ type ODYCIVILWarrant {
   warrant_type: String
   issue_date: AWSDate
   issue_date_str: String
+  judge: String
   last_status: String
   status_date: AWSDate
   status_date_str: String
   case_number: String
+}
+
+type ODYCOA {
+  reference_numbers: [ODYCOAReferenceNumber]
+  involved_parties: [ODYCOAInvolvedParty]
+  attorneys: [ODYCOAAttorney]
+  judgments: [ODYCOAJudgment]
+  court_schedule: [ODYCOACourtSchedule]
+  documents: [ODYCOADocument]
+  id: Int
+  court_system: String
+  case_title: String
+  case_type: String
+  filing_date: AWSDate
+  filing_date_str: String
+  case_status: String
+  tracking_numbers: String
+  authoring_judge: String
+  case_number: String
+}
+
+type ODYCOAAttorney {
+  id: Int
+  name: String
+  appearance_date: AWSDate
+  appearance_date_str: String
+  removal_date: AWSDate
+  removal_date_str: String
+  address_1: String
+  address_2: String
+  address_3: String
+  city: String
+  state: String
+  zip_code: String
+  party_id: Int
+  case_number: String
+}
+
+type ODYCOACourtSchedule {
+  id: Int
+  event_type: String
+  date: AWSDate
+  date_str: String
+  time: AWSTime
+  time_str: String
+  result: String
+  panel_judges: String
+  case_number: String
+}
+
+type ODYCOADocument {
+  id: Int
+  file_date: AWSDate
+  file_date_str: String
+  document_name: String
+  case_number: String
+}
+
+type ODYCOAInvolvedParty {
+  attorneys: [ODYCOAAttorney]
+  id: Int
+  party_type: String
+  name: String
+  race: String
+  sex: String
+  height: String
+  weight: Int
+  hair_color: String
+  eye_color: String
+  DOB: AWSDate
+  DOB_str: String
+  address_1: String
+  address_2: String
+  city: String
+  state: String
+  zip_code: String
+  case_number: String
+}
+
+type ODYCOAJudgment {
+  id: Int
+  judgment_event_type: String
+  judge_name: String
+  issue_date: AWSDate
+  issue_date_str: String
+  comment: String
+  case_number: String
+}
+
+type ODYCOAReferenceNumber {
+  id: Int
+  ref_num: String
+  ref_num_type: String
+  case_number: String
+}
+
+type ODYCOAResultsResponse {
+  rows: [ODYCOA]
+  last_row: Int
+}
+
+type ODYCOSA {
+  reference_numbers: [ODYCOSAReferenceNumber]
+  involved_parties: [ODYCOSAInvolvedParty]
+  attorneys: [ODYCOSAAttorney]
+  judgments: [ODYCOSAJudgment]
+  court_schedule: [ODYCOSACourtSchedule]
+  documents: [ODYCOSADocument]
+  id: Int
+  court_system: String
+  case_title: String
+  case_type: String
+  filing_date: AWSDate
+  filing_date_str: String
+  case_status: String
+  tracking_numbers: String
+  authoring_judge: String
+  case_number: String
+}
+
+type ODYCOSAAttorney {
+  id: Int
+  name: String
+  appearance_date: AWSDate
+  appearance_date_str: String
+  removal_date: AWSDate
+  removal_date_str: String
+  address_1: String
+  address_2: String
+  address_3: String
+  city: String
+  state: String
+  zip_code: String
+  party_id: Int
+  case_number: String
+}
+
+type ODYCOSACourtSchedule {
+  id: Int
+  event_type: String
+  date: AWSDate
+  date_str: String
+  time: AWSTime
+  time_str: String
+  result: String
+  panel_judges: String
+  case_number: String
+}
+
+type ODYCOSADocument {
+  id: Int
+  file_date: AWSDate
+  file_date_str: String
+  document_name: String
+  case_number: String
+}
+
+type ODYCOSAInvolvedParty {
+  attorneys: [ODYCOSAAttorney]
+  id: Int
+  party_type: String
+  name: String
+  race: String
+  sex: String
+  height: String
+  weight: Int
+  hair_color: String
+  eye_color: String
+  DOB: AWSDate
+  DOB_str: String
+  address_1: String
+  address_2: String
+  city: String
+  state: String
+  zip_code: String
+  case_number: String
+}
+
+type ODYCOSAJudgment {
+  id: Int
+  judgment_event_type: String
+  judge_name: String
+  issue_date: AWSDate
+  issue_date_str: String
+  comment: String
+  case_number: String
+}
+
+type ODYCOSAReferenceNumber {
+  id: Int
+  ref_num: String
+  ref_num_type: String
+  case_number: String
+}
+
+type ODYCOSAResultsResponse {
+  rows: [ODYCOSA]
+  last_row: Int
 }
 
 type ODYCRIM {
@@ -2066,6 +2276,7 @@ type ODYCRIM {
   filing_date_str: String
   case_status: String
   tracking_numbers: String
+  judicial_officer: String
   case_number: String
 }
 
@@ -2112,6 +2323,7 @@ type ODYCRIMBondSetting {
   bail_date_str: String
   bail_setting_type: String
   bail_amount: Float
+  judge: String
   case_number: String
 }
 
@@ -2133,9 +2345,11 @@ type ODYCRIMCharge {
   plea: String
   plea_date: AWSDate
   plea_date_str: String
+  plea_judge: String
   disposition: String
   disposition_date: AWSDate
   disposition_date_str: String
+  disposition_judge: String
   converted_disposition: String
   jail_life: Boolean
   jail_death: Boolean
@@ -2155,6 +2369,8 @@ type ODYCRIMCharge {
   jail_suspend_all_but_months: Int
   jail_suspend_all_but_days: Int
   jail_suspend_all_but_hours: Int
+  sentence_judge: String
+  notes: String
   case_number: String
 }
 
@@ -2165,6 +2381,7 @@ type ODYCRIMCourtSchedule {
   date_str: String
   time: AWSTime
   time_str: String
+  judge: String
   location: String
   room: String
   result: String
@@ -2268,6 +2485,7 @@ type ODYCRIMWarrant {
   warrant_type: String
   issue_date: AWSDate
   issue_date_str: String
+  judge: String
   last_status: String
   status_date: AWSDate
   status_date_str: String
@@ -2517,6 +2735,7 @@ type ODYTRAF {
   violation_time_str: String
   violation_county: String
   case_status: String
+  judicial_officer: String
   case_number: String
 }
 
@@ -2563,6 +2782,7 @@ type ODYTRAFBondSetting {
   bail_date_str: String
   bail_setting_type: String
   bail_amount: Float
+  judge: String
   case_number: String
 }
 
@@ -2591,9 +2811,11 @@ type ODYTRAFCharge {
   plea: String
   plea_date: AWSDate
   plea_date_str: String
+  plea_judge: String
   disposition: String
   disposition_date: AWSDate
   disposition_date_str: String
+  disposition_judge: String
   converted_disposition: String
   probation_start_date: AWSDate
   probation_start_date_str: String
@@ -2620,6 +2842,8 @@ type ODYTRAFCharge {
   jail_suspend_all_but_months: Int
   jail_suspend_all_but_days: Int
   jail_suspend_all_but_hours: Int
+  sentence_judge: String
+  notes: String
   case_number: String
 }
 
@@ -2630,6 +2854,7 @@ type ODYTRAFCourtSchedule {
   date_str: String
   time: AWSTime
   time_str: String
+  judge: String
   location: String
   room: String
   result: String
@@ -2700,6 +2925,7 @@ type ODYTRAFWarrant {
   warrant_type: String
   issue_date: AWSDate
   issue_date_str: String
+  judge: String
   last_status: String
   status_date: AWSDate
   status_date_str: String
@@ -2925,22 +3151,24 @@ type PGVResultsResponse {
 }
 
 type Query {
-  pg(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): PGResultsResponse
-  mccr(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): MCCRResultsResponse
-  dscivil(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSCIVILResultsResponse
-  odycvcit(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCVCITResultsResponse
-  mcci(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): MCCIResultsResponse
+  dsk8(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSK8ResultsResponse
+  odycosa(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCOSAResultsResponse
   odytraf(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYTRAFResultsResponse
   k(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): KResultsResponse
-  dv(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DVResultsResponse
-  pgv(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): PGVResultsResponse
-  odycrim(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCRIMResultsResponse
-  cc(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): CCResultsResponse
-  dscp(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSCPResultsResponse
   dstraf(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSTRAFResultsResponse
-  odycivil(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCIVILResultsResponse
-  dsk8(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSK8ResultsResponse
+  mccr(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): MCCRResultsResponse
+  odycrim(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCRIMResultsResponse
+  pgv(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): PGVResultsResponse
+  dscp(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSCPResultsResponse
+  dv(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DVResultsResponse
+  odycvcit(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCVCITResultsResponse
+  pg(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): PGResultsResponse
+  dscivil(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSCIVILResultsResponse
+  mcci(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): MCCIResultsResponse
+  cc(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): CCResultsResponse
   dscr(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): DSCRResultsResponse
+  odycivil(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCIVILResultsResponse
+  odycoa(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): ODYCOAResultsResponse
   cases(start_row: Int = 0, end_row: Int = 100, row_group_cols: [ValueColumn], value_cols: [ValueColumn], pivot_cols: [ValueColumn], pivot_mode: Boolean = false, group_keys: [String], sort_model: [SortColumn], filter_model: FilterModel): CaseResultsResponse
 }
 
