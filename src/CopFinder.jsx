@@ -7,7 +7,7 @@ import environment from './config';
 import { API } from 'aws-amplify';
 import { getURLLastPart } from './utils';
 
-const CopFinder: React.FunctionComponent = props => {
+const CopFinder = props => {
   let value;
   if (window.location.pathname.startsWith('/bpd')) {
     value = getURLLastPart();

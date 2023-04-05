@@ -484,6 +484,90 @@
 		    }
 		  }
 		},
+		"QueryODYCOSAResolver": {
+		  "Type": "AWS::AppSync::Resolver",
+		  "Properties": {
+		    "ApiId": {
+		      "Ref": "AppSyncApiId"
+		    },
+		    "DataSourceName": {
+		      "Fn::GetAtt": [
+		        "CaseExplorerLambdaDataSource",
+		        "Name"
+		      ]
+		    },
+		    "TypeName": "Query",
+		    "FieldName": "odycosa",
+		    "RequestMappingTemplateS3Location": {
+		      "Fn::Sub": [
+		        "s3://${S3DeploymentBucket}/${S3DeploymentRootKey}/resolvers/Query.odycosa.req.vtl",
+		        {
+		          "S3DeploymentBucket": {
+		            "Ref": "S3DeploymentBucket"
+		          },
+		          "S3DeploymentRootKey": {
+		            "Ref": "S3DeploymentRootKey"
+		          }
+		        }
+		      ]
+		    },
+		    "ResponseMappingTemplateS3Location": {
+		      "Fn::Sub": [
+		        "s3://${S3DeploymentBucket}/${S3DeploymentRootKey}/resolvers/Query.results.res.vtl",
+		        {
+		          "S3DeploymentBucket": {
+		            "Ref": "S3DeploymentBucket"
+		          },
+		          "S3DeploymentRootKey": {
+		            "Ref": "S3DeploymentRootKey"
+		          }
+		        }
+		      ]
+		    }
+		  }
+		},
+		"QueryODYCOAResolver": {
+		  "Type": "AWS::AppSync::Resolver",
+		  "Properties": {
+		    "ApiId": {
+		      "Ref": "AppSyncApiId"
+		    },
+		    "DataSourceName": {
+		      "Fn::GetAtt": [
+		        "CaseExplorerLambdaDataSource",
+		        "Name"
+		      ]
+		    },
+		    "TypeName": "Query",
+		    "FieldName": "odycoa",
+		    "RequestMappingTemplateS3Location": {
+		      "Fn::Sub": [
+		        "s3://${S3DeploymentBucket}/${S3DeploymentRootKey}/resolvers/Query.odycoa.req.vtl",
+		        {
+		          "S3DeploymentBucket": {
+		            "Ref": "S3DeploymentBucket"
+		          },
+		          "S3DeploymentRootKey": {
+		            "Ref": "S3DeploymentRootKey"
+		          }
+		        }
+		      ]
+		    },
+		    "ResponseMappingTemplateS3Location": {
+		      "Fn::Sub": [
+		        "s3://${S3DeploymentBucket}/${S3DeploymentRootKey}/resolvers/Query.results.res.vtl",
+		        {
+		          "S3DeploymentBucket": {
+		            "Ref": "S3DeploymentBucket"
+		          },
+		          "S3DeploymentRootKey": {
+		            "Ref": "S3DeploymentRootKey"
+		          }
+		        }
+		      ]
+		    }
+		  }
+		},
 		"QueryDSTRAFResolver": {
 			"Type": "AWS::AppSync::Resolver",
 			"Properties": {

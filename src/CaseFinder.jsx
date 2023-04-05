@@ -4,7 +4,7 @@ import { IconButton } from '@fluentui/react/lib/Button';
 import { Stack } from '@fluentui/react/lib/Stack';
 import { getURLLastPart } from './utils';
 
-const CaseFinder: React.FunctionComponent = props => {
+const CaseFinder = props => {
   let value;
   if (window.location.pathname.startsWith('/case')) {
     value = getURLLastPart();
