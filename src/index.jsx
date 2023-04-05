@@ -21,7 +21,7 @@ import 'swagger-ui-react/swagger-ui.css';
 import { CookiesProvider } from 'react-cookie';
 import AnnouncementModal from './AnnouncementModal';
 
-export const version = '0.2';
+export const version = '0.3';
 
 Amplify.configure(awsmobile);
 
