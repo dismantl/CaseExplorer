@@ -1151,6 +1151,18 @@
                     },
                     "type": "array"
                 },
+                "odycoa": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOA"
+                    },
+                    "type": "array"
+                },
+                "odycosa": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOSA"
+                    },
+                    "type": "array"
+                },
                 "odycrim": {
                     "items": {
                         "$ref": "#/definitions/ODYCRIM"
@@ -1169,9 +1181,9 @@
                     },
                     "type": "array"
                 },
-                "pgv": {
+                "pg": {
                     "items": {
-                        "$ref": "#/definitions/PGV"
+                        "$ref": "#/definitions/PG"
                     },
                     "type": "array"
                 },
@@ -2532,6 +2544,9 @@
                 "mo_pll": {
                     "type": "string"
                 },
+                "notes": {
+                    "type": "string"
+                },
                 "pbj_end_date": {
                     "format": "date",
                     "type": "string"
@@ -3877,6 +3892,9 @@
                 },
                 "id": {
                     "type": "integer"
+                },
+                "notes": {
+                    "type": "string"
                 },
                 "personal_injury": {
                     "type": "string"
@@ -7541,7 +7559,13 @@
                     },
                     "type": "array"
                 },
+                "judicial_officer": {
+                    "type": "string"
+                },
                 "location": {
+                    "type": "string"
+                },
+                "magistrate": {
                     "type": "string"
                 },
                 "reference_numbers": {
@@ -7729,6 +7753,9 @@
                 },
                 "id": {
                     "type": "integer"
+                },
+                "judge": {
+                    "type": "string"
                 }
             },
             "type": "object"
@@ -7848,6 +7875,9 @@
                 },
                 "id": {
                     "type": "integer"
+                },
+                "judge": {
+                    "type": "string"
                 },
                 "location": {
                     "type": "string"
@@ -8149,7 +8179,13 @@
                     },
                     "type": "array"
                 },
+                "judicial_officer": {
+                    "type": "string"
+                },
                 "location": {
+                    "type": "string"
+                },
+                "magistrate": {
                     "type": "string"
                 },
                 "reference_numbers": {
@@ -8296,6 +8332,9 @@
                 "interest_rate_details": {
                     "type": "string"
                 },
+                "judge": {
+                    "type": "string"
+                },
                 "judgment": {
                     "type": "string"
                 },
@@ -8303,6 +8342,9 @@
                     "type": "string"
                 },
                 "judgment_description": {
+                    "type": "string"
+                },
+                "judgment_details": {
                     "type": "string"
                 },
                 "judgment_entry_date": {
@@ -8615,6 +8657,9 @@
                 "case_number": {
                     "type": "string"
                 },
+                "comment": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -8749,6 +8794,9 @@
                 "issue_date_str": {
                     "type": "string"
                 },
+                "judge": {
+                    "type": "string"
+                },
                 "last_status": {
                     "type": "string"
                 },
@@ -8773,6 +8821,916 @@
                 "rows": {
                     "items": {
                         "$ref": "#/definitions/ODYCIVILWarrant"
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOA": {
+            "properties": {
+                "attorneys": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOAAttorney"
+                    },
+                    "type": "array"
+                },
+                "authoring_judge": {
+                    "type": "string"
+                },
+                "case_number": {
+                    "type": "string"
+                },
+                "case_status": {
+                    "type": "string"
+                },
+                "case_title": {
+                    "type": "string"
+                },
+                "case_type": {
+                    "type": "string"
+                },
+                "court_schedule": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOACourtSchedule"
+                    },
+                    "type": "array"
+                },
+                "court_system": {
+                    "type": "string"
+                },
+                "documents": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOADocument"
+                    },
+                    "type": "array"
+                },
+                "filing_date": {
+                    "format": "date",
+                    "type": "string"
+                },
+                "filing_date_str": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "involved_parties": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOAInvolvedParty"
+                    },
+                    "type": "array"
+                },
+                "judgments": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOAJudgment"
+                    },
+                    "type": "array"
+                },
+                "reference_numbers": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOAReferenceNumber"
+                    },
+                    "type": "array"
+                },
+                "tracking_numbers": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOAAttorney": {
+            "properties": {
+                "address_1": {
+                    "type": "string"
+                },
+                "address_2": {
+                    "type": "string"
+                },
+                "address_3": {
+                    "type": "string"
+                },
+                "appearance_date": {
+                    "format": "date",
+                    "type": "string"
+                },
+                "appearance_date_str": {
+                    "type": "string"
+                },
+                "case_number": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "party_id": {
+                    "type": "integer"
+                },
+                "removal_date": {
+                    "format": "date",
+                    "type": "string"
+                },
+                "removal_date_str": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "zip_code": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOAAttorneyResults": {
+            "properties": {
+                "lastRow": {
+                    "type": "integer"
+                },
+                "rows": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOAAttorney"
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOACourtSchedule": {
+            "properties": {
+                "case_number": {
+                    "type": "string"
+                },
+                "date": {
+                    "format": "date",
+                    "type": "string"
+                },
+                "date_str": {
+                    "type": "string"
+                },
+                "event_type": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "panel_judges": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                },
+                "time_str": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOACourtScheduleResults": {
+            "properties": {
+                "lastRow": {
+                    "type": "integer"
+                },
+                "rows": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOACourtSchedule"
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOADocument": {
+            "properties": {
+                "case_number": {
+                    "type": "string"
+                },
+                "document_name": {
+                    "type": "string"
+                },
+                "file_date": {
+                    "format": "date",
+                    "type": "string"
+                },
+                "file_date_str": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOADocumentResults": {
+            "properties": {
+                "lastRow": {
+                    "type": "integer"
+                },
+                "rows": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOADocument"
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOAFull": {
+            "properties": {
+                "attorneys": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOAAttorney"
+                    },
+                    "type": "array"
+                },
+                "authoring_judge": {
+                    "type": "string"
+                },
+                "case": {
+                    "$ref": "#/definitions/Case"
+                },
+                "case_number": {
+                    "type": "string"
+                },
+                "case_status": {
+                    "type": "string"
+                },
+                "case_title": {
+                    "type": "string"
+                },
+                "case_type": {
+                    "type": "string"
+                },
+                "court_schedule": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOACourtSchedule"
+                    },
+                    "type": "array"
+                },
+                "court_system": {
+                    "type": "string"
+                },
+                "documents": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOADocument"
+                    },
+                    "type": "array"
+                },
+                "filing_date": {
+                    "format": "date",
+                    "type": "string"
+                },
+                "filing_date_str": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "involved_parties": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOAInvolvedParty"
+                    },
+                    "type": "array"
+                },
+                "judgments": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOAJudgment"
+                    },
+                    "type": "array"
+                },
+                "reference_numbers": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOAReferenceNumber"
+                    },
+                    "type": "array"
+                },
+                "tracking_numbers": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOAInvolvedParty": {
+            "properties": {
+                "DOB": {
+                    "format": "date",
+                    "type": "string"
+                },
+                "DOB_str": {
+                    "type": "string"
+                },
+                "address_1": {
+                    "type": "string"
+                },
+                "address_2": {
+                    "type": "string"
+                },
+                "attorneys": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOAAttorney"
+                    },
+                    "type": "array"
+                },
+                "case_number": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "eye_color": {
+                    "type": "string"
+                },
+                "hair_color": {
+                    "type": "string"
+                },
+                "height": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "party_type": {
+                    "type": "string"
+                },
+                "race": {
+                    "type": "string"
+                },
+                "sex": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "weight": {
+                    "type": "integer"
+                },
+                "zip_code": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOAInvolvedPartyResults": {
+            "properties": {
+                "lastRow": {
+                    "type": "integer"
+                },
+                "rows": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOAInvolvedParty"
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOAJudgment": {
+            "properties": {
+                "case_number": {
+                    "type": "string"
+                },
+                "comment": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "issue_date": {
+                    "format": "date",
+                    "type": "string"
+                },
+                "issue_date_str": {
+                    "type": "string"
+                },
+                "judge_name": {
+                    "type": "string"
+                },
+                "judgment_event_type": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOAJudgmentResults": {
+            "properties": {
+                "lastRow": {
+                    "type": "integer"
+                },
+                "rows": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOAJudgment"
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOAReferenceNumber": {
+            "properties": {
+                "case_number": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "ref_num": {
+                    "type": "string"
+                },
+                "ref_num_type": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOAReferenceNumberResults": {
+            "properties": {
+                "lastRow": {
+                    "type": "integer"
+                },
+                "rows": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOAReferenceNumber"
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOAResults": {
+            "properties": {
+                "lastRow": {
+                    "type": "integer"
+                },
+                "rows": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOA"
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOSA": {
+            "properties": {
+                "attorneys": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOSAAttorney"
+                    },
+                    "type": "array"
+                },
+                "authoring_judge": {
+                    "type": "string"
+                },
+                "case_number": {
+                    "type": "string"
+                },
+                "case_status": {
+                    "type": "string"
+                },
+                "case_title": {
+                    "type": "string"
+                },
+                "case_type": {
+                    "type": "string"
+                },
+                "court_schedule": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOSACourtSchedule"
+                    },
+                    "type": "array"
+                },
+                "court_system": {
+                    "type": "string"
+                },
+                "documents": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOSADocument"
+                    },
+                    "type": "array"
+                },
+                "filing_date": {
+                    "format": "date",
+                    "type": "string"
+                },
+                "filing_date_str": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "involved_parties": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOSAInvolvedParty"
+                    },
+                    "type": "array"
+                },
+                "judgments": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOSAJudgment"
+                    },
+                    "type": "array"
+                },
+                "reference_numbers": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOSAReferenceNumber"
+                    },
+                    "type": "array"
+                },
+                "tracking_numbers": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOSAAttorney": {
+            "properties": {
+                "address_1": {
+                    "type": "string"
+                },
+                "address_2": {
+                    "type": "string"
+                },
+                "address_3": {
+                    "type": "string"
+                },
+                "appearance_date": {
+                    "format": "date",
+                    "type": "string"
+                },
+                "appearance_date_str": {
+                    "type": "string"
+                },
+                "case_number": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "party_id": {
+                    "type": "integer"
+                },
+                "removal_date": {
+                    "format": "date",
+                    "type": "string"
+                },
+                "removal_date_str": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "zip_code": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOSAAttorneyResults": {
+            "properties": {
+                "lastRow": {
+                    "type": "integer"
+                },
+                "rows": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOSAAttorney"
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOSACourtSchedule": {
+            "properties": {
+                "case_number": {
+                    "type": "string"
+                },
+                "date": {
+                    "format": "date",
+                    "type": "string"
+                },
+                "date_str": {
+                    "type": "string"
+                },
+                "event_type": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "panel_judges": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                },
+                "time_str": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOSACourtScheduleResults": {
+            "properties": {
+                "lastRow": {
+                    "type": "integer"
+                },
+                "rows": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOSACourtSchedule"
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOSADocument": {
+            "properties": {
+                "case_number": {
+                    "type": "string"
+                },
+                "document_name": {
+                    "type": "string"
+                },
+                "file_date": {
+                    "format": "date",
+                    "type": "string"
+                },
+                "file_date_str": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOSADocumentResults": {
+            "properties": {
+                "lastRow": {
+                    "type": "integer"
+                },
+                "rows": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOSADocument"
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOSAFull": {
+            "properties": {
+                "attorneys": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOSAAttorney"
+                    },
+                    "type": "array"
+                },
+                "authoring_judge": {
+                    "type": "string"
+                },
+                "case": {
+                    "$ref": "#/definitions/Case"
+                },
+                "case_number": {
+                    "type": "string"
+                },
+                "case_status": {
+                    "type": "string"
+                },
+                "case_title": {
+                    "type": "string"
+                },
+                "case_type": {
+                    "type": "string"
+                },
+                "court_schedule": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOSACourtSchedule"
+                    },
+                    "type": "array"
+                },
+                "court_system": {
+                    "type": "string"
+                },
+                "documents": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOSADocument"
+                    },
+                    "type": "array"
+                },
+                "filing_date": {
+                    "format": "date",
+                    "type": "string"
+                },
+                "filing_date_str": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "involved_parties": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOSAInvolvedParty"
+                    },
+                    "type": "array"
+                },
+                "judgments": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOSAJudgment"
+                    },
+                    "type": "array"
+                },
+                "reference_numbers": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOSAReferenceNumber"
+                    },
+                    "type": "array"
+                },
+                "tracking_numbers": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOSAInvolvedParty": {
+            "properties": {
+                "DOB": {
+                    "format": "date",
+                    "type": "string"
+                },
+                "DOB_str": {
+                    "type": "string"
+                },
+                "address_1": {
+                    "type": "string"
+                },
+                "address_2": {
+                    "type": "string"
+                },
+                "attorneys": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOSAAttorney"
+                    },
+                    "type": "array"
+                },
+                "case_number": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "eye_color": {
+                    "type": "string"
+                },
+                "hair_color": {
+                    "type": "string"
+                },
+                "height": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "party_type": {
+                    "type": "string"
+                },
+                "race": {
+                    "type": "string"
+                },
+                "sex": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "weight": {
+                    "type": "integer"
+                },
+                "zip_code": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOSAInvolvedPartyResults": {
+            "properties": {
+                "lastRow": {
+                    "type": "integer"
+                },
+                "rows": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOSAInvolvedParty"
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOSAJudgment": {
+            "properties": {
+                "case_number": {
+                    "type": "string"
+                },
+                "comment": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "issue_date": {
+                    "format": "date",
+                    "type": "string"
+                },
+                "issue_date_str": {
+                    "type": "string"
+                },
+                "judge_name": {
+                    "type": "string"
+                },
+                "judgment_event_type": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOSAJudgmentResults": {
+            "properties": {
+                "lastRow": {
+                    "type": "integer"
+                },
+                "rows": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOSAJudgment"
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOSAReferenceNumber": {
+            "properties": {
+                "case_number": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "ref_num": {
+                    "type": "string"
+                },
+                "ref_num_type": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOSAReferenceNumberResults": {
+            "properties": {
+                "lastRow": {
+                    "type": "integer"
+                },
+                "rows": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOSAReferenceNumber"
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        },
+        "ODYCOSAResults": {
+            "properties": {
+                "lastRow": {
+                    "type": "integer"
+                },
+                "rows": {
+                    "items": {
+                        "$ref": "#/definitions/ODYCOSA"
                     },
                     "type": "array"
                 }
@@ -8859,6 +9817,9 @@
                         "$ref": "#/definitions/ODYCRIMInvolvedParty"
                     },
                     "type": "array"
+                },
+                "judicial_officer": {
+                    "type": "string"
                 },
                 "location": {
                     "type": "string"
@@ -9069,6 +10030,9 @@
                 },
                 "id": {
                     "type": "integer"
+                },
+                "judge": {
+                    "type": "string"
                 }
             },
             "type": "object"
@@ -9118,6 +10082,9 @@
                     "type": "string"
                 },
                 "disposition_date_str": {
+                    "type": "string"
+                },
+                "disposition_judge": {
                     "type": "string"
                 },
                 "expunged": {
@@ -9181,6 +10148,9 @@
                 "jail_years": {
                     "type": "integer"
                 },
+                "notes": {
+                    "type": "string"
+                },
                 "offense_date_from": {
                     "format": "date",
                     "type": "string"
@@ -9208,8 +10178,14 @@
                 "plea_date_str": {
                     "type": "string"
                 },
+                "plea_judge": {
+                    "type": "string"
+                },
                 "probable_cause": {
                     "type": "boolean"
+                },
+                "sentence_judge": {
+                    "type": "string"
                 },
                 "statute_code": {
                     "type": "string"
@@ -9248,6 +10224,9 @@
                 },
                 "id": {
                     "type": "integer"
+                },
+                "judge": {
+                    "type": "string"
                 },
                 "location": {
                     "type": "string"
@@ -9463,6 +10442,9 @@
                         "$ref": "#/definitions/ODYCRIMInvolvedParty"
                     },
                     "type": "array"
+                },
+                "judicial_officer": {
+                    "type": "string"
                 },
                 "location": {
                     "type": "string"
@@ -9794,6 +10776,9 @@
                     "type": "string"
                 },
                 "issue_date_str": {
+                    "type": "string"
+                },
+                "judge": {
                     "type": "string"
                 },
                 "last_status": {
@@ -10887,6 +11872,9 @@
                     },
                     "type": "array"
                 },
+                "judicial_officer": {
+                    "type": "string"
+                },
                 "location": {
                     "type": "string"
                 },
@@ -11091,6 +12079,9 @@
                 },
                 "id": {
                     "type": "integer"
+                },
+                "judge": {
+                    "type": "string"
                 }
             },
             "type": "object"
@@ -11143,6 +12134,9 @@
                     "type": "string"
                 },
                 "disposition_date_str": {
+                    "type": "string"
+                },
+                "disposition_judge": {
                     "type": "string"
                 },
                 "disposition_personal_injury": {
@@ -11209,6 +12203,9 @@
                 "mandatory_court_appearance": {
                     "type": "boolean"
                 },
+                "notes": {
+                    "type": "string"
+                },
                 "plea": {
                     "type": "string"
                 },
@@ -11217,6 +12214,9 @@
                     "type": "string"
                 },
                 "plea_date_str": {
+                    "type": "string"
+                },
+                "plea_judge": {
                     "type": "string"
                 },
                 "probable_cause_indicator": {
@@ -11261,6 +12261,9 @@
                 },
                 "seat_belts": {
                     "type": "boolean"
+                },
+                "sentence_judge": {
+                    "type": "string"
                 },
                 "speed_limit": {
                     "type": "integer"
@@ -11311,6 +12314,9 @@
                 },
                 "id": {
                     "type": "integer"
+                },
+                "judge": {
+                    "type": "string"
                 },
                 "location": {
                     "type": "string"
@@ -11524,6 +12530,9 @@
                     },
                     "type": "array"
                 },
+                "judicial_officer": {
+                    "type": "string"
+                },
                 "location": {
                     "type": "string"
                 },
@@ -11721,6 +12730,9 @@
                     "type": "string"
                 },
                 "issue_date_str": {
+                    "type": "string"
+                },
+                "judge": {
                     "type": "string"
                 },
                 "last_status": {
@@ -26309,6 +27321,1558 @@
                 }
             ]
         },
+        "/api/v1/odycoa": {
+            "post": {
+                "operationId": "post_api_resource",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    },
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOAResults"
+                        }
+                    }
+                },
+                "summary": "Get a list of MDEC Supreme Court of Maryland Cases",
+                "tags": [
+                    "ODYCOA"
+                ]
+            }
+        },
+        "/api/v1/odycoa/filtered/total": {
+            "post": {
+                "operationId": "post_api_resource_filtered",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Get total number of MDEC Supreme Court of Maryland Cases filtered by search criteria",
+                "tags": [
+                    "ODYCOA"
+                ]
+            }
+        },
+        "/api/v1/odycoa/total": {
+            "get": {
+                "operationId": "get_api_total",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Total number of MDEC Supreme Court of Maryland Cases (estimate)",
+                "tags": [
+                    "ODYCOA"
+                ]
+            }
+        },
+        "/api/v1/odycoa/{case_number}": {
+            "get": {
+                "operationId": "get_api_resource_case_number",
+                "parameters": [
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOA"
+                        }
+                    }
+                },
+                "summary": "MDEC Supreme Court of Maryland Cases by case number",
+                "tags": [
+                    "ODYCOA"
+                ]
+            },
+            "parameters": [
+                {
+                    "in": "path",
+                    "name": "case_number",
+                    "required": true,
+                    "type": "string"
+                }
+            ]
+        },
+        "/api/v1/odycoa/{case_number}/full": {
+            "get": {
+                "operationId": "get_api_resource_case_number_full",
+                "parameters": [
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOAFull"
+                        }
+                    }
+                },
+                "summary": "MDEC Supreme Court of Maryland Cases full case details by case number",
+                "tags": [
+                    "ODYCOA"
+                ]
+            },
+            "parameters": [
+                {
+                    "in": "path",
+                    "name": "case_number",
+                    "required": true,
+                    "type": "string"
+                }
+            ]
+        },
+        "/api/v1/odycoa_attorneys": {
+            "post": {
+                "operationId": "post_api_resource",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    },
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOAAttorneyResults"
+                        }
+                    }
+                },
+                "summary": "Get a list of MDEC Supreme Court of Maryland Cases: Attorneys",
+                "tags": [
+                    "ODYCOA_ATTORNEYS"
+                ]
+            }
+        },
+        "/api/v1/odycoa_attorneys/filtered/total": {
+            "post": {
+                "operationId": "post_api_resource_filtered",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Get total number of MDEC Supreme Court of Maryland Cases: Attorneys filtered by search criteria",
+                "tags": [
+                    "ODYCOA_ATTORNEYS"
+                ]
+            }
+        },
+        "/api/v1/odycoa_attorneys/total": {
+            "get": {
+                "operationId": "get_api_total",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Total number of MDEC Supreme Court of Maryland Cases: Attorneys (estimate)",
+                "tags": [
+                    "ODYCOA_ATTORNEYS"
+                ]
+            }
+        },
+        "/api/v1/odycoa_attorneys/{case_number}": {
+            "get": {
+                "operationId": "get_api_resource_case_number",
+                "parameters": [
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOAAttorney"
+                        }
+                    }
+                },
+                "summary": "MDEC Supreme Court of Maryland Cases: Attorneys by case number",
+                "tags": [
+                    "ODYCOA_ATTORNEYS"
+                ]
+            },
+            "parameters": [
+                {
+                    "in": "path",
+                    "name": "case_number",
+                    "required": true,
+                    "type": "string"
+                }
+            ]
+        },
+        "/api/v1/odycoa_court_schedule": {
+            "post": {
+                "operationId": "post_api_resource",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    },
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOACourtScheduleResults"
+                        }
+                    }
+                },
+                "summary": "Get a list of MDEC Supreme Court of Maryland Cases: Court Schedule",
+                "tags": [
+                    "ODYCOA_COURT_SCHEDULE"
+                ]
+            }
+        },
+        "/api/v1/odycoa_court_schedule/filtered/total": {
+            "post": {
+                "operationId": "post_api_resource_filtered",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Get total number of MDEC Supreme Court of Maryland Cases: Court Schedule filtered by search criteria",
+                "tags": [
+                    "ODYCOA_COURT_SCHEDULE"
+                ]
+            }
+        },
+        "/api/v1/odycoa_court_schedule/total": {
+            "get": {
+                "operationId": "get_api_total",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Total number of MDEC Supreme Court of Maryland Cases: Court Schedule (estimate)",
+                "tags": [
+                    "ODYCOA_COURT_SCHEDULE"
+                ]
+            }
+        },
+        "/api/v1/odycoa_court_schedule/{case_number}": {
+            "get": {
+                "operationId": "get_api_resource_case_number",
+                "parameters": [
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOACourtSchedule"
+                        }
+                    }
+                },
+                "summary": "MDEC Supreme Court of Maryland Cases: Court Schedule by case number",
+                "tags": [
+                    "ODYCOA_COURT_SCHEDULE"
+                ]
+            },
+            "parameters": [
+                {
+                    "in": "path",
+                    "name": "case_number",
+                    "required": true,
+                    "type": "string"
+                }
+            ]
+        },
+        "/api/v1/odycoa_documents": {
+            "post": {
+                "operationId": "post_api_resource",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    },
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOADocumentResults"
+                        }
+                    }
+                },
+                "summary": "Get a list of MDEC Supreme Court of Maryland Cases: Documents",
+                "tags": [
+                    "ODYCOA_DOCUMENTS"
+                ]
+            }
+        },
+        "/api/v1/odycoa_documents/filtered/total": {
+            "post": {
+                "operationId": "post_api_resource_filtered",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Get total number of MDEC Supreme Court of Maryland Cases: Documents filtered by search criteria",
+                "tags": [
+                    "ODYCOA_DOCUMENTS"
+                ]
+            }
+        },
+        "/api/v1/odycoa_documents/total": {
+            "get": {
+                "operationId": "get_api_total",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Total number of MDEC Supreme Court of Maryland Cases: Documents (estimate)",
+                "tags": [
+                    "ODYCOA_DOCUMENTS"
+                ]
+            }
+        },
+        "/api/v1/odycoa_documents/{case_number}": {
+            "get": {
+                "operationId": "get_api_resource_case_number",
+                "parameters": [
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOADocument"
+                        }
+                    }
+                },
+                "summary": "MDEC Supreme Court of Maryland Cases: Documents by case number",
+                "tags": [
+                    "ODYCOA_DOCUMENTS"
+                ]
+            },
+            "parameters": [
+                {
+                    "in": "path",
+                    "name": "case_number",
+                    "required": true,
+                    "type": "string"
+                }
+            ]
+        },
+        "/api/v1/odycoa_involved_parties": {
+            "post": {
+                "operationId": "post_api_resource",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    },
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOAInvolvedPartyResults"
+                        }
+                    }
+                },
+                "summary": "Get a list of MDEC Supreme Court of Maryland Cases: Involved Parties",
+                "tags": [
+                    "ODYCOA_INVOLVED_PARTIES"
+                ]
+            }
+        },
+        "/api/v1/odycoa_involved_parties/filtered/total": {
+            "post": {
+                "operationId": "post_api_resource_filtered",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Get total number of MDEC Supreme Court of Maryland Cases: Involved Parties filtered by search criteria",
+                "tags": [
+                    "ODYCOA_INVOLVED_PARTIES"
+                ]
+            }
+        },
+        "/api/v1/odycoa_involved_parties/total": {
+            "get": {
+                "operationId": "get_api_total",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Total number of MDEC Supreme Court of Maryland Cases: Involved Parties (estimate)",
+                "tags": [
+                    "ODYCOA_INVOLVED_PARTIES"
+                ]
+            }
+        },
+        "/api/v1/odycoa_involved_parties/{case_number}": {
+            "get": {
+                "operationId": "get_api_resource_case_number",
+                "parameters": [
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOAInvolvedParty"
+                        }
+                    }
+                },
+                "summary": "MDEC Supreme Court of Maryland Cases: Involved Parties by case number",
+                "tags": [
+                    "ODYCOA_INVOLVED_PARTIES"
+                ]
+            },
+            "parameters": [
+                {
+                    "in": "path",
+                    "name": "case_number",
+                    "required": true,
+                    "type": "string"
+                }
+            ]
+        },
+        "/api/v1/odycoa_judgments": {
+            "post": {
+                "operationId": "post_api_resource",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    },
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOAJudgmentResults"
+                        }
+                    }
+                },
+                "summary": "Get a list of MDEC Supreme Court of Maryland Cases: Judgments",
+                "tags": [
+                    "ODYCOA_JUDGMENTS"
+                ]
+            }
+        },
+        "/api/v1/odycoa_judgments/filtered/total": {
+            "post": {
+                "operationId": "post_api_resource_filtered",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Get total number of MDEC Supreme Court of Maryland Cases: Judgments filtered by search criteria",
+                "tags": [
+                    "ODYCOA_JUDGMENTS"
+                ]
+            }
+        },
+        "/api/v1/odycoa_judgments/total": {
+            "get": {
+                "operationId": "get_api_total",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Total number of MDEC Supreme Court of Maryland Cases: Judgments (estimate)",
+                "tags": [
+                    "ODYCOA_JUDGMENTS"
+                ]
+            }
+        },
+        "/api/v1/odycoa_judgments/{case_number}": {
+            "get": {
+                "operationId": "get_api_resource_case_number",
+                "parameters": [
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOAJudgment"
+                        }
+                    }
+                },
+                "summary": "MDEC Supreme Court of Maryland Cases: Judgments by case number",
+                "tags": [
+                    "ODYCOA_JUDGMENTS"
+                ]
+            },
+            "parameters": [
+                {
+                    "in": "path",
+                    "name": "case_number",
+                    "required": true,
+                    "type": "string"
+                }
+            ]
+        },
+        "/api/v1/odycoa_reference_numbers": {
+            "post": {
+                "operationId": "post_api_resource",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    },
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOAReferenceNumberResults"
+                        }
+                    }
+                },
+                "summary": "Get a list of MDEC Supreme Court of Maryland Cases: Reference Numbers",
+                "tags": [
+                    "ODYCOA_REFERENCE_NUMBERS"
+                ]
+            }
+        },
+        "/api/v1/odycoa_reference_numbers/filtered/total": {
+            "post": {
+                "operationId": "post_api_resource_filtered",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Get total number of MDEC Supreme Court of Maryland Cases: Reference Numbers filtered by search criteria",
+                "tags": [
+                    "ODYCOA_REFERENCE_NUMBERS"
+                ]
+            }
+        },
+        "/api/v1/odycoa_reference_numbers/total": {
+            "get": {
+                "operationId": "get_api_total",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Total number of MDEC Supreme Court of Maryland Cases: Reference Numbers (estimate)",
+                "tags": [
+                    "ODYCOA_REFERENCE_NUMBERS"
+                ]
+            }
+        },
+        "/api/v1/odycoa_reference_numbers/{case_number}": {
+            "get": {
+                "operationId": "get_api_resource_case_number",
+                "parameters": [
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOAReferenceNumber"
+                        }
+                    }
+                },
+                "summary": "MDEC Supreme Court of Maryland Cases: Reference Numbers by case number",
+                "tags": [
+                    "ODYCOA_REFERENCE_NUMBERS"
+                ]
+            },
+            "parameters": [
+                {
+                    "in": "path",
+                    "name": "case_number",
+                    "required": true,
+                    "type": "string"
+                }
+            ]
+        },
+        "/api/v1/odycosa": {
+            "post": {
+                "operationId": "post_api_resource",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    },
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOSAResults"
+                        }
+                    }
+                },
+                "summary": "Get a list of MDEC Appellate Court of Maryland Cases",
+                "tags": [
+                    "ODYCOSA"
+                ]
+            }
+        },
+        "/api/v1/odycosa/filtered/total": {
+            "post": {
+                "operationId": "post_api_resource_filtered",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Get total number of MDEC Appellate Court of Maryland Cases filtered by search criteria",
+                "tags": [
+                    "ODYCOSA"
+                ]
+            }
+        },
+        "/api/v1/odycosa/total": {
+            "get": {
+                "operationId": "get_api_total",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Total number of MDEC Appellate Court of Maryland Cases (estimate)",
+                "tags": [
+                    "ODYCOSA"
+                ]
+            }
+        },
+        "/api/v1/odycosa/{case_number}": {
+            "get": {
+                "operationId": "get_api_resource_case_number",
+                "parameters": [
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOSA"
+                        }
+                    }
+                },
+                "summary": "MDEC Appellate Court of Maryland Cases by case number",
+                "tags": [
+                    "ODYCOSA"
+                ]
+            },
+            "parameters": [
+                {
+                    "in": "path",
+                    "name": "case_number",
+                    "required": true,
+                    "type": "string"
+                }
+            ]
+        },
+        "/api/v1/odycosa/{case_number}/full": {
+            "get": {
+                "operationId": "get_api_resource_case_number_full",
+                "parameters": [
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOSAFull"
+                        }
+                    }
+                },
+                "summary": "MDEC Appellate Court of Maryland Cases full case details by case number",
+                "tags": [
+                    "ODYCOSA"
+                ]
+            },
+            "parameters": [
+                {
+                    "in": "path",
+                    "name": "case_number",
+                    "required": true,
+                    "type": "string"
+                }
+            ]
+        },
+        "/api/v1/odycosa_attorneys": {
+            "post": {
+                "operationId": "post_api_resource",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    },
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOSAAttorneyResults"
+                        }
+                    }
+                },
+                "summary": "Get a list of MDEC Appellate Court of Maryland Cases: Attorneys",
+                "tags": [
+                    "ODYCOSA_ATTORNEYS"
+                ]
+            }
+        },
+        "/api/v1/odycosa_attorneys/filtered/total": {
+            "post": {
+                "operationId": "post_api_resource_filtered",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Get total number of MDEC Appellate Court of Maryland Cases: Attorneys filtered by search criteria",
+                "tags": [
+                    "ODYCOSA_ATTORNEYS"
+                ]
+            }
+        },
+        "/api/v1/odycosa_attorneys/total": {
+            "get": {
+                "operationId": "get_api_total",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Total number of MDEC Appellate Court of Maryland Cases: Attorneys (estimate)",
+                "tags": [
+                    "ODYCOSA_ATTORNEYS"
+                ]
+            }
+        },
+        "/api/v1/odycosa_attorneys/{case_number}": {
+            "get": {
+                "operationId": "get_api_resource_case_number",
+                "parameters": [
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOSAAttorney"
+                        }
+                    }
+                },
+                "summary": "MDEC Appellate Court of Maryland Cases: Attorneys by case number",
+                "tags": [
+                    "ODYCOSA_ATTORNEYS"
+                ]
+            },
+            "parameters": [
+                {
+                    "in": "path",
+                    "name": "case_number",
+                    "required": true,
+                    "type": "string"
+                }
+            ]
+        },
+        "/api/v1/odycosa_court_schedule": {
+            "post": {
+                "operationId": "post_api_resource",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    },
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOSACourtScheduleResults"
+                        }
+                    }
+                },
+                "summary": "Get a list of MDEC Appellate Court of Maryland Cases: Court Schedule",
+                "tags": [
+                    "ODYCOSA_COURT_SCHEDULE"
+                ]
+            }
+        },
+        "/api/v1/odycosa_court_schedule/filtered/total": {
+            "post": {
+                "operationId": "post_api_resource_filtered",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Get total number of MDEC Appellate Court of Maryland Cases: Court Schedule filtered by search criteria",
+                "tags": [
+                    "ODYCOSA_COURT_SCHEDULE"
+                ]
+            }
+        },
+        "/api/v1/odycosa_court_schedule/total": {
+            "get": {
+                "operationId": "get_api_total",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Total number of MDEC Appellate Court of Maryland Cases: Court Schedule (estimate)",
+                "tags": [
+                    "ODYCOSA_COURT_SCHEDULE"
+                ]
+            }
+        },
+        "/api/v1/odycosa_court_schedule/{case_number}": {
+            "get": {
+                "operationId": "get_api_resource_case_number",
+                "parameters": [
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOSACourtSchedule"
+                        }
+                    }
+                },
+                "summary": "MDEC Appellate Court of Maryland Cases: Court Schedule by case number",
+                "tags": [
+                    "ODYCOSA_COURT_SCHEDULE"
+                ]
+            },
+            "parameters": [
+                {
+                    "in": "path",
+                    "name": "case_number",
+                    "required": true,
+                    "type": "string"
+                }
+            ]
+        },
+        "/api/v1/odycosa_documents": {
+            "post": {
+                "operationId": "post_api_resource",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    },
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOSADocumentResults"
+                        }
+                    }
+                },
+                "summary": "Get a list of MDEC Appellate Court of Maryland Cases: Documents",
+                "tags": [
+                    "ODYCOSA_DOCUMENTS"
+                ]
+            }
+        },
+        "/api/v1/odycosa_documents/filtered/total": {
+            "post": {
+                "operationId": "post_api_resource_filtered",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Get total number of MDEC Appellate Court of Maryland Cases: Documents filtered by search criteria",
+                "tags": [
+                    "ODYCOSA_DOCUMENTS"
+                ]
+            }
+        },
+        "/api/v1/odycosa_documents/total": {
+            "get": {
+                "operationId": "get_api_total",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Total number of MDEC Appellate Court of Maryland Cases: Documents (estimate)",
+                "tags": [
+                    "ODYCOSA_DOCUMENTS"
+                ]
+            }
+        },
+        "/api/v1/odycosa_documents/{case_number}": {
+            "get": {
+                "operationId": "get_api_resource_case_number",
+                "parameters": [
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOSADocument"
+                        }
+                    }
+                },
+                "summary": "MDEC Appellate Court of Maryland Cases: Documents by case number",
+                "tags": [
+                    "ODYCOSA_DOCUMENTS"
+                ]
+            },
+            "parameters": [
+                {
+                    "in": "path",
+                    "name": "case_number",
+                    "required": true,
+                    "type": "string"
+                }
+            ]
+        },
+        "/api/v1/odycosa_involved_parties": {
+            "post": {
+                "operationId": "post_api_resource",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    },
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOSAInvolvedPartyResults"
+                        }
+                    }
+                },
+                "summary": "Get a list of MDEC Appellate Court of Maryland Cases: Involved Parties",
+                "tags": [
+                    "ODYCOSA_INVOLVED_PARTIES"
+                ]
+            }
+        },
+        "/api/v1/odycosa_involved_parties/filtered/total": {
+            "post": {
+                "operationId": "post_api_resource_filtered",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Get total number of MDEC Appellate Court of Maryland Cases: Involved Parties filtered by search criteria",
+                "tags": [
+                    "ODYCOSA_INVOLVED_PARTIES"
+                ]
+            }
+        },
+        "/api/v1/odycosa_involved_parties/total": {
+            "get": {
+                "operationId": "get_api_total",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Total number of MDEC Appellate Court of Maryland Cases: Involved Parties (estimate)",
+                "tags": [
+                    "ODYCOSA_INVOLVED_PARTIES"
+                ]
+            }
+        },
+        "/api/v1/odycosa_involved_parties/{case_number}": {
+            "get": {
+                "operationId": "get_api_resource_case_number",
+                "parameters": [
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOSAInvolvedParty"
+                        }
+                    }
+                },
+                "summary": "MDEC Appellate Court of Maryland Cases: Involved Parties by case number",
+                "tags": [
+                    "ODYCOSA_INVOLVED_PARTIES"
+                ]
+            },
+            "parameters": [
+                {
+                    "in": "path",
+                    "name": "case_number",
+                    "required": true,
+                    "type": "string"
+                }
+            ]
+        },
+        "/api/v1/odycosa_judgments": {
+            "post": {
+                "operationId": "post_api_resource",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    },
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOSAJudgmentResults"
+                        }
+                    }
+                },
+                "summary": "Get a list of MDEC Appellate Court of Maryland Cases: Judgments",
+                "tags": [
+                    "ODYCOSA_JUDGMENTS"
+                ]
+            }
+        },
+        "/api/v1/odycosa_judgments/filtered/total": {
+            "post": {
+                "operationId": "post_api_resource_filtered",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Get total number of MDEC Appellate Court of Maryland Cases: Judgments filtered by search criteria",
+                "tags": [
+                    "ODYCOSA_JUDGMENTS"
+                ]
+            }
+        },
+        "/api/v1/odycosa_judgments/total": {
+            "get": {
+                "operationId": "get_api_total",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Total number of MDEC Appellate Court of Maryland Cases: Judgments (estimate)",
+                "tags": [
+                    "ODYCOSA_JUDGMENTS"
+                ]
+            }
+        },
+        "/api/v1/odycosa_judgments/{case_number}": {
+            "get": {
+                "operationId": "get_api_resource_case_number",
+                "parameters": [
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOSAJudgment"
+                        }
+                    }
+                },
+                "summary": "MDEC Appellate Court of Maryland Cases: Judgments by case number",
+                "tags": [
+                    "ODYCOSA_JUDGMENTS"
+                ]
+            },
+            "parameters": [
+                {
+                    "in": "path",
+                    "name": "case_number",
+                    "required": true,
+                    "type": "string"
+                }
+            ]
+        },
+        "/api/v1/odycosa_reference_numbers": {
+            "post": {
+                "operationId": "post_api_resource",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    },
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOSAReferenceNumberResults"
+                        }
+                    }
+                },
+                "summary": "Get a list of MDEC Appellate Court of Maryland Cases: Reference Numbers",
+                "tags": [
+                    "ODYCOSA_REFERENCE_NUMBERS"
+                ]
+            }
+        },
+        "/api/v1/odycosa_reference_numbers/filtered/total": {
+            "post": {
+                "operationId": "post_api_resource_filtered",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "payload",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/QueryParams"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Get total number of MDEC Appellate Court of Maryland Cases: Reference Numbers filtered by search criteria",
+                "tags": [
+                    "ODYCOSA_REFERENCE_NUMBERS"
+                ]
+            }
+        },
+        "/api/v1/odycosa_reference_numbers/total": {
+            "get": {
+                "operationId": "get_api_total",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "summary": "Total number of MDEC Appellate Court of Maryland Cases: Reference Numbers (estimate)",
+                "tags": [
+                    "ODYCOSA_REFERENCE_NUMBERS"
+                ]
+            }
+        },
+        "/api/v1/odycosa_reference_numbers/{case_number}": {
+            "get": {
+                "operationId": "get_api_resource_case_number",
+                "parameters": [
+                    {
+                        "description": "An optional fields mask",
+                        "format": "mask",
+                        "in": "header",
+                        "name": "X-Fields",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ODYCOSAReferenceNumber"
+                        }
+                    }
+                },
+                "summary": "MDEC Appellate Court of Maryland Cases: Reference Numbers by case number",
+                "tags": [
+                    "ODYCOSA_REFERENCE_NUMBERS"
+                ]
+            },
+            "parameters": [
+                {
+                    "in": "path",
+                    "name": "case_number",
+                    "required": true,
+                    "type": "string"
+                }
+            ]
+        },
         "/api/v1/odycrim": {
             "post": {
                 "operationId": "post_api_resource",
@@ -33073,26 +35637,6 @@
             "name": "CASES"
         },
         {
-            "description": "Domestic Violence Cases",
-            "name": "DV"
-        },
-        {
-            "description": "Domestic Violence Cases: Defendants",
-            "name": "DV_DEFENDANTS"
-        },
-        {
-            "description": "Domestic Violence Cases: Defendant Attorneys",
-            "name": "DV_DEFENDANT_ATTORNEYS"
-        },
-        {
-            "description": "Domestic Violence Cases: Hearings",
-            "name": "DV_HEARINGS"
-        },
-        {
-            "description": "Domestic Violence Cases: Events",
-            "name": "DV_EVENTS"
-        },
-        {
             "description": "MDEC Criminal Cases",
             "name": "ODYCRIM"
         },
@@ -33157,6 +35701,114 @@
             "name": "ODYCRIM_SERVICES"
         },
         {
+            "description": "Prince George's County Circuit Court Criminal Cases",
+            "name": "PG"
+        },
+        {
+            "description": "Prince George's County Circuit Court Criminal Cases: Charges",
+            "name": "PG_CHARGES"
+        },
+        {
+            "description": "Prince George's County Circuit Court Criminal Cases: Plaintiffs",
+            "name": "PG_PLAINTIFFS"
+        },
+        {
+            "description": "Prince George's County Circuit Court Criminal Cases: Defendants",
+            "name": "PG_DEFENDANTS"
+        },
+        {
+            "description": "Prince George's County Circuit Court Criminal Cases: Defendant Aliases",
+            "name": "PG_DEFENDANT_ALIASES"
+        },
+        {
+            "description": "Prince George's County Circuit Court Criminal Cases: Attorneys",
+            "name": "PG_ATTORNEYS"
+        },
+        {
+            "description": "Prince George's County Circuit Court Criminal Cases: Other Parties",
+            "name": "PG_OTHER_PARTIES"
+        },
+        {
+            "description": "Prince George's County Circuit Court Criminal Cases: Court Schedule",
+            "name": "PG_COURT_SCHEDULE"
+        },
+        {
+            "description": "Prince George's County Circuit Court Criminal Cases: Dockets",
+            "name": "PG_DOCKETS"
+        },
+        {
+            "description": "Domestic Violence Cases",
+            "name": "DV"
+        },
+        {
+            "description": "Domestic Violence Cases: Defendants",
+            "name": "DV_DEFENDANTS"
+        },
+        {
+            "description": "Domestic Violence Cases: Defendant Attorneys",
+            "name": "DV_DEFENDANT_ATTORNEYS"
+        },
+        {
+            "description": "Domestic Violence Cases: Hearings",
+            "name": "DV_HEARINGS"
+        },
+        {
+            "description": "Domestic Violence Cases: Events",
+            "name": "DV_EVENTS"
+        },
+        {
+            "description": "MDEC Traffic Cases",
+            "name": "ODYTRAF"
+        },
+        {
+            "description": "MDEC Traffic Cases: Reference Numbers",
+            "name": "ODYTRAF_REFERENCE_NUMBERS"
+        },
+        {
+            "description": "MDEC Traffic Cases: Defendants",
+            "name": "ODYTRAF_DEFENDANTS"
+        },
+        {
+            "description": "MDEC Traffic Cases: Involved Parties",
+            "name": "ODYTRAF_INVOLVED_PARTIES"
+        },
+        {
+            "description": "MDEC Traffic Cases: Aliases",
+            "name": "ODYTRAF_ALIASES"
+        },
+        {
+            "description": "MDEC Traffic Cases: Attorneys",
+            "name": "ODYTRAF_ATTORNEYS"
+        },
+        {
+            "description": "MDEC Traffic Cases: Court Schedule",
+            "name": "ODYTRAF_COURT_SCHEDULE"
+        },
+        {
+            "description": "MDEC Traffic Cases: Charges",
+            "name": "ODYTRAF_CHARGES"
+        },
+        {
+            "description": "MDEC Traffic Cases: Warrants",
+            "name": "ODYTRAF_WARRANTS"
+        },
+        {
+            "description": "MDEC Traffic Cases: Bail Bonds",
+            "name": "ODYTRAF_BAIL_BONDS"
+        },
+        {
+            "description": "MDEC Traffic Cases: Bond Settings",
+            "name": "ODYTRAF_BOND_SETTINGS"
+        },
+        {
+            "description": "MDEC Traffic Cases: Documents",
+            "name": "ODYTRAF_DOCUMENTS"
+        },
+        {
+            "description": "MDEC Traffic Cases: Services",
+            "name": "ODYTRAF_SERVICES"
+        },
+        {
             "description": "Circuit Court Criminal Cases",
             "name": "K"
         },
@@ -33217,60 +35869,64 @@
             "name": "K_SENTENCING_NET_TOOLS"
         },
         {
-            "description": "District Court Civil Cases",
-            "name": "DSCIVIL"
+            "description": "Circuit Court Civil Cases",
+            "name": "CC"
         },
         {
-            "description": "District Court Civil Cases: Complaints",
-            "name": "DSCIVIL_COMPLAINTS"
+            "description": "Circuit Court Civil Cases: District Case Numbers",
+            "name": "CC_DISTRICT_CASE_NUMBERS"
         },
         {
-            "description": "District Court Civil Cases: Hearings",
-            "name": "DSCIVIL_HEARINGS"
+            "description": "Circuit Court Civil Cases: Plaintiffs",
+            "name": "CC_PLAINTIFFS"
         },
         {
-            "description": "District Court Civil Cases: Judgments",
-            "name": "DSCIVIL_JUDGMENTS"
+            "description": "Circuit Court Civil Cases: Defendants",
+            "name": "CC_DEFENDANTS"
         },
         {
-            "description": "District Court Civil Cases: Related Persons",
-            "name": "DSCIVIL_RELATED_PERSONS"
+            "description": "Circuit Court Civil Cases: Related Persons",
+            "name": "CC_RELATED_PERSONS"
         },
         {
-            "description": "District Court Civil Cases: Events",
-            "name": "DSCIVIL_EVENTS"
+            "description": "Circuit Court Civil Cases: Party Alias",
+            "name": "CC_PARTY_ALIAS"
         },
         {
-            "description": "District Court Civil Cases: Trials",
-            "name": "DSCIVIL_TRIALS"
+            "description": "Circuit Court Civil Cases: Party Addresses",
+            "name": "CC_PARTY_ADDRESSES"
         },
         {
-            "description": "District Court Traffic Cases",
-            "name": "DSTRAF"
+            "description": "Circuit Court Civil Cases: Attorneys",
+            "name": "CC_ATTORNEYS"
         },
         {
-            "description": "District Court Traffic Cases: Charges",
-            "name": "DSTRAF_CHARGES"
+            "description": "Circuit Court Civil Cases: Court Schedule",
+            "name": "CC_COURT_SCHEDULE"
         },
         {
-            "description": "District Court Traffic Cases: Dispositions",
-            "name": "DSTRAF_DISPOSITIONS"
+            "description": "Circuit Court Civil Cases: Documents",
+            "name": "CC_DOCUMENTS"
         },
         {
-            "description": "District Court Traffic Cases: Defendants",
-            "name": "DSTRAF_DEFENDANTS"
+            "description": "Circuit Court Civil Cases: Judgments",
+            "name": "CC_JUDGMENTS"
         },
         {
-            "description": "District Court Traffic Cases: Related Persons",
-            "name": "DSTRAF_RELATED_PERSONS"
+            "description": "Circuit Court Civil Cases: Judgment Modifications",
+            "name": "CC_JUDGMENT_MODIFICATIONS"
         },
         {
-            "description": "District Court Traffic Cases: Events",
-            "name": "DSTRAF_EVENTS"
+            "description": "Circuit Court Civil Cases: Judgments Against",
+            "name": "CC_JUDGMENTS_AGAINST"
         },
         {
-            "description": "District Court Traffic Cases: Trials",
-            "name": "DSTRAF_TRIALS"
+            "description": "Circuit Court Civil Cases: Judgments In Favor",
+            "name": "CC_JUDGMENTS_IN_FAVOR"
+        },
+        {
+            "description": "Circuit Court Civil Cases: Support Orders",
+            "name": "CC_SUPPORT_ORDERS"
         },
         {
             "description": "MDEC Civil Cases",
@@ -33345,96 +36001,120 @@
             "name": "ODYCIVIL_SERVICES"
         },
         {
-            "description": "Montgomery County Civil Cases",
-            "name": "MCCI"
+            "description": "District Court Traffic Cases",
+            "name": "DSTRAF"
         },
         {
-            "description": "Montgomery County Civil Cases: Defendants",
-            "name": "MCCI_DEFENDANTS"
+            "description": "District Court Traffic Cases: Charges",
+            "name": "DSTRAF_CHARGES"
         },
         {
-            "description": "Montgomery County Civil Cases: Aliases",
-            "name": "MCCI_ALIASES"
+            "description": "District Court Traffic Cases: Dispositions",
+            "name": "DSTRAF_DISPOSITIONS"
         },
         {
-            "description": "Montgomery County Civil Cases: Plaintiffs",
-            "name": "MCCI_PLAINTIFFS"
+            "description": "District Court Traffic Cases: Defendants",
+            "name": "DSTRAF_DEFENDANTS"
         },
         {
-            "description": "Montgomery County Civil Cases: Interested Parties",
-            "name": "MCCI_INTERESTED_PARTIES"
+            "description": "District Court Traffic Cases: Related Persons",
+            "name": "DSTRAF_RELATED_PERSONS"
         },
         {
-            "description": "Montgomery County Civil Cases: Wards",
-            "name": "MCCI_WARDS"
+            "description": "District Court Traffic Cases: Events",
+            "name": "DSTRAF_EVENTS"
         },
         {
-            "description": "Montgomery County Civil Cases: Garnishees",
-            "name": "MCCI_GARNISHEES"
+            "description": "District Court Traffic Cases: Trials",
+            "name": "DSTRAF_TRIALS"
         },
         {
-            "description": "Montgomery County Civil Cases: Attorneys",
-            "name": "MCCI_ATTORNEYS"
+            "description": "District Court Criminal Cases",
+            "name": "DSCR"
         },
         {
-            "description": "Montgomery County Civil Cases: Resident Agents",
-            "name": "MCCI_RESIDENT_AGENTS"
+            "description": "District Court Criminal Cases: Charges",
+            "name": "DSCR_CHARGES"
         },
         {
-            "description": "Montgomery County Civil Cases: Issues",
-            "name": "MCCI_ISSUES"
+            "description": "District Court Criminal Cases: Defendants",
+            "name": "DSCR_DEFENDANTS"
         },
         {
-            "description": "Montgomery County Civil Cases: Court Schedule",
-            "name": "MCCI_COURT_SCHEDULE"
+            "description": "District Court Criminal Cases: Defendant Aliases",
+            "name": "DSCR_DEFENDANT_ALIASES"
         },
         {
-            "description": "Montgomery County Civil Cases: Judgments",
-            "name": "MCCI_JUDGMENTS"
+            "description": "District Court Criminal Cases: Related Persons",
+            "name": "DSCR_RELATED_PERSONS"
         },
         {
-            "description": "Montgomery County Civil Cases: Dockets",
-            "name": "MCCI_DOCKETS"
+            "description": "District Court Criminal Cases: Events",
+            "name": "DSCR_EVENTS"
         },
         {
-            "description": "Montgomery County Civil Cases: Audio Media",
-            "name": "MCCI_AUDIO_MEDIA"
+            "description": "District Court Criminal Cases: Trials",
+            "name": "DSCR_TRIALS"
         },
         {
-            "description": "Prince George's County Circuit Court Civil Cases",
-            "name": "PGV"
+            "description": "District Court Criminal Cases: Bail Events",
+            "name": "DSCR_BAIL_EVENTS"
         },
         {
-            "description": "Prince George's County Circuit Court Civil Cases: Plaintiffs",
-            "name": "PGV_PLAINTIFFS"
+            "description": "MDEC Supreme Court of Maryland Cases",
+            "name": "ODYCOA"
         },
         {
-            "description": "Prince George's County Circuit Court Civil Cases: Defendants",
-            "name": "PGV_DEFENDANTS"
+            "description": "MDEC Supreme Court of Maryland Cases: Reference Numbers",
+            "name": "ODYCOA_REFERENCE_NUMBERS"
         },
         {
-            "description": "Prince George's County Circuit Court Civil Cases: Defendant Aliases",
-            "name": "PGV_DEFENDANT_ALIASES"
+            "description": "MDEC Supreme Court of Maryland Cases: Involved Parties",
+            "name": "ODYCOA_INVOLVED_PARTIES"
         },
         {
-            "description": "Prince George's County Circuit Court Civil Cases: Attorneys",
-            "name": "PGV_ATTORNEYS"
+            "description": "MDEC Supreme Court of Maryland Cases: Attorneys",
+            "name": "ODYCOA_ATTORNEYS"
         },
         {
-            "description": "Prince George's County Circuit Court Civil Cases: Other Parties",
-            "name": "PGV_OTHER_PARTIES"
+            "description": "MDEC Supreme Court of Maryland Cases: Judgments",
+            "name": "ODYCOA_JUDGMENTS"
         },
         {
-            "description": "Prince George's County Circuit Court Civil Cases: Judgments",
-            "name": "PGV_JUDGMENTS"
+            "description": "MDEC Supreme Court of Maryland Cases: Court Schedule",
+            "name": "ODYCOA_COURT_SCHEDULE"
         },
         {
-            "description": "Prince George's County Circuit Court Civil Cases: Court Schedule",
-            "name": "PGV_COURT_SCHEDULE"
+            "description": "MDEC Supreme Court of Maryland Cases: Documents",
+            "name": "ODYCOA_DOCUMENTS"
         },
         {
-            "description": "Prince George's County Circuit Court Civil Cases: Dockets",
-            "name": "PGV_DOCKETS"
+            "description": "District Court Civil Cases",
+            "name": "DSCIVIL"
+        },
+        {
+            "description": "District Court Civil Cases: Complaints",
+            "name": "DSCIVIL_COMPLAINTS"
+        },
+        {
+            "description": "District Court Civil Cases: Hearings",
+            "name": "DSCIVIL_HEARINGS"
+        },
+        {
+            "description": "District Court Civil Cases: Judgments",
+            "name": "DSCIVIL_JUDGMENTS"
+        },
+        {
+            "description": "District Court Civil Cases: Related Persons",
+            "name": "DSCIVIL_RELATED_PERSONS"
+        },
+        {
+            "description": "District Court Civil Cases: Events",
+            "name": "DSCIVIL_EVENTS"
+        },
+        {
+            "description": "District Court Civil Cases: Trials",
+            "name": "DSCIVIL_TRIALS"
         },
         {
             "description": "MDEC Civil Citations",
@@ -33497,184 +36177,92 @@
             "name": "ODYCVCIT_SERVICES"
         },
         {
-            "description": "Baltimore City Criminal Cases",
-            "name": "DSK8"
+            "description": "District Court Civil Citations",
+            "name": "DSCP"
         },
         {
-            "description": "Baltimore City Criminal Cases: Charges",
-            "name": "DSK8_CHARGES"
+            "description": "District Court Civil Citations: Charges",
+            "name": "DSCP_CHARGES"
         },
         {
-            "description": "Baltimore City Criminal Cases: Bail And Bond",
-            "name": "DSK8_BAIL_AND_BOND"
+            "description": "District Court Civil Citations: Defendants",
+            "name": "DSCP_DEFENDANTS"
         },
         {
-            "description": "Baltimore City Criminal Cases: Bondsman",
-            "name": "DSK8_BONDSMAN"
+            "description": "District Court Civil Citations: Defendant Aliases",
+            "name": "DSCP_DEFENDANT_ALIASES"
         },
         {
-            "description": "Baltimore City Criminal Cases: Defendants",
-            "name": "DSK8_DEFENDANTS"
+            "description": "District Court Civil Citations: Related Persons",
+            "name": "DSCP_RELATED_PERSONS"
         },
         {
-            "description": "Baltimore City Criminal Cases: Defendant Aliases",
-            "name": "DSK8_DEFENDANT_ALIASES"
+            "description": "District Court Civil Citations: Events",
+            "name": "DSCP_EVENTS"
         },
         {
-            "description": "Baltimore City Criminal Cases: Related Persons",
-            "name": "DSK8_RELATED_PERSONS"
+            "description": "District Court Civil Citations: Trials",
+            "name": "DSCP_TRIALS"
         },
         {
-            "description": "Baltimore City Criminal Cases: Events",
-            "name": "DSK8_EVENTS"
+            "description": "District Court Civil Citations: Bail Events",
+            "name": "DSCP_BAIL_EVENTS"
         },
         {
-            "description": "Baltimore City Criminal Cases: Trials",
-            "name": "DSK8_TRIALS"
+            "description": "Montgomery County Civil Cases",
+            "name": "MCCI"
         },
         {
-            "description": "MDEC Traffic Cases",
-            "name": "ODYTRAF"
+            "description": "Montgomery County Civil Cases: Defendants",
+            "name": "MCCI_DEFENDANTS"
         },
         {
-            "description": "MDEC Traffic Cases: Reference Numbers",
-            "name": "ODYTRAF_REFERENCE_NUMBERS"
+            "description": "Montgomery County Civil Cases: Aliases",
+            "name": "MCCI_ALIASES"
         },
         {
-            "description": "MDEC Traffic Cases: Defendants",
-            "name": "ODYTRAF_DEFENDANTS"
+            "description": "Montgomery County Civil Cases: Plaintiffs",
+            "name": "MCCI_PLAINTIFFS"
         },
         {
-            "description": "MDEC Traffic Cases: Involved Parties",
-            "name": "ODYTRAF_INVOLVED_PARTIES"
+            "description": "Montgomery County Civil Cases: Interested Parties",
+            "name": "MCCI_INTERESTED_PARTIES"
         },
         {
-            "description": "MDEC Traffic Cases: Aliases",
-            "name": "ODYTRAF_ALIASES"
+            "description": "Montgomery County Civil Cases: Wards",
+            "name": "MCCI_WARDS"
         },
         {
-            "description": "MDEC Traffic Cases: Attorneys",
-            "name": "ODYTRAF_ATTORNEYS"
+            "description": "Montgomery County Civil Cases: Garnishees",
+            "name": "MCCI_GARNISHEES"
         },
         {
-            "description": "MDEC Traffic Cases: Court Schedule",
-            "name": "ODYTRAF_COURT_SCHEDULE"
+            "description": "Montgomery County Civil Cases: Attorneys",
+            "name": "MCCI_ATTORNEYS"
         },
         {
-            "description": "MDEC Traffic Cases: Charges",
-            "name": "ODYTRAF_CHARGES"
+            "description": "Montgomery County Civil Cases: Resident Agents",
+            "name": "MCCI_RESIDENT_AGENTS"
         },
         {
-            "description": "MDEC Traffic Cases: Warrants",
-            "name": "ODYTRAF_WARRANTS"
+            "description": "Montgomery County Civil Cases: Issues",
+            "name": "MCCI_ISSUES"
         },
         {
-            "description": "MDEC Traffic Cases: Bail Bonds",
-            "name": "ODYTRAF_BAIL_BONDS"
+            "description": "Montgomery County Civil Cases: Court Schedule",
+            "name": "MCCI_COURT_SCHEDULE"
         },
         {
-            "description": "MDEC Traffic Cases: Bond Settings",
-            "name": "ODYTRAF_BOND_SETTINGS"
+            "description": "Montgomery County Civil Cases: Judgments",
+            "name": "MCCI_JUDGMENTS"
         },
         {
-            "description": "MDEC Traffic Cases: Documents",
-            "name": "ODYTRAF_DOCUMENTS"
+            "description": "Montgomery County Civil Cases: Dockets",
+            "name": "MCCI_DOCKETS"
         },
         {
-            "description": "MDEC Traffic Cases: Services",
-            "name": "ODYTRAF_SERVICES"
-        },
-        {
-            "description": "District Court Criminal Cases",
-            "name": "DSCR"
-        },
-        {
-            "description": "District Court Criminal Cases: Charges",
-            "name": "DSCR_CHARGES"
-        },
-        {
-            "description": "District Court Criminal Cases: Defendants",
-            "name": "DSCR_DEFENDANTS"
-        },
-        {
-            "description": "District Court Criminal Cases: Defendant Aliases",
-            "name": "DSCR_DEFENDANT_ALIASES"
-        },
-        {
-            "description": "District Court Criminal Cases: Related Persons",
-            "name": "DSCR_RELATED_PERSONS"
-        },
-        {
-            "description": "District Court Criminal Cases: Events",
-            "name": "DSCR_EVENTS"
-        },
-        {
-            "description": "District Court Criminal Cases: Trials",
-            "name": "DSCR_TRIALS"
-        },
-        {
-            "description": "District Court Criminal Cases: Bail Events",
-            "name": "DSCR_BAIL_EVENTS"
-        },
-        {
-            "description": "Circuit Court Civil Cases",
-            "name": "CC"
-        },
-        {
-            "description": "Circuit Court Civil Cases: District Case Numbers",
-            "name": "CC_DISTRICT_CASE_NUMBERS"
-        },
-        {
-            "description": "Circuit Court Civil Cases: Plaintiffs",
-            "name": "CC_PLAINTIFFS"
-        },
-        {
-            "description": "Circuit Court Civil Cases: Defendants",
-            "name": "CC_DEFENDANTS"
-        },
-        {
-            "description": "Circuit Court Civil Cases: Related Persons",
-            "name": "CC_RELATED_PERSONS"
-        },
-        {
-            "description": "Circuit Court Civil Cases: Party Alias",
-            "name": "CC_PARTY_ALIAS"
-        },
-        {
-            "description": "Circuit Court Civil Cases: Party Addresses",
-            "name": "CC_PARTY_ADDRESSES"
-        },
-        {
-            "description": "Circuit Court Civil Cases: Attorneys",
-            "name": "CC_ATTORNEYS"
-        },
-        {
-            "description": "Circuit Court Civil Cases: Court Schedule",
-            "name": "CC_COURT_SCHEDULE"
-        },
-        {
-            "description": "Circuit Court Civil Cases: Documents",
-            "name": "CC_DOCUMENTS"
-        },
-        {
-            "description": "Circuit Court Civil Cases: Judgments",
-            "name": "CC_JUDGMENTS"
-        },
-        {
-            "description": "Circuit Court Civil Cases: Judgment Modifications",
-            "name": "CC_JUDGMENT_MODIFICATIONS"
-        },
-        {
-            "description": "Circuit Court Civil Cases: Judgments Against",
-            "name": "CC_JUDGMENTS_AGAINST"
-        },
-        {
-            "description": "Circuit Court Civil Cases: Judgments In Favor",
-            "name": "CC_JUDGMENTS_IN_FAVOR"
-        },
-        {
-            "description": "Circuit Court Civil Cases: Support Orders",
-            "name": "CC_SUPPORT_ORDERS"
+            "description": "Montgomery County Civil Cases: Audio Media",
+            "name": "MCCI_AUDIO_MEDIA"
         },
         {
             "description": "Montgomery County Criminal Cases",
@@ -33737,72 +36325,104 @@
             "name": "MCCR_BOND_REMITTERS"
         },
         {
-            "description": "District Court Civil Citations",
-            "name": "DSCP"
+            "description": "Baltimore City Criminal Cases",
+            "name": "DSK8"
         },
         {
-            "description": "District Court Civil Citations: Charges",
-            "name": "DSCP_CHARGES"
+            "description": "Baltimore City Criminal Cases: Charges",
+            "name": "DSK8_CHARGES"
         },
         {
-            "description": "District Court Civil Citations: Defendants",
-            "name": "DSCP_DEFENDANTS"
+            "description": "Baltimore City Criminal Cases: Bail And Bond",
+            "name": "DSK8_BAIL_AND_BOND"
         },
         {
-            "description": "District Court Civil Citations: Defendant Aliases",
-            "name": "DSCP_DEFENDANT_ALIASES"
+            "description": "Baltimore City Criminal Cases: Bondsman",
+            "name": "DSK8_BONDSMAN"
         },
         {
-            "description": "District Court Civil Citations: Related Persons",
-            "name": "DSCP_RELATED_PERSONS"
+            "description": "Baltimore City Criminal Cases: Defendants",
+            "name": "DSK8_DEFENDANTS"
         },
         {
-            "description": "District Court Civil Citations: Events",
-            "name": "DSCP_EVENTS"
+            "description": "Baltimore City Criminal Cases: Defendant Aliases",
+            "name": "DSK8_DEFENDANT_ALIASES"
         },
         {
-            "description": "District Court Civil Citations: Trials",
-            "name": "DSCP_TRIALS"
+            "description": "Baltimore City Criminal Cases: Related Persons",
+            "name": "DSK8_RELATED_PERSONS"
         },
         {
-            "description": "District Court Civil Citations: Bail Events",
-            "name": "DSCP_BAIL_EVENTS"
+            "description": "Baltimore City Criminal Cases: Events",
+            "name": "DSK8_EVENTS"
         },
         {
-            "description": "Prince George's County Circuit Court Criminal Cases",
-            "name": "PG"
+            "description": "Baltimore City Criminal Cases: Trials",
+            "name": "DSK8_TRIALS"
         },
         {
-            "description": "Prince George's County Circuit Court Criminal Cases: Charges",
-            "name": "PG_CHARGES"
+            "description": "MDEC Appellate Court of Maryland Cases",
+            "name": "ODYCOSA"
         },
         {
-            "description": "Prince George's County Circuit Court Criminal Cases: Plaintiffs",
-            "name": "PG_PLAINTIFFS"
+            "description": "MDEC Appellate Court of Maryland Cases: Reference Numbers",
+            "name": "ODYCOSA_REFERENCE_NUMBERS"
         },
         {
-            "description": "Prince George's County Circuit Court Criminal Cases: Defendants",
-            "name": "PG_DEFENDANTS"
+            "description": "MDEC Appellate Court of Maryland Cases: Involved Parties",
+            "name": "ODYCOSA_INVOLVED_PARTIES"
         },
         {
-            "description": "Prince George's County Circuit Court Criminal Cases: Defendant Aliases",
-            "name": "PG_DEFENDANT_ALIASES"
+            "description": "MDEC Appellate Court of Maryland Cases: Attorneys",
+            "name": "ODYCOSA_ATTORNEYS"
         },
         {
-            "description": "Prince George's County Circuit Court Criminal Cases: Attorneys",
-            "name": "PG_ATTORNEYS"
+            "description": "MDEC Appellate Court of Maryland Cases: Judgments",
+            "name": "ODYCOSA_JUDGMENTS"
         },
         {
-            "description": "Prince George's County Circuit Court Criminal Cases: Other Parties",
-            "name": "PG_OTHER_PARTIES"
+            "description": "MDEC Appellate Court of Maryland Cases: Court Schedule",
+            "name": "ODYCOSA_COURT_SCHEDULE"
         },
         {
-            "description": "Prince George's County Circuit Court Criminal Cases: Court Schedule",
-            "name": "PG_COURT_SCHEDULE"
+            "description": "MDEC Appellate Court of Maryland Cases: Documents",
+            "name": "ODYCOSA_DOCUMENTS"
         },
         {
-            "description": "Prince George's County Circuit Court Criminal Cases: Dockets",
-            "name": "PG_DOCKETS"
+            "description": "Prince George's County Circuit Court Civil Cases",
+            "name": "PGV"
+        },
+        {
+            "description": "Prince George's County Circuit Court Civil Cases: Plaintiffs",
+            "name": "PGV_PLAINTIFFS"
+        },
+        {
+            "description": "Prince George's County Circuit Court Civil Cases: Defendants",
+            "name": "PGV_DEFENDANTS"
+        },
+        {
+            "description": "Prince George's County Circuit Court Civil Cases: Defendant Aliases",
+            "name": "PGV_DEFENDANT_ALIASES"
+        },
+        {
+            "description": "Prince George's County Circuit Court Civil Cases: Attorneys",
+            "name": "PGV_ATTORNEYS"
+        },
+        {
+            "description": "Prince George's County Circuit Court Civil Cases: Other Parties",
+            "name": "PGV_OTHER_PARTIES"
+        },
+        {
+            "description": "Prince George's County Circuit Court Civil Cases: Judgments",
+            "name": "PGV_JUDGMENTS"
+        },
+        {
+            "description": "Prince George's County Circuit Court Civil Cases: Court Schedule",
+            "name": "PGV_COURT_SCHEDULE"
+        },
+        {
+            "description": "Prince George's County Circuit Court Civil Cases: Dockets",
+            "name": "PGV_DOCKETS"
         },
         {
             "name": "bail_stats"

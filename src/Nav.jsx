@@ -13,7 +13,7 @@ import {
   ITooltipProps
 } from '@fluentui/react';
 
-let navLinkGroups: INavLinkGroup[] = [
+let navLinkGroups = [
   {
     name: 'Case Data',
     key: 'Case Data',
@@ -101,7 +101,9 @@ export const genNavStructure = metadata => {
     genNavItem(metadata.tables, currentTable, 'odycrim'),
     genNavItem(metadata.tables, currentTable, 'odytraf'),
     genNavItem(metadata.tables, currentTable, 'odycivil'),
-    genNavItem(metadata.tables, currentTable, 'odycvcit')
+    genNavItem(metadata.tables, currentTable, 'odycvcit'),
+    genNavItem(metadata.tables, currentTable, 'odycosa'),
+    genNavItem(metadata.tables, currentTable, 'odycoa')
   ];
   // non-MDEC
   navLinkGroups[0].links[2].links = [
@@ -120,8 +122,8 @@ export const genNavStructure = metadata => {
   ];
 };
 
-const NavBar: React.FunctionComponent = props => {
-  function _onRenderGroupHeader(group: INavLinkGroup): JSX.Element {
+const NavBar = props => {
+  function _onRenderGroupHeader(group) {
     if (group.name === 'Search By BPD Officer') {
       return (
         <>
@@ -195,7 +197,7 @@ const styles = mergeStyleSets({
   }
 });
 
-const tooltipProps: ITooltipProps = {
+const tooltipProps = {
   onRenderContent: () => (
     <Text block variant="medium">
       <a target="_blank" href="https://mdcourts.gov/mdec/about">
