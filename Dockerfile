@@ -1,4 +1,4 @@
-FROM python:3.7-buster
+FROM python:3.9-buster
 
 WORKDIR /usr/src/app
 ENV FLASK_APP=/usr/src/app
