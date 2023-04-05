@@ -59,7 +59,7 @@ copy_backend: $(BACKEND_DEPS)
 	rm -r $(LAMBDA_TARGET) || true
 	mkdir -p $(LAMBDA_TARGET)
 	pip install --target $(LAMBDA_TARGET)/lib -r $(BACKEND_DIR)/requirements.txt
-	cp -r $(BACKEND_DIR)/psycopg2-3.7 $(LAMBDA_TARGET)/lib/psycopg2
+	cp -r $(BACKEND_DIR)/psycopg2-3.9 $(LAMBDA_TARGET)/lib/psycopg2
 	cp -r $(BACKEND_DIR)/app $(LAMBDA_TARGET)/
 	cp $(BACKEND_DIR)/lambda.py $(LAMBDA_TARGET)/
 	find $(LAMBDA_TARGET) -name *.pyc -delete

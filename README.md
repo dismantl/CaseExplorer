@@ -8,7 +8,7 @@ Case Explorer is a web interface and set of APIs for exploring data scraped from
 
 ### Dependencies
 
-Case Explorer requires Node.js 10x, Python3.7+, and GNU Make. It is also recommend to use Virtualenv with Python to set up a local development environment.
+Case Explorer requires Node.js 10x, Python3.9+, and GNU Make. It is also recommend to use Virtualenv with Python to set up a local development environment.
 
 If you are running Debian, you can install dependencies with the following:
 
