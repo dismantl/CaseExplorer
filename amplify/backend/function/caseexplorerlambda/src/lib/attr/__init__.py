@@ -1,8 +1,7 @@
 # SPDX-License-Identifier: MIT
 
-from __future__ import absolute_import, division, print_function
-
 import sys
+import warnings
 
 from functools import partial
 
@@ -21,10 +20,19 @@ from ._make import (
     make_class,
     validate,
 )
+from ._next_gen import define, field, frozen, mutable
 from ._version_info import VersionInfo
 
 
-__version__ = "21.4.0"
+if sys.version_info < (3, 7):  # pragma: no cover
+    warnings.warn(
+        "Running attrs on Python 3.6 is deprecated & we intend to drop "
+        "support soon. If that's a problem for you, please let us know why & "
+        "we MAY re-evaluate: <https://github.com/python-attrs/attrs/pull/993>",
+        DeprecationWarning,
+    )
+
+__version__ = "22.2.0"
 __version_info__ = VersionInfo._from_version_string(__version__)
 
 __title__ = "attrs"
@@ -44,8 +52,14 @@ s = attributes = attrs
 ib = attr = attrib
 dataclass = partial(attrs, auto_attribs=True)  # happy Easter ;)
 
+
+class AttrsInstance:
+    pass
+
+
 __all__ = [
     "Attribute",
+    "AttrsInstance",
     "Factory",
     "NOTHING",
     "asdict",
@@ -57,15 +71,19 @@ __all__ = [
     "attrs",
     "cmp_using",
     "converters",
+    "define",
     "evolve",
     "exceptions",
+    "field",
     "fields",
     "fields_dict",
     "filters",
+    "frozen",
     "get_run_validators",
     "has",
     "ib",
     "make_class",
+    "mutable",
     "resolve_types",
     "s",
     "set_run_validators",
@@ -73,8 +91,3 @@ __all__ = [
     "validate",
     "validators",
 ]
-
-if sys.version_info[:2] >= (3, 6):
-    from ._next_gen import define, field, frozen, mutable  # noqa: F401
-
-    __all__.extend(("define", "field", "frozen", "mutable"))

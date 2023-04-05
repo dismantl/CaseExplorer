@@ -6,11 +6,18 @@ import datetime
 import ipaddress
 import re
 import typing
+import warnings
 
 from jsonschema.exceptions import FormatError
 
+_FormatCheckCallable = typing.Callable[[object], bool]
+_F = typing.TypeVar("_F", bound=_FormatCheckCallable)
+_RaisesType = typing.Union[
+    typing.Type[Exception], typing.Tuple[typing.Type[Exception], ...],
+]
 
-class FormatChecker(object):
+
+class FormatChecker:
     """
     A ``format`` property checker.
 
@@ -21,13 +28,12 @@ class FormatChecker(object):
     `FormatChecker` objects always return ``True`` when asked about
     formats that they do not know how to validate.
 
-    To check a custom format using a function that takes an instance and
-    returns a ``bool``, use the `FormatChecker.checks` or
-    `FormatChecker.cls_checks` decorators.
+    To add a check for a custom format use the `FormatChecker.checks`
+    decorator.
 
     Arguments:
 
-        formats (~collections.abc.Iterable):
+        formats:
 
             The known formats to validate. This argument can be used to
             limit which formats will be used during validation.
@@ -35,32 +41,30 @@ class FormatChecker(object):
 
     checkers: dict[
         str,
-        tuple[
-            typing.Callable[[typing.Any], bool],
-            Exception | tuple[Exception, ...],
-        ],
+        tuple[_FormatCheckCallable, _RaisesType],
     ] = {}
 
-    def __init__(self, formats=None):
+    def __init__(self, formats: typing.Iterable[str] | None = None):
         if formats is None:
-            self.checkers = self.checkers.copy()
-        else:
-            self.checkers = dict((k, self.checkers[k]) for k in formats)
+            formats = self.checkers.keys()
+        self.checkers = {k: self.checkers[k] for k in formats}
 
     def __repr__(self):
         return "<FormatChecker checkers={}>".format(sorted(self.checkers))
 
-    def checks(self, format, raises=()):
+    def checks(
+        self, format: str, raises: _RaisesType = (),
+    ) -> typing.Callable[[_F], _F]:
         """
         Register a decorated function as validating a new format.
 
         Arguments:
 
-            format (str):
+            format:
 
                 The format that the decorated function will check.
 
-            raises (Exception):
+            raises:
 
                 The exception(s) raised by the decorated function when an
                 invalid instance is found.
@@ -70,14 +74,38 @@ class FormatChecker(object):
                 resulting validation error.
         """
 
-        def _checks(func):
+        def _checks(func: _F) -> _F:
             self.checkers[format] = (func, raises)
             return func
+
         return _checks
 
-    cls_checks = classmethod(checks)
+    @classmethod
+    def cls_checks(
+        cls, format: str, raises: _RaisesType = (),
+    ) -> typing.Callable[[_F], _F]:
+        warnings.warn(
+            (
+                "FormatChecker.cls_checks is deprecated. Call "
+                "FormatChecker.checks on a specific FormatChecker instance "
+                "instead."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return cls._cls_checks(format=format, raises=raises)
 
-    def check(self, instance, format):
+    @classmethod
+    def _cls_checks(
+        cls, format: str, raises: _RaisesType = (),
+    ) -> typing.Callable[[_F], _F]:
+        def _checks(func: _F) -> _F:
+            cls.checkers[format] = (func, raises)
+            return func
+
+        return _checks
+
+    def check(self, instance: object, format: str) -> None:
         """
         Check whether the instance conforms to the given format.
 
@@ -87,14 +115,15 @@ class FormatChecker(object):
 
                 The instance to check
 
-            format (str):
+            format:
 
                 The format that instance should conform to
 
-
         Raises:
 
-            FormatError: if the instance does not conform to ``format``
+            FormatError:
+
+                if the instance does not conform to ``format``
         """
 
         if format not in self.checkers:
@@ -109,7 +138,7 @@ class FormatChecker(object):
         if not result:
             raise FormatError(f"{instance!r} is not a {format!r}", cause=cause)
 
-    def conforms(self, instance, format):
+    def conforms(self, instance: object, format: str) -> bool:
         """
         Check whether the instance conforms to the given format.
 
@@ -119,7 +148,7 @@ class FormatChecker(object):
 
                 The instance to check
 
-            format (str):
+            format:
 
                 The format that instance should conform to
 
@@ -143,7 +172,7 @@ draft7_format_checker = FormatChecker()
 draft201909_format_checker = FormatChecker()
 draft202012_format_checker = FormatChecker()
 
-_draft_checkers = dict(
+_draft_checkers: dict[str, FormatChecker] = dict(
     draft3=draft3_format_checker,
     draft4=draft4_format_checker,
     draft6=draft6_format_checker,
@@ -162,7 +191,7 @@ def _checks_drafts(
     draft201909=None,
     draft202012=None,
     raises=(),
-):
+) -> typing.Callable[[_F], _F]:
     draft3 = draft3 or name
     draft4 = draft4 or name
     draft6 = draft6 or name
@@ -170,7 +199,7 @@ def _checks_drafts(
     draft201909 = draft201909 or name
     draft202012 = draft202012 or name
 
-    def wrap(func):
+    def wrap(func: _F) -> _F:
         if draft3:
             func = _draft_checkers["draft3"].checks(draft3, raises)(func)
         if draft4:
@@ -190,17 +219,18 @@ def _checks_drafts(
 
         # Oy. This is bad global state, but relied upon for now, until
         # deprecation. See #519 and test_format_checkers_come_with_defaults
-        FormatChecker.cls_checks(
+        FormatChecker._cls_checks(
             draft202012 or draft201909 or draft7 or draft6 or draft4 or draft3,
             raises,
         )(func)
         return func
+
     return wrap
 
 
 @_checks_drafts(name="idn-email")
 @_checks_drafts(name="email")
-def is_email(instance):
+def is_email(instance: object) -> bool:
     if not isinstance(instance, str):
         return True
     return "@" in instance
@@ -215,14 +245,14 @@ def is_email(instance):
     draft202012="ipv4",
     raises=ipaddress.AddressValueError,
 )
-def is_ipv4(instance):
+def is_ipv4(instance: object) -> bool:
     if not isinstance(instance, str):
         return True
-    return ipaddress.IPv4Address(instance)
+    return bool(ipaddress.IPv4Address(instance))
 
 
 @_checks_drafts(name="ipv6", raises=ipaddress.AddressValueError)
-def is_ipv6(instance):
+def is_ipv6(instance: object) -> bool:
     if not isinstance(instance, str):
         return True
     address = ipaddress.IPv6Address(instance)
@@ -240,7 +270,7 @@ with suppress(ImportError):
         draft201909="hostname",
         draft202012="hostname",
     )
-    def is_host_name(instance):
+    def is_host_name(instance: object) -> bool:
         if not isinstance(instance, str):
             return True
         return FQDN(instance).is_valid
@@ -256,7 +286,7 @@ with suppress(ImportError):
         draft202012="idn-hostname",
         raises=(idna.IDNAError, UnicodeError),
     )
-    def is_idn_host_name(instance):
+    def is_idn_host_name(instance: object) -> bool:
         if not isinstance(instance, str):
             return True
         idna.encode(instance)
@@ -270,7 +300,7 @@ except ImportError:
         from rfc3986_validator import validate_rfc3986
 
         @_checks_drafts(name="uri")
-        def is_uri(instance):
+        def is_uri(instance: object) -> bool:
             if not isinstance(instance, str):
                 return True
             return validate_rfc3986(instance, rule="URI")
@@ -282,19 +312,20 @@ except ImportError:
             draft202012="uri-reference",
             raises=ValueError,
         )
-        def is_uri_reference(instance):
+        def is_uri_reference(instance: object) -> bool:
             if not isinstance(instance, str):
                 return True
             return validate_rfc3986(instance, rule="URI_reference")
 
 else:
+
     @_checks_drafts(
         draft7="iri",
         draft201909="iri",
         draft202012="iri",
         raises=ValueError,
     )
-    def is_iri(instance):
+    def is_iri(instance: object) -> bool:
         if not isinstance(instance, str):
             return True
         return rfc3987.parse(instance, rule="IRI")
@@ -305,13 +336,13 @@ else:
         draft202012="iri-reference",
         raises=ValueError,
     )
-    def is_iri_reference(instance):
+    def is_iri_reference(instance: object) -> bool:
         if not isinstance(instance, str):
             return True
         return rfc3987.parse(instance, rule="IRI_reference")
 
     @_checks_drafts(name="uri", raises=ValueError)
-    def is_uri(instance):
+    def is_uri(instance: object) -> bool:
         if not isinstance(instance, str):
             return True
         return rfc3987.parse(instance, rule="URI")
@@ -323,16 +354,17 @@ else:
         draft202012="uri-reference",
         raises=ValueError,
     )
-    def is_uri_reference(instance):
+    def is_uri_reference(instance: object) -> bool:
         if not isinstance(instance, str):
             return True
         return rfc3987.parse(instance, rule="URI_reference")
+
 
 with suppress(ImportError):
     from rfc3339_validator import validate_rfc3339
 
     @_checks_drafts(name="date-time")
-    def is_datetime(instance):
+    def is_datetime(instance: object) -> bool:
         if not isinstance(instance, str):
             return True
         return validate_rfc3339(instance.upper())
@@ -342,17 +374,17 @@ with suppress(ImportError):
         draft201909="time",
         draft202012="time",
     )
-    def is_time(instance):
+    def is_time(instance: object) -> bool:
         if not isinstance(instance, str):
             return True
         return is_datetime("1970-01-01T" + instance)
 
 
 @_checks_drafts(name="regex", raises=re.error)
-def is_regex(instance):
+def is_regex(instance: object) -> bool:
     if not isinstance(instance, str):
         return True
-    return re.compile(instance)
+    return bool(re.compile(instance))
 
 
 @_checks_drafts(
@@ -362,28 +394,28 @@ def is_regex(instance):
     draft202012="date",
     raises=ValueError,
 )
-def is_date(instance):
+def is_date(instance: object) -> bool:
     if not isinstance(instance, str):
         return True
-    return instance.isascii() and datetime.date.fromisoformat(instance)
+    return bool(instance.isascii() and datetime.date.fromisoformat(instance))
 
 
 @_checks_drafts(draft3="time", raises=ValueError)
-def is_draft3_time(instance):
+def is_draft3_time(instance: object) -> bool:
     if not isinstance(instance, str):
         return True
-    return datetime.datetime.strptime(instance, "%H:%M:%S")
+    return bool(datetime.datetime.strptime(instance, "%H:%M:%S"))
 
 
 with suppress(ImportError):
     from webcolors import CSS21_NAMES_TO_HEX
     import webcolors
 
-    def is_css_color_code(instance):
+    def is_css_color_code(instance: object) -> bool:
         return webcolors.normalize_hex(instance)
 
     @_checks_drafts(draft3="color", raises=(ValueError, TypeError))
-    def is_css21_color(instance):
+    def is_css21_color(instance: object) -> bool:
         if (
             not isinstance(instance, str)
             or instance.lower() in CSS21_NAMES_TO_HEX
@@ -402,10 +434,10 @@ with suppress(ImportError):
         draft202012="json-pointer",
         raises=jsonpointer.JsonPointerException,
     )
-    def is_json_pointer(instance):
+    def is_json_pointer(instance: object) -> bool:
         if not isinstance(instance, str):
             return True
-        return jsonpointer.JsonPointer(instance)
+        return bool(jsonpointer.JsonPointer(instance))
 
     # TODO: I don't want to maintain this, so it
     #       needs to go either into jsonpointer (pending
@@ -417,11 +449,14 @@ with suppress(ImportError):
         draft202012="relative-json-pointer",
         raises=jsonpointer.JsonPointerException,
     )
-    def is_relative_json_pointer(instance):
+    def is_relative_json_pointer(instance: object) -> bool:
         # Definition taken from:
         # https://tools.ietf.org/html/draft-handrews-relative-json-pointer-01#section-3
         if not isinstance(instance, str):
             return True
+        if not instance:
+            return False
+
         non_negative_integer, rest = [], ""
         for i, character in enumerate(instance):
             if character.isdigit():
@@ -437,7 +472,7 @@ with suppress(ImportError):
 
             rest = instance[i:]
             break
-        return (rest == "#") or jsonpointer.JsonPointer(rest)
+        return (rest == "#") or bool(jsonpointer.JsonPointer(rest))
 
 
 with suppress(ImportError):
@@ -449,7 +484,7 @@ with suppress(ImportError):
         draft201909="uri-template",
         draft202012="uri-template",
     )
-    def is_uri_template(instance):
+    def is_uri_template(instance: object) -> bool:
         if not isinstance(instance, str):
             return True
         return uri_template.validate(instance)
@@ -463,10 +498,12 @@ with suppress(ImportError):
         draft202012="duration",
         raises=isoduration.DurationParsingException,
     )
-    def is_duration(instance):
+    def is_duration(instance: object) -> bool:
         if not isinstance(instance, str):
             return True
-        return isoduration.parse_duration(instance)
+        isoduration.parse_duration(instance)
+        # FIXME: See bolsote/isoduration#25 and bolsote/isoduration#21
+        return instance.endswith(tuple("DMYWHMS"))
 
 
 @_checks_drafts(
@@ -474,7 +511,7 @@ with suppress(ImportError):
     draft202012="uuid",
     raises=ValueError,
 )
-def is_uuid(instance):
+def is_uuid(instance: object) -> bool:
     if not isinstance(instance, str):
         return True
     UUID(instance)

@@ -1,50 +1,21 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2021, Brandon Nielsen
+# Copyright (c) 2019, Brandon Nielsen
 # All rights reserved.
 #
 # This software may be modified and distributed under the terms
 # of the BSD license.  See the LICENSE file for details.
 
 import datetime
-from collections import namedtuple
-from functools import partial
 
-from aniso8601.builders import (
-    BaseTimeBuilder,
-    DatetimeTuple,
-    DateTuple,
-    Limit,
-    TimeTuple,
-    TupleBuilder,
-    cast,
-    range_check,
-)
-from aniso8601.exceptions import (
-    DayOutOfBoundsError,
-    HoursOutOfBoundsError,
-    ISOFormatError,
-    LeapSecondError,
-    MidnightBoundsError,
-    MinutesOutOfBoundsError,
-    MonthOutOfBoundsError,
-    SecondsOutOfBoundsError,
-    WeekOutOfBoundsError,
-    YearOutOfBoundsError,
-)
+from aniso8601.builders import BaseTimeBuilder, TupleBuilder
+from aniso8601.exceptions import (DayOutOfBoundsError,
+                                  HoursOutOfBoundsError,
+                                  LeapSecondError, MidnightBoundsError,
+                                  MinutesOutOfBoundsError,
+                                  SecondsOutOfBoundsError,
+                                  WeekOutOfBoundsError, YearOutOfBoundsError)
 from aniso8601.utcoffset import UTCOffset
-
-DAYS_PER_YEAR = 365
-DAYS_PER_MONTH = 30
-DAYS_PER_WEEK = 7
-
-HOURS_PER_DAY = 24
-
-MINUTES_PER_HOUR = 60
-MINUTES_PER_DAY = MINUTES_PER_HOUR * HOURS_PER_DAY
-
-SECONDS_PER_MINUTE = 60
-SECONDS_PER_DAY = MINUTES_PER_DAY * SECONDS_PER_MINUTE
 
 MICROSECONDS_PER_SECOND = int(1e6)
 
@@ -52,388 +23,161 @@ MICROSECONDS_PER_MINUTE = 60 * MICROSECONDS_PER_SECOND
 MICROSECONDS_PER_HOUR = 60 * MICROSECONDS_PER_MINUTE
 MICROSECONDS_PER_DAY = 24 * MICROSECONDS_PER_HOUR
 MICROSECONDS_PER_WEEK = 7 * MICROSECONDS_PER_DAY
-MICROSECONDS_PER_MONTH = DAYS_PER_MONTH * MICROSECONDS_PER_DAY
-MICROSECONDS_PER_YEAR = DAYS_PER_YEAR * MICROSECONDS_PER_DAY
-
-TIMEDELTA_MAX_DAYS = datetime.timedelta.max.days
-
-FractionalComponent = namedtuple(
-    "FractionalComponent", ["principal", "microsecondremainder"]
-)
-
-
-def year_range_check(valuestr, limit):
-    YYYYstr = valuestr
-
-    # Truncated dates, like '19', refer to 1900-1999 inclusive,
-    # we simply parse to 1900
-    if len(valuestr) < 4:
-        # Shift 0s in from the left to form complete year
-        YYYYstr = valuestr.ljust(4, "0")
-
-    return range_check(YYYYstr, limit)
-
-
-def fractional_range_check(conversion, valuestr, limit):
-    if valuestr is None:
-        return None
-
-    if "." in valuestr:
-        castfunc = partial(_cast_to_fractional_component, conversion)
-    else:
-        castfunc = int
-
-    value = cast(valuestr, castfunc, thrownmessage=limit.casterrorstring)
-
-    if type(value) is FractionalComponent:
-        tocheck = float(valuestr)
-    else:
-        tocheck = int(valuestr)
-
-    if limit.min is not None and tocheck < limit.min:
-        raise limit.rangeexception(limit.rangeerrorstring)
-
-    if limit.max is not None and tocheck > limit.max:
-        raise limit.rangeexception(limit.rangeerrorstring)
-
-    return value
-
-
-def _cast_to_fractional_component(conversion, floatstr):
-    # Splits a string with a decimal point into an int, and
-    # int representing the floating point remainder as a number
-    # of microseconds, determined by multiplying by conversion
-    intpart, floatpart = floatstr.split(".")
-
-    intvalue = int(intpart)
-    preconvertedvalue = int(floatpart)
-
-    convertedvalue = (preconvertedvalue * conversion) // (10 ** len(floatpart))
-
-    return FractionalComponent(intvalue, convertedvalue)
-
+MICROSECONDS_PER_MONTH = 30 * MICROSECONDS_PER_DAY
+MICROSECONDS_PER_YEAR = 365 * MICROSECONDS_PER_DAY
 
 class PythonTimeBuilder(BaseTimeBuilder):
-    # 0000 (1 BC) is not representable as a Python date
-    DATE_YYYY_LIMIT = Limit(
-        "Invalid year string.",
-        datetime.MINYEAR,
-        datetime.MAXYEAR,
-        YearOutOfBoundsError,
-        "Year must be between {0}..{1}.".format(datetime.MINYEAR, datetime.MAXYEAR),
-        year_range_check,
-    )
-    TIME_HH_LIMIT = Limit(
-        "Invalid hour string.",
-        0,
-        24,
-        HoursOutOfBoundsError,
-        "Hour must be between 0..24 with " "24 representing midnight.",
-        partial(fractional_range_check, MICROSECONDS_PER_HOUR),
-    )
-    TIME_MM_LIMIT = Limit(
-        "Invalid minute string.",
-        0,
-        59,
-        MinutesOutOfBoundsError,
-        "Minute must be between 0..59.",
-        partial(fractional_range_check, MICROSECONDS_PER_MINUTE),
-    )
-    TIME_SS_LIMIT = Limit(
-        "Invalid second string.",
-        0,
-        60,
-        SecondsOutOfBoundsError,
-        "Second must be between 0..60 with " "60 representing a leap second.",
-        partial(fractional_range_check, MICROSECONDS_PER_SECOND),
-    )
-    DURATION_PNY_LIMIT = Limit(
-        "Invalid year duration string.",
-        None,
-        None,
-        YearOutOfBoundsError,
-        None,
-        partial(fractional_range_check, MICROSECONDS_PER_YEAR),
-    )
-    DURATION_PNM_LIMIT = Limit(
-        "Invalid month duration string.",
-        None,
-        None,
-        MonthOutOfBoundsError,
-        None,
-        partial(fractional_range_check, MICROSECONDS_PER_MONTH),
-    )
-    DURATION_PNW_LIMIT = Limit(
-        "Invalid week duration string.",
-        None,
-        None,
-        WeekOutOfBoundsError,
-        None,
-        partial(fractional_range_check, MICROSECONDS_PER_WEEK),
-    )
-    DURATION_PND_LIMIT = Limit(
-        "Invalid day duration string.",
-        None,
-        None,
-        DayOutOfBoundsError,
-        None,
-        partial(fractional_range_check, MICROSECONDS_PER_DAY),
-    )
-    DURATION_TNH_LIMIT = Limit(
-        "Invalid hour duration string.",
-        None,
-        None,
-        HoursOutOfBoundsError,
-        None,
-        partial(fractional_range_check, MICROSECONDS_PER_HOUR),
-    )
-    DURATION_TNM_LIMIT = Limit(
-        "Invalid minute duration string.",
-        None,
-        None,
-        MinutesOutOfBoundsError,
-        None,
-        partial(fractional_range_check, MICROSECONDS_PER_MINUTE),
-    )
-    DURATION_TNS_LIMIT = Limit(
-        "Invalid second duration string.",
-        None,
-        None,
-        SecondsOutOfBoundsError,
-        None,
-        partial(fractional_range_check, MICROSECONDS_PER_SECOND),
-    )
-
-    DATE_RANGE_DICT = BaseTimeBuilder.DATE_RANGE_DICT
-    DATE_RANGE_DICT["YYYY"] = DATE_YYYY_LIMIT
-
-    TIME_RANGE_DICT = {"hh": TIME_HH_LIMIT, "mm": TIME_MM_LIMIT, "ss": TIME_SS_LIMIT}
-
-    DURATION_RANGE_DICT = {
-        "PnY": DURATION_PNY_LIMIT,
-        "PnM": DURATION_PNM_LIMIT,
-        "PnW": DURATION_PNW_LIMIT,
-        "PnD": DURATION_PND_LIMIT,
-        "TnH": DURATION_TNH_LIMIT,
-        "TnM": DURATION_TNM_LIMIT,
-        "TnS": DURATION_TNS_LIMIT,
-    }
-
     @classmethod
-    def build_date(cls, YYYY=None, MM=None, DD=None, Www=None, D=None, DDD=None):
-        YYYY, MM, DD, Www, D, DDD = cls.range_check_date(YYYY, MM, DD, Www, D, DDD)
+    def build_date(cls, YYYY=None, MM=None, DD=None, Www=None, D=None,
+                   DDD=None):
 
-        if MM is None:
-            MM = 1
+        if YYYY is not None:
+            #Truncated dates, like '19', refer to 1900-1999 inclusive,
+            #we simply parse to 1900
+            if len(YYYY) < 4:
+                #Shift 0s in from the left to form complete year
+                YYYY = YYYY.ljust(4, '0')
 
-        if DD is None:
-            DD = 1
+            year = cls.cast(YYYY, int,
+                            thrownmessage='Invalid year string.')
 
-        if DDD is not None:
-            return PythonTimeBuilder._build_ordinal_date(YYYY, DDD)
+        if MM is not None:
+            month = cls.cast(MM, int,
+                             thrownmessage='Invalid month string.')
+        else:
+            month = 1
+
+        if DD is not None:
+            day = cls.cast(DD, int,
+                           thrownmessage='Invalid day string.')
+        else:
+            day = 1
 
         if Www is not None:
-            return PythonTimeBuilder._build_week_date(YYYY, Www, isoday=D)
+            weeknumber = cls.cast(Www, int,
+                                  thrownmessage='Invalid week string.')
 
-        return datetime.date(YYYY, MM, DD)
+            if weeknumber == 0 or weeknumber > 53:
+                raise WeekOutOfBoundsError('Week number must be between '
+                                           '1..53.')
+        else:
+            weeknumber = None
+
+        if DDD is not None:
+            dayofyear = cls.cast(DDD, int,
+                                 thrownmessage='Invalid day string.')
+        else:
+            dayofyear = None
+
+        if D is not None:
+            dayofweek = cls.cast(D, int,
+                                 thrownmessage='Invalid day string.')
+
+            if dayofweek == 0 or dayofweek > 7:
+                raise DayOutOfBoundsError('Weekday number must be between '
+                                          '1..7.')
+        else:
+            dayofweek = None
+
+        #0000 (1 BC) is not representable as a Python date so a ValueError is
+        #raised
+        if year == 0:
+            raise YearOutOfBoundsError('Year must be between 1..9999.')
+
+        if dayofyear is not None:
+            return PythonTimeBuilder._build_ordinal_date(year, dayofyear)
+
+        if weeknumber is not None:
+            return PythonTimeBuilder._build_week_date(year, weeknumber,
+                                                      isoday=dayofweek)
+
+        return datetime.date(year, month, day)
 
     @classmethod
     def build_time(cls, hh=None, mm=None, ss=None, tz=None):
-        # Builds a time from the given parts, handling fractional arguments
-        # where necessary
+        #Builds a time from the given parts, handling fractional arguments
+        #where necessary
         hours = 0
         minutes = 0
         seconds = 0
         microseconds = 0
 
-        hh, mm, ss, tz = cls.range_check_time(hh, mm, ss, tz)
+        if hh is not None:
+            if '.' in hh:
+                hours, remainingmicroseconds = cls._split_to_microseconds(hh, MICROSECONDS_PER_HOUR, 'Invalid hour string.')
+                microseconds += remainingmicroseconds
+            else:
+                hours = cls.cast(hh, int,
+                                 thrownmessage='Invalid hour string.')
 
-        if type(hh) is FractionalComponent:
-            hours = hh.principal
-            microseconds = hh.microsecondremainder
-        elif hh is not None:
-            hours = hh
+        if mm is not None:
+            if '.' in mm:
+                minutes, remainingmicroseconds = cls._split_to_microseconds(mm, MICROSECONDS_PER_MINUTE, 'Invalid minute string.')
+                microseconds += remainingmicroseconds
+            else:
+                minutes = cls.cast(mm, int,
+                                   thrownmessage='Invalid minute string.')
 
-        if type(mm) is FractionalComponent:
-            minutes = mm.principal
-            microseconds = mm.microsecondremainder
-        elif mm is not None:
-            minutes = mm
+        if ss is not None:
+            if '.' in ss:
+                seconds, remainingmicroseconds = cls._split_to_microseconds(ss, MICROSECONDS_PER_SECOND, 'Invalid second string.')
+                microseconds += remainingmicroseconds
+            else:
+                seconds = cls.cast(ss, int,
+                                   thrownmessage='Invalid second string.')
 
-        if type(ss) is FractionalComponent:
-            seconds = ss.principal
-            microseconds = ss.microsecondremainder
-        elif ss is not None:
-            seconds = ss
+        hours, minutes, seconds, microseconds = PythonTimeBuilder._distribute_microseconds(microseconds, (hours, minutes, seconds), (MICROSECONDS_PER_HOUR, MICROSECONDS_PER_MINUTE, MICROSECONDS_PER_SECOND))
 
-        (
-            hours,
-            minutes,
-            seconds,
-            microseconds,
-        ) = PythonTimeBuilder._distribute_microseconds(
-            microseconds,
-            (hours, minutes, seconds),
-            (MICROSECONDS_PER_HOUR, MICROSECONDS_PER_MINUTE, MICROSECONDS_PER_SECOND),
-        )
+        #Range checks
+        if hours == 23 and minutes == 59 and seconds == 60:
+            #https://bitbucket.org/nielsenb/aniso8601/issues/10/sub-microsecond-precision-in-durations-is
+            raise LeapSecondError('Leap seconds are not supported.')
 
-        # Move midnight into range
+        if (hours == 24
+                and (minutes != 0 or seconds != 0)):
+            raise MidnightBoundsError('Hour 24 may only represent midnight.')
+
+        if hours > 24:
+            raise HoursOutOfBoundsError('Hour must be between 0..24 with '
+                                        '24 representing midnight.')
+
+        if minutes >= 60:
+            raise MinutesOutOfBoundsError('Minutes must be less than 60.')
+
+        if seconds >= 60:
+            raise SecondsOutOfBoundsError('Seconds must be less than 60.')
+
+        #Fix ranges that have passed range checks
         if hours == 24:
             hours = 0
+            minutes = 0
+            seconds = 0
 
-        # Datetimes don't handle fractional components, so we use a timedelta
+        #Datetimes don't handle fractional components, so we use a timedelta
         if tz is not None:
-            return (
-                datetime.datetime(
-                    1, 1, 1, hour=hours, minute=minutes, tzinfo=cls._build_object(tz)
-                )
-                + datetime.timedelta(seconds=seconds, microseconds=microseconds)
-            ).timetz()
+            return (datetime.datetime(1, 1, 1,
+                                      hour=hours,
+                                      minute=minutes,
+                                      tzinfo=cls._build_object(tz))
+                    + datetime.timedelta(seconds=seconds,
+                                         microseconds=microseconds)
+                   ).timetz()
 
-        return (
-            datetime.datetime(1, 1, 1, hour=hours, minute=minutes)
-            + datetime.timedelta(seconds=seconds, microseconds=microseconds)
-        ).time()
+        return (datetime.datetime(1, 1, 1,
+                                  hour=hours,
+                                  minute=minutes)
+                + datetime.timedelta(seconds=seconds,
+                                     microseconds=microseconds)
+               ).time()
 
     @classmethod
     def build_datetime(cls, date, time):
-        return datetime.datetime.combine(
-            cls._build_object(date), cls._build_object(time)
-        )
+        return datetime.datetime.combine(cls._build_object(date),
+                                         cls._build_object(time))
 
     @classmethod
-    def build_duration(
-        cls, PnY=None, PnM=None, PnW=None, PnD=None, TnH=None, TnM=None, TnS=None
-    ):
-        # PnY and PnM will be distributed to PnD, microsecond remainder to TnS
-        PnY, PnM, PnW, PnD, TnH, TnM, TnS = cls.range_check_duration(
-            PnY, PnM, PnW, PnD, TnH, TnM, TnS
-        )
-
-        seconds = TnS.principal
-        microseconds = TnS.microsecondremainder
-
-        return datetime.timedelta(
-            days=PnD,
-            seconds=seconds,
-            microseconds=microseconds,
-            minutes=TnM,
-            hours=TnH,
-            weeks=PnW,
-        )
-
-    @classmethod
-    def build_interval(cls, start=None, end=None, duration=None):
-        start, end, duration = cls.range_check_interval(start, end, duration)
-
-        if start is not None and end is not None:
-            # <start>/<end>
-            startobject = cls._build_object(start)
-            endobject = cls._build_object(end)
-
-            return (startobject, endobject)
-
-        durationobject = cls._build_object(duration)
-
-        # Determine if datetime promotion is required
-        datetimerequired = (
-            duration.TnH is not None
-            or duration.TnM is not None
-            or duration.TnS is not None
-            or durationobject.seconds != 0
-            or durationobject.microseconds != 0
-        )
-
-        if end is not None:
-            # <duration>/<end>
-            endobject = cls._build_object(end)
-
-            # Range check
-            if type(end) is DateTuple and datetimerequired is True:
-                # <end> is a date, and <duration> requires datetime resolution
-                return (
-                    endobject,
-                    cls.build_datetime(end, TupleBuilder.build_time()) - durationobject,
-                )
-
-            return (endobject, endobject - durationobject)
-
-        # <start>/<duration>
-        startobject = cls._build_object(start)
-
-        # Range check
-        if type(start) is DateTuple and datetimerequired is True:
-            # <start> is a date, and <duration> requires datetime resolution
-            return (
-                startobject,
-                cls.build_datetime(start, TupleBuilder.build_time()) + durationobject,
-            )
-
-        return (startobject, startobject + durationobject)
-
-    @classmethod
-    def build_repeating_interval(cls, R=None, Rnn=None, interval=None):
-        startobject = None
-        endobject = None
-
-        R, Rnn, interval = cls.range_check_repeating_interval(R, Rnn, interval)
-
-        if interval.start is not None:
-            startobject = cls._build_object(interval.start)
-
-        if interval.end is not None:
-            endobject = cls._build_object(interval.end)
-
-        if interval.duration is not None:
-            durationobject = cls._build_object(interval.duration)
-        else:
-            durationobject = endobject - startobject
-
-        if R is True:
-            if startobject is not None:
-                return cls._date_generator_unbounded(startobject, durationobject)
-
-            return cls._date_generator_unbounded(endobject, -durationobject)
-
-        iterations = int(Rnn)
-
-        if startobject is not None:
-            return cls._date_generator(startobject, durationobject, iterations)
-
-        return cls._date_generator(endobject, -durationobject, iterations)
-
-    @classmethod
-    def build_timezone(cls, negative=None, Z=None, hh=None, mm=None, name=""):
-        negative, Z, hh, mm, name = cls.range_check_timezone(negative, Z, hh, mm, name)
-
-        if Z is True:
-            # Z -> UTC
-            return UTCOffset(name="UTC", minutes=0)
-
-        tzhour = int(hh)
-
-        if mm is not None:
-            tzminute = int(mm)
-        else:
-            tzminute = 0
-
-        if negative is True:
-            return UTCOffset(name=name, minutes=-(tzhour * 60 + tzminute))
-
-        return UTCOffset(name=name, minutes=tzhour * 60 + tzminute)
-
-    @classmethod
-    def range_check_duration(
-        cls,
-        PnY=None,
-        PnM=None,
-        PnW=None,
-        PnD=None,
-        TnH=None,
-        TnM=None,
-        TnS=None,
-        rangedict=None,
-    ):
+    def build_duration(cls, PnY=None, PnM=None, PnW=None, PnD=None, TnH=None,
+                       TnM=None, TnS=None):
         years = 0
         months = 0
         days = 0
@@ -443,222 +187,213 @@ class PythonTimeBuilder(BaseTimeBuilder):
         seconds = 0
         microseconds = 0
 
-        PnY, PnM, PnW, PnD, TnH, TnM, TnS = BaseTimeBuilder.range_check_duration(
-            PnY, PnM, PnW, PnD, TnH, TnM, TnS, rangedict=cls.DURATION_RANGE_DICT
-        )
-
         if PnY is not None:
-            if type(PnY) is FractionalComponent:
-                years = PnY.principal
-                microseconds = PnY.microsecondremainder
+            if '.' in PnY:
+                years, remainingmicroseconds = cls._split_to_microseconds(PnY, MICROSECONDS_PER_YEAR, 'Invalid year string.')
+                microseconds += remainingmicroseconds
             else:
-                years = PnY
-
-            if years * DAYS_PER_YEAR > TIMEDELTA_MAX_DAYS:
-                raise YearOutOfBoundsError("Duration exceeds maximum timedelta size.")
+                years = cls.cast(PnY, int,
+                                 thrownmessage='Invalid year string.')
 
         if PnM is not None:
-            if type(PnM) is FractionalComponent:
-                months = PnM.principal
-                microseconds = PnM.microsecondremainder
+            if '.' in PnM:
+                months, remainingmicroseconds = cls._split_to_microseconds(PnM, MICROSECONDS_PER_MONTH, 'Invalid month string.')
+                microseconds += remainingmicroseconds
             else:
-                months = PnM
-
-            if months * DAYS_PER_MONTH > TIMEDELTA_MAX_DAYS:
-                raise MonthOutOfBoundsError("Duration exceeds maximum timedelta size.")
+                months = cls.cast(PnM, int,
+                                  thrownmessage='Invalid month string.')
 
         if PnW is not None:
-            if type(PnW) is FractionalComponent:
-                weeks = PnW.principal
-                microseconds = PnW.microsecondremainder
+            if '.' in PnW:
+                weeks, remainingmicroseconds = cls._split_to_microseconds(PnW, MICROSECONDS_PER_WEEK, 'Invalid week string.')
+                microseconds += remainingmicroseconds
             else:
-                weeks = PnW
-
-            if weeks * DAYS_PER_WEEK > TIMEDELTA_MAX_DAYS:
-                raise WeekOutOfBoundsError("Duration exceeds maximum timedelta size.")
+                weeks = cls.cast(PnW, int,
+                                 thrownmessage='Invalid week string.')
 
         if PnD is not None:
-            if type(PnD) is FractionalComponent:
-                days = PnD.principal
-                microseconds = PnD.microsecondremainder
+            if '.' in PnD:
+                days, remainingmicroseconds = cls._split_to_microseconds(PnD, MICROSECONDS_PER_DAY, 'Invalid day string.')
+                microseconds += remainingmicroseconds
             else:
-                days = PnD
-
-            if days > TIMEDELTA_MAX_DAYS:
-                raise DayOutOfBoundsError("Duration exceeds maximum timedelta size.")
+                days = cls.cast(PnD, int,
+                                thrownmessage='Invalid day string.')
 
         if TnH is not None:
-            if type(TnH) is FractionalComponent:
-                hours = TnH.principal
-                microseconds = TnH.microsecondremainder
+            if '.' in TnH:
+                hours, remainingmicroseconds = cls._split_to_microseconds(TnH, MICROSECONDS_PER_HOUR, 'Invalid hour string.')
+                microseconds += remainingmicroseconds
             else:
-                hours = TnH
-
-            if hours // HOURS_PER_DAY > TIMEDELTA_MAX_DAYS:
-                raise HoursOutOfBoundsError("Duration exceeds maximum timedelta size.")
+                hours = cls.cast(TnH, int,
+                                 thrownmessage='Invalid hour string.')
 
         if TnM is not None:
-            if type(TnM) is FractionalComponent:
-                minutes = TnM.principal
-                microseconds = TnM.microsecondremainder
+            if '.' in TnM:
+                minutes, remainingmicroseconds = cls._split_to_microseconds(TnM, MICROSECONDS_PER_MINUTE, 'Invalid minute string.')
+                microseconds += remainingmicroseconds
             else:
-                minutes = TnM
-
-            if minutes // MINUTES_PER_DAY > TIMEDELTA_MAX_DAYS:
-                raise MinutesOutOfBoundsError(
-                    "Duration exceeds maximum timedelta size."
-                )
+                minutes = cls.cast(TnM, int,
+                                   thrownmessage='Invalid minute string.')
 
         if TnS is not None:
-            if type(TnS) is FractionalComponent:
-                seconds = TnS.principal
-                microseconds = TnS.microsecondremainder
+            if '.' in TnS:
+                seconds, remainingmicroseconds = cls._split_to_microseconds(TnS, MICROSECONDS_PER_SECOND, 'Invalid second string.')
+                microseconds += remainingmicroseconds
             else:
-                seconds = TnS
+                seconds = cls.cast(TnS, int,
+                                   thrownmessage='Invalid second string.')
 
-            if seconds // SECONDS_PER_DAY > TIMEDELTA_MAX_DAYS:
-                raise SecondsOutOfBoundsError(
-                    "Duration exceeds maximum timedelta size."
-                )
+        years, months, weeks, days, hours, minutes, seconds, microseconds = PythonTimeBuilder._distribute_microseconds(microseconds, (years, months, weeks, days, hours, minutes, seconds), (MICROSECONDS_PER_YEAR, MICROSECONDS_PER_MONTH, MICROSECONDS_PER_WEEK, MICROSECONDS_PER_DAY, MICROSECONDS_PER_HOUR, MICROSECONDS_PER_MINUTE, MICROSECONDS_PER_SECOND))
 
-        (
-            years,
-            months,
-            weeks,
-            days,
-            hours,
-            minutes,
-            seconds,
-            microseconds,
-        ) = PythonTimeBuilder._distribute_microseconds(
-            microseconds,
-            (years, months, weeks, days, hours, minutes, seconds),
-            (
-                MICROSECONDS_PER_YEAR,
-                MICROSECONDS_PER_MONTH,
-                MICROSECONDS_PER_WEEK,
-                MICROSECONDS_PER_DAY,
-                MICROSECONDS_PER_HOUR,
-                MICROSECONDS_PER_MINUTE,
-                MICROSECONDS_PER_SECOND,
-            ),
-        )
+        #Note that weeks can be handled without conversion to days
+        totaldays = years * 365 + months * 30 + days
 
-        # Note that weeks can be handled without conversion to days
-        totaldays = years * DAYS_PER_YEAR + months * DAYS_PER_MONTH + days
-
-        # Check against timedelta limits
-        if (
-            totaldays
-            + weeks * DAYS_PER_WEEK
-            + hours // HOURS_PER_DAY
-            + minutes // MINUTES_PER_DAY
-            + seconds // SECONDS_PER_DAY
-            > TIMEDELTA_MAX_DAYS
-        ):
-            raise DayOutOfBoundsError("Duration exceeds maximum timedelta size.")
-
-        return (
-            None,
-            None,
-            weeks,
-            totaldays,
-            hours,
-            minutes,
-            FractionalComponent(seconds, microseconds),
-        )
+        return datetime.timedelta(days=totaldays,
+                                  seconds=seconds,
+                                  microseconds=microseconds,
+                                  minutes=minutes,
+                                  hours=hours,
+                                  weeks=weeks)
 
     @classmethod
-    def range_check_interval(cls, start=None, end=None, duration=None):
-        # Handles concise format, range checks any potential durations
+    def build_interval(cls, start=None, end=None, duration=None):
         if start is not None and end is not None:
-            # <start>/<end>
-            # Handle concise format
-            if cls._is_interval_end_concise(end) is True:
-                end = cls._combine_concise_interval_tuples(start, end)
+            #<start>/<end>
+            startobject = cls._build_object(start)
+            endobject = cls._build_object(end)
 
-            return (start, end, duration)
+            return (startobject, endobject)
 
         durationobject = cls._build_object(duration)
 
+        #Determine if datetime promotion is required
+        datetimerequired = (duration[4] is not None
+                            or duration[5] is not None
+                            or duration[6] is not None
+                            or durationobject.seconds != 0
+                            or durationobject.microseconds != 0)
+
         if end is not None:
-            # <duration>/<end>
+            #<duration>/<end>
             endobject = cls._build_object(end)
+            if end[-1] == 'date' and datetimerequired is True:
+                #<end> is a date, and <duration> requires datetime resolution
+                return (endobject,
+                        cls.build_datetime(end, TupleBuilder.build_time())
+                        - durationobject)
 
-            # Range check
-            if type(end) is DateTuple:
-                enddatetime = cls.build_datetime(end, TupleBuilder.build_time())
+            return (endobject,
+                    endobject
+                    - durationobject)
 
-                if enddatetime - datetime.datetime.min < durationobject:
-                    raise YearOutOfBoundsError("Interval end less than minimium date.")
-            else:
-                mindatetime = datetime.datetime.min
+        #<start>/<duration>
+        startobject = cls._build_object(start)
 
-                if end.time.tz is not None:
-                    mindatetime = mindatetime.replace(tzinfo=endobject.tzinfo)
+        if start[-1] == 'date' and datetimerequired is True:
+            #<start> is a date, and <duration> requires datetime resolution
+            return (startobject,
+                    cls.build_datetime(start, TupleBuilder.build_time())
+                    + durationobject)
 
-                if endobject - mindatetime < durationobject:
-                    raise YearOutOfBoundsError("Interval end less than minimium date.")
+        return (startobject,
+                startobject
+                + durationobject)
+
+    @classmethod
+    def build_repeating_interval(cls, R=None, Rnn=None, interval=None):
+        startobject = None
+        endobject = None
+
+        if interval[0] is not None:
+            startobject = cls._build_object(interval[0])
+
+        if interval[1] is not None:
+            endobject = cls._build_object(interval[1])
+
+        if interval[2] is not None:
+            durationobject = cls._build_object(interval[2])
         else:
-            # <start>/<duration>
-            startobject = cls._build_object(start)
+            durationobject = endobject - startobject
 
-            # Range check
-            if type(start) is DateTuple:
-                startdatetime = cls.build_datetime(start, TupleBuilder.build_time())
+        if R is True:
+            if startobject is not None:
+                return cls._date_generator_unbounded(startobject,
+                                                     durationobject)
 
-                if datetime.datetime.max - startdatetime < durationobject:
-                    raise YearOutOfBoundsError(
-                        "Interval end greater than maximum date."
-                    )
-            else:
-                maxdatetime = datetime.datetime.max
+            return cls._date_generator_unbounded(endobject,
+                                                 -durationobject)
 
-                if start.time.tz is not None:
-                    maxdatetime = maxdatetime.replace(tzinfo=startobject.tzinfo)
+        iterations = cls.cast(Rnn, int,
+                              thrownmessage='Invalid iterations.')
 
-                if maxdatetime - startobject < durationobject:
-                    raise YearOutOfBoundsError(
-                        "Interval end greater than maximum date."
-                    )
+        if startobject is not None:
+            return cls._date_generator(startobject, durationobject, iterations)
 
-        return (start, end, duration)
+        return cls._date_generator(endobject, -durationobject, iterations)
+
+    @classmethod
+    def build_timezone(cls, negative=None, Z=None, hh=None, mm=None, name=''):
+        if Z is True:
+            #Z -> UTC
+            return UTCOffset(name='UTC', minutes=0)
+
+        if hh is not None:
+            tzhour = cls.cast(hh, int,
+                              thrownmessage='Invalid hour string.')
+        else:
+            tzhour = 0
+
+        if mm is not None:
+            tzminute = cls.cast(mm, int,
+                                thrownmessage='Invalid minute string.')
+        else:
+            tzminute = 0
+
+        if negative is True:
+            return UTCOffset(name=name, minutes=-(tzhour * 60 + tzminute))
+
+        return UTCOffset(name=name, minutes=tzhour * 60 + tzminute)
 
     @staticmethod
     def _build_week_date(isoyear, isoweek, isoday=None):
         if isoday is None:
-            return PythonTimeBuilder._iso_year_start(isoyear) + datetime.timedelta(
-                weeks=isoweek - 1
-            )
+            return (PythonTimeBuilder._iso_year_start(isoyear)
+                    + datetime.timedelta(weeks=isoweek - 1))
 
-        return PythonTimeBuilder._iso_year_start(isoyear) + datetime.timedelta(
-            weeks=isoweek - 1, days=isoday - 1
-        )
+        return (PythonTimeBuilder._iso_year_start(isoyear)
+                + datetime.timedelta(weeks=isoweek - 1, days=isoday - 1))
 
     @staticmethod
     def _build_ordinal_date(isoyear, isoday):
-        # Day of year to a date
-        # https://stackoverflow.com/questions/2427555/python-question-year-and-day-of-year-to-date
-        builtdate = datetime.date(isoyear, 1, 1) + datetime.timedelta(days=isoday - 1)
+        #Day of year to a date
+        #https://stackoverflow.com/questions/2427555/python-question-year-and-day-of-year-to-date
+        builtdate = (datetime.date(isoyear, 1, 1)
+                     + datetime.timedelta(days=isoday - 1))
+
+        #Enforce ordinal day limitation
+        #https://bitbucket.org/nielsenb/aniso8601/issues/14/parsing-ordinal-dates-should-only-allow
+        if isoday == 0 or builtdate.year != isoyear:
+            raise DayOutOfBoundsError('Day of year must be from 1..365, '
+                                      '1..366 for leap year.')
 
         return builtdate
 
     @staticmethod
     def _iso_year_start(isoyear):
-        # Given an ISO year, returns the equivalent of the start of the year
-        # on the Gregorian calendar (which is used by Python)
-        # Stolen from:
-        # http://stackoverflow.com/questions/304256/whats-the-best-way-to-find-the-inverse-of-datetime-isocalendar
+        #Given an ISO year, returns the equivalent of the start of the year
+        #on the Gregorian calendar (which is used by Python)
+        #Stolen from:
+        #http://stackoverflow.com/questions/304256/whats-the-best-way-to-find-the-inverse-of-datetime-isocalendar
 
-        # Determine the location of the 4th of January, the first week of
-        # the ISO year is the week containing the 4th of January
-        # http://en.wikipedia.org/wiki/ISO_week_date
+        #Determine the location of the 4th of January, the first week of
+        #the ISO year is the week containing the 4th of January
+        #http://en.wikipedia.org/wiki/ISO_week_date
         fourth_jan = datetime.date(isoyear, 1, 4)
 
-        # Note the conversion from ISO day (1 - 7) and Python day (0 - 6)
+        #Note the conversion from ISO day (1 - 7) and Python day (0 - 6)
         delta = datetime.timedelta(days=fourth_jan.isoweekday() - 1)
 
-        # Return the start of the year
+        #Return the start of the year
         return fourth_jan - delta
 
     @staticmethod
@@ -669,7 +404,7 @@ class PythonTimeBuilder(BaseTimeBuilder):
         while currentiteration < iterations:
             yield currentdate
 
-            # Update the values
+            #Update the values
             currentdate += timedelta
             currentiteration += 1
 
@@ -680,16 +415,34 @@ class PythonTimeBuilder(BaseTimeBuilder):
         while True:
             yield currentdate
 
-            # Update the value
+            #Update the value
             currentdate += timedelta
+
+    @classmethod
+    def _split_to_microseconds(cls, floatstr, conversion, thrownmessage):
+        #Splits a string with a decimal point into an int, and
+        #int representing the floating point remainder as a number
+        #of microseconds, determined by multiplying by conversion
+        intpart, floatpart = floatstr.split('.')
+
+        intvalue = cls.cast(intpart, int,
+                            thrownmessage=thrownmessage)
+
+        preconvertedvalue = cls.cast(floatpart, int,
+                                     thrownmessage=thrownmessage)
+
+        convertedvalue = ((preconvertedvalue * conversion) //
+                          (10 ** len(floatpart)))
+
+        return (intvalue, convertedvalue)
 
     @staticmethod
     def _distribute_microseconds(todistribute, recipients, reductions):
-        # Given a number of microseconds as int, a tuple of ints length n
-        # to distribute to, and a tuple of ints length n to divide todistribute
-        # by (from largest to smallest), returns a tuple of length n + 1, with
-        # todistribute divided across recipients using the reductions, with
-        # the final remainder returned as the final tuple member
+        #Given a number of microseconds as int, a tuple of ints length n
+        #to distribute to, and a tuple of ints length n to divide todistribute
+        #by (from largest to smallest), returns a tuple of length n + 1, with
+        #todistribute divided across recipients using the reductions, with
+        #the final remainder returned as the final tuple member
         results = []
 
         remainder = todistribute
@@ -699,7 +452,7 @@ class PythonTimeBuilder(BaseTimeBuilder):
 
             results.append(recipients[index] + additional)
 
-        # Always return the remaining microseconds
+        #Always return the remaining microseconds
         results.append(remainder)
 
         return tuple(results)

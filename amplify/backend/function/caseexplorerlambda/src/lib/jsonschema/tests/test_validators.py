@@ -197,6 +197,38 @@ class TestCreateAndExtend(TestCase):
             ),
         )
 
+    def test_check_schema_with_different_metaschema(self):
+        """
+        One can create a validator class whose metaschema uses a different
+        dialect than itself.
+        """
+
+        NoEmptySchemasValidator = validators.create(
+            meta_schema={
+                "$schema": validators.Draft202012Validator.META_SCHEMA["$id"],
+                "not": {"const": {}},
+            },
+        )
+        NoEmptySchemasValidator.check_schema({"foo": "bar"})
+
+        with self.assertRaises(exceptions.SchemaError):
+            NoEmptySchemasValidator.check_schema({})
+
+        NoEmptySchemasValidator({"foo": "bar"}).validate("foo")
+
+    def test_check_schema_with_different_metaschema_defaults_to_self(self):
+        """
+        A validator whose metaschema doesn't declare $schema defaults to its
+        own validation behavior, not the latest "normal" specification.
+        """
+
+        NoEmptySchemasValidator = validators.create(
+            meta_schema={"fail": [{"message": "Meta schema whoops!"}]},
+            validators={"fail": fail},
+        )
+        with self.assertRaises(exceptions.SchemaError):
+            NoEmptySchemasValidator.check_schema({})
+
     def test_extend(self):
         original = dict(self.Validator.VALIDATORS)
         new = object()
@@ -269,18 +301,6 @@ class TestValidationErrorMessages(TestCase):
         message = self.message_for(instance=1, schema={"type": list(types)})
         self.assertEqual(message, "1 is not of type 'string', 'object'")
 
-    def test_object_without_title_type_failure(self):
-        type = {"type": [{"minimum": 3}]}
-        message = self.message_for(
-            instance=1,
-            schema={"type": [type]},
-            cls=validators.Draft3Validator,
-        )
-        self.assertEqual(
-            message,
-            "1 is not of type {'type': [{'minimum': 3}]}",
-        )
-
     def test_object_with_named_type_failure(self):
         schema = {"type": [{"name": "Foo", "minimum": 3}]}
         message = self.message_for(
@@ -307,6 +327,18 @@ class TestValidationErrorMessages(TestCase):
             cls=validators.Draft3Validator,
         )
         self.assertEqual(message, "'foo' is a dependency of 'bar'")
+
+    def test_object_without_title_type_failure_draft3(self):
+        type = {"type": [{"minimum": 3}]}
+        message = self.message_for(
+            instance=1,
+            schema={"type": [type]},
+            cls=validators.Draft3Validator,
+        )
+        self.assertEqual(
+            message,
+            "1 is not of type {'type': [{'minimum': 3}]}",
+        )
 
     def test_dependencies_list_draft3(self):
         depend, on = "bar", "foo"
@@ -602,7 +634,26 @@ class TestValidationErrorMessages(TestCase):
         message = self.message_for(instance="foo", schema=schema)
         self.assertEqual(message, "'foo' is not of type 'array'")
 
-    def test_unevaluated_properties(self):
+    def test_unevaluated_properties_invalid_against_subschema(self):
+        schema = {
+            "properties": {"foo": {"type": "string"}},
+            "unevaluatedProperties": {"const": 12},
+        }
+        message = self.message_for(
+            instance={
+                "foo": "foo",
+                "bar": "bar",
+                "baz": 12,
+            },
+            schema=schema,
+        )
+        self.assertEqual(
+            message,
+            "Unevaluated properties are not valid under the given schema "
+            "('bar' was unevaluated and invalid)",
+        )
+
+    def test_unevaluated_properties_disallowed(self):
         schema = {"type": "object", "unevaluatedProperties": False}
         message = self.message_for(
             instance={
@@ -624,7 +675,7 @@ class TestValidationErrorMessages(TestCase):
 
 
 class TestValidationErrorDetails(TestCase):
-    # TODO: These really need unit tests for each individual validator, rather
+    # TODO: These really need unit tests for each individual keyword, rather
     #       than just these higher level tests.
     def test_anyOf(self):
         instance = 5
@@ -1406,11 +1457,11 @@ class TestValidationErrorDetails(TestCase):
         )
 
 
-class MetaSchemaTestsMixin(object):
+class MetaSchemaTestsMixin:
     # TODO: These all belong upstream
     def test_invalid_properties(self):
         with self.assertRaises(exceptions.SchemaError):
-            self.Validator.check_schema({"properties": {"test": object()}})
+            self.Validator.check_schema({"properties": 12})
 
     def test_minItems_invalid_string(self):
         with self.assertRaises(exceptions.SchemaError):
@@ -1421,17 +1472,45 @@ class MetaSchemaTestsMixin(object):
         """
         Technically, all the spec says is they SHOULD have elements, not MUST.
 
+        (As of Draft 6. Previous drafts do say MUST).
+
         See #529.
         """
-        self.Validator.check_schema({"enum": []})
+        if self.Validator in {
+            validators.Draft3Validator,
+            validators.Draft4Validator,
+        }:
+            with self.assertRaises(exceptions.SchemaError):
+                self.Validator.check_schema({"enum": []})
+        else:
+            self.Validator.check_schema({"enum": []})
 
     def test_enum_allows_non_unique_items(self):
         """
         Technically, all the spec says is they SHOULD be unique, not MUST.
 
+        (As of Draft 6. Previous drafts do say MUST).
+
         See #529.
         """
-        self.Validator.check_schema({"enum": [12, 12]})
+        if self.Validator in {
+            validators.Draft3Validator,
+            validators.Draft4Validator,
+        }:
+            with self.assertRaises(exceptions.SchemaError):
+                self.Validator.check_schema({"enum": [12, 12]})
+        else:
+            self.Validator.check_schema({"enum": [12, 12]})
+
+    def test_schema_with_invalid_regex(self):
+        with self.assertRaises(exceptions.SchemaError):
+            self.Validator.check_schema({"pattern": "*notaregex"})
+
+    def test_schema_with_invalid_regex_with_disabled_format_validation(self):
+        self.Validator.check_schema(
+            {"pattern": "*notaregex"},
+            format_checker=None,
+        )
 
 
 class ValidatorTestMixin(MetaSchemaTestsMixin, object):
@@ -1463,13 +1542,48 @@ class ValidatorTestMixin(MetaSchemaTestsMixin, object):
         with self.assertRaises(exceptions.ValidationError):
             validator.validate(None)
 
+    def test_evolve(self):
+        ref, schema = "someCoolRef", {"type": "integer"}
+        resolver = validators.RefResolver("", {}, store={ref: schema})
+
+        validator = self.Validator(schema, resolver=resolver)
+        new = validator.evolve(schema={"type": "string"})
+
+        expected = self.Validator({"type": "string"}, resolver=resolver)
+
+        self.assertEqual(new, expected)
+        self.assertNotEqual(new, validator)
+
+    def test_evolve_with_subclass(self):
+        """
+        Subclassing validators isn't supported public API, but some users have
+        done it, because we don't actually error entirely when it's done :/
+
+        We need to deprecate doing so first to help as many of these users
+        ensure they can move to supported APIs, but this test ensures that in
+        the interim, we haven't broken those users.
+        """
+
+        with self.assertWarns(DeprecationWarning):
+            @attr.s
+            class OhNo(self.Validator):
+                foo = attr.ib(factory=lambda: [1, 2, 3])
+                _bar = attr.ib(default=37)
+
+        validator = OhNo({}, bar=12)
+        self.assertEqual(validator.foo, [1, 2, 3])
+
+        new = validator.evolve(schema={"type": "integer"})
+        self.assertEqual(new.foo, [1, 2, 3])
+        self.assertEqual(new._bar, 12)
+
     def test_it_delegates_to_a_legacy_ref_resolver(self):
         """
         Legacy RefResolvers support only the context manager form of
         resolution.
         """
 
-        class LegacyRefResolver(object):
+        class LegacyRefResolver:
             @contextmanager
             def resolving(this, ref):
                 self.assertEqual(ref, "the ref")
@@ -1642,7 +1756,7 @@ class ValidatorTestMixin(MetaSchemaTestsMixin, object):
                 validator.validate(instance)
 
 
-class AntiDraft6LeakMixin(object):
+class AntiDraft6LeakMixin:
     """
     Make sure functionality from draft 6 doesn't leak backwards in time.
     """
@@ -1732,6 +1846,21 @@ class TestDraft202012Validator(ValidatorTestMixin, TestCase):
     Validator = validators.Draft202012Validator
     valid: tuple[dict, dict] = ({}, {})
     invalid = {"type": "integer"}, "foo"
+
+
+class TestLatestValidator(TestCase):
+    """
+    These really apply to multiple versions but are easiest to test on one.
+    """
+
+    def test_ref_resolvers_may_have_boolean_schemas_stored(self):
+        ref = "someCoolRef"
+        schema = {"$ref": ref}
+        resolver = validators.RefResolver("", {}, store={ref: False})
+        validator = validators._LATEST_VERSION(schema, resolver=resolver)
+
+        with self.assertRaises(exceptions.ValidationError):
+            validator.validate(None)
 
 
 class TestValidatorFor(TestCase):
@@ -1872,6 +2001,10 @@ class TestValidatorFor(TestCase):
             validators.validator_for(schema={}, default={})
         self.assertFalse(w)
 
+    def test_validator_for_custom_default_with_schema(self):
+        schema, default = {"$schema": "mailto:foo@example.com"}, object()
+        self.assertIs(validators.validator_for(schema, default), default)
+
 
 class TestValidate(TestCase):
     def assertUses(self, schema, Validator):
@@ -1959,11 +2092,15 @@ class TestValidate(TestCase):
         )
 
     def test_it_uses_best_match(self):
-        # This is a schema that best_match will recurse into
-        schema = {"oneOf": [{"type": "string"}, {"type": "array"}]}
+        schema = {
+            "oneOf": [
+                {"type": "number", "minimum": 20},
+                {"type": "array"},
+            ],
+        }
         with self.assertRaises(exceptions.ValidationError) as e:
             validators.validate(12, schema)
-        self.assertIn("12 is not of type", str(e.exception))
+        self.assertIn("12 is less than the minimum of 20", str(e.exception))
 
 
 class TestRefResolver(TestCase):
@@ -2159,7 +2296,7 @@ def sorted_errors(errors):
 
 
 @attr.s
-class ReallyFakeRequests(object):
+class ReallyFakeRequests:
 
     _responses = attr.ib()
 
@@ -2171,7 +2308,7 @@ class ReallyFakeRequests(object):
 
 
 @attr.s
-class _ReallyFakeJSONResponse(object):
+class _ReallyFakeJSONResponse:
 
     _response = attr.ib()
 

@@ -3,12 +3,11 @@ Name: promise
 Version: 2.3
 Summary: Promises/A+ implementation for Python
 Home-page: https://github.com/syrusakbary/promise
+Download-URL: https://github.com/syrusakbary/promise/releases
 Author: Syrus Akbary
 Author-email: me@syrusakbary.com
 License: MIT
-Download-URL: https://github.com/syrusakbary/promise/releases
 Keywords: concurrent future deferred promise
-Platform: UNKNOWN
 Classifier: Development Status :: 5 - Production/Stable
 Classifier: Intended Audience :: Developers
 Classifier: Topic :: Software Development :: Libraries
@@ -23,6 +22,7 @@ Classifier: Programming Language :: Python :: 3.7
 Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: Implementation :: PyPy
 Classifier: License :: OSI Approved :: MIT License
+License-File: LICENSE
 Requires-Dist: six
 Requires-Dist: typing (>=3.6.4) ; python_version < "3.5"
 Provides-Extra: test
@@ -254,5 +254,3 @@ License <https://github.com/syrusakbary/promise/blob/master/LICENSE>`__
    :target: https://pypi.python.org/pypi/promise
 .. |coveralls| image:: https://coveralls.io/repos/syrusakbary/promise/badge.svg?branch=master&service=github
    :target: https://coveralls.io/github/syrusakbary/promise?branch=master
-
-

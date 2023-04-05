@@ -3,10 +3,10 @@ Name: Flask-GraphQL
 Version: 2.0.1
 Summary: Adds GraphQL support to your Flask application
 Home-page: https://github.com/graphql-python/flask-graphql
+Download-URL: https://github.com/graphql-python/flask-graphql/releases
 Author: Syrus Akbary
 Author-email: me@syrusakbary.com
 License: MIT
-Download-URL: https://github.com/graphql-python/flask-graphql/releases
 Keywords: api graphql protocol rest flask
 Platform: any
 Classifier: Development Status :: 5 - Production/Stable
@@ -89,5 +89,3 @@ request.
    :target: https://coveralls.io/github/graphql-python/flask-graphql?branch=master
 .. |PyPI version| image:: https://badge.fury.io/py/flask-graphql.svg
    :target: https://badge.fury.io/py/flask-graphql
-
-

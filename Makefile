@@ -7,13 +7,13 @@ BACKEND_MODEL_DEPS=$(addprefix $(BACKEND_DIR)/app/models/,__init__.py case.py CC
 BACKEND_APP_DEPS=$(addprefix $(BACKEND_DIR)/app/,__init__.py commands.py config.py graphql.py officer.py service.py utils.py)
 BACKEND_DEPS=$(addprefix $(BACKEND_DIR)/,requirements.txt lambda.py) $(BACKEND_API_DEPS) $(BACKEND_MODEL_DEPS) $(BACKEND_APP_DEPS)
 STACK_PREFIX=caseexplorer
-AWS_REGION=us-east-1
+DEFAULT_AWS_REGION=us-east-1
 SECRETS_FILE=secrets.json
 CASEHARVESTER_STATIC_STACK=caseharvester-stack-static-prod
 DOCKER_REPO_NAME=caseexplorer
 
 .create-stack-bucket:
-	aws s3api create-bucket --bucket $(STACK_PREFIX)-stack --region $(AWS_REGION)
+	aws s3api create-bucket --bucket $(STACK_PREFIX)-stack --region $(DEFAULT_AWS_REGION)
 	touch $@
 
 .deploy-stack: .create-stack-bucket cloudformation.yml $(SECRETS_FILE)
@@ -27,17 +27,18 @@ DOCKER_REPO_NAME=caseexplorer
 		--parameter-overrides \
 			StaticStackName=$(CASEHARVESTER_STATIC_STACK) \
 			DockerRepoName=$(DOCKER_REPO_NAME) \
-			AWSRegion=$(AWS_REGION) \
+			AWSRegion=$(DEFAULT_AWS_REGION) \
 			$(shell jq -r '. as $$x|keys[]|. + "=" + $$x[.]' $(SECRETS_FILE))
 	touch $@
 
 .push-docker-image: .deploy-stack Dockerfile $(BACKEND_DEPS)
-	$(shell aws ecr get-login --region $(AWS_REGION) --no-include-email)
 	$(eval AWS_ACCOUNT_ID = $(shell aws sts get-caller-identity | grep Account | cut -d'"' -f4))
+	$(eval SUCCESS = $(shell aws ecr get-login-password --region $(DEFAULT_AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.$(DEFAULT_AWS_REGION).amazonaws.com))
+	echo $(SUCCESS)
 	find $(BACKEND_DIR) -name *.pyc -delete
 	find $(BACKEND_DIR) -name __pycache__ -delete
 	docker build -t $(DOCKER_REPO_NAME) .
-	$(eval REPO_URL = $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/$(DOCKER_REPO_NAME))
+	$(eval REPO_URL = $(AWS_ACCOUNT_ID).dkr.ecr.$(DEFAULT_AWS_REGION).amazonaws.com/$(DOCKER_REPO_NAME))
 	docker tag $(DOCKER_REPO_NAME):latest $(REPO_URL):latest
 	docker push $(REPO_URL)
 	touch $@

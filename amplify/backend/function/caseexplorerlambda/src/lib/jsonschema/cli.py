@@ -8,17 +8,32 @@ import argparse
 import json
 import sys
 import traceback
+import warnings
 
 try:
     from importlib import metadata
 except ImportError:
     import importlib_metadata as metadata  # type: ignore
 
+try:
+    from pkgutil import resolve_name
+except ImportError:
+    from pkgutil_resolve_name import resolve_name  # type: ignore
+
 import attr
 
-from jsonschema._reflect import namedAny
 from jsonschema.exceptions import SchemaError
 from jsonschema.validators import RefResolver, validator_for
+
+warnings.warn(
+    (
+        "The jsonschema CLI is deprecated and will be removed in a future "
+        "version. Please use check-jsonschema instead, which can be installed "
+        "from https://pypi.org/project/check-jsonschema/"
+    ),
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 class _CannotLoadFile(Exception):
@@ -26,7 +41,7 @@ class _CannotLoadFile(Exception):
 
 
 @attr.s
-class _Outputter(object):
+class _Outputter:
 
     _formatter = attr.ib()
     _stdout = attr.ib()
@@ -68,7 +83,7 @@ class _Outputter(object):
 
 
 @attr.s
-class _PrettyFormatter(object):
+class _PrettyFormatter:
 
     _ERROR_MSG = dedent(
         """\
@@ -110,7 +125,7 @@ class _PrettyFormatter(object):
 
 
 @attr.s
-class _PlainFormatter(object):
+class _PlainFormatter:
 
     _error_format = attr.ib()
 
@@ -130,10 +145,10 @@ class _PlainFormatter(object):
         return ""
 
 
-def _namedAnyWithDefault(name):
+def _resolve_name_with_default(name):
     if "." not in name:
         name = "jsonschema." + name
-    return namedAny(name)
+    return resolve_name(name)
 
 
 parser = argparse.ArgumentParser(
@@ -172,7 +187,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "-V", "--validator",
-    type=_namedAnyWithDefault,
+    type=_resolve_name_with_default,
     help="""
         the fully qualified object name of a validator to use, or, for
         validators that are registered with jsonschema, simply the name
