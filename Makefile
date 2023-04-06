@@ -100,4 +100,4 @@ generate_api_specs: $(BACKEND_DEPS)
 
 .PHONY: sync_models
 sync_models:
-	cp ../CaseHarvester/src/mjcs/models/*.py server/app/models/
+	cp ../CaseHarvester/mjcs/models/*.py server/app/models/
