@@ -37,12 +37,12 @@ export default class DetailCellRenderer extends Component {
         : this.state.table.substring(0, this.state.table.indexOf('_'));
     let promise,
       path = `/api/v1/${t}/${case_number}/full`;
-    if (environment === 'development') {
+    if (environment === 'amplify') {
+      promise = API.post(apiName, path);
+    } else {
       promise = fetch(path)
         .then(checkStatus)
         .then(httpResponse => httpResponse.json());
-    } else {
-      promise = API.post(apiName, path);
     }
     promise
       .then(response => {

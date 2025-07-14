@@ -9,4 +9,10 @@ RUN pip install --no-cache-dir psycopg2
 
 COPY server/app .
 
-CMD ["flask", "--help"]
+EXPOSE 5000
+
+VOLUME /usr/src/app
+
+COPY docker/backend_start.sh /backend_start.sh
+
+ENTRYPOINT ["/backend_start.sh"]

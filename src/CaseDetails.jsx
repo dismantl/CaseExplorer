@@ -11,12 +11,12 @@ const CaseRenderer = props => {
   useEffect(() => {
     let promise,
       path = `/api/v1/html/${case_number}`;
-    if (environment === 'development') {
+    if (environment === 'amplify') {
+      promise = API.get(props.apiName, path);
+    } else {
       promise = fetch(path)
         .then(checkStatus)
         .then(httpResponse => httpResponse.json());
-    } else {
-      promise = API.get(props.apiName, path);
     }
     promise.then(data => {
       let el = document.createElement('html');

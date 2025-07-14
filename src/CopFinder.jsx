@@ -22,12 +22,12 @@ const CopFinder = props => {
     if (copVal.includes('bpdwatch.com')) {
       const id = copVal.substring(copVal.lastIndexOf('/') + 1);
       path = `/api/v1/bpd/id/${id}`;
-      if (environment === 'development') {
+      if (environment === 'amplify') {
+        promise = API.get(props.apiName, path);
+      } else {
         promise = fetch(path)
           .then(checkStatus)
           .then(httpResponse => httpResponse.json());
-      } else {
-        promise = API.get(props.apiName, path);
       }
       promise
         .then(response => {

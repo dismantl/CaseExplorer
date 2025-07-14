@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, useState } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { API } from 'aws-amplify';
 import environment from './config';
 import { AgGridReact, AgGridColumn } from 'ag-grid-react';
@@ -95,7 +95,11 @@ const ServerSideGrid = props => {
 
   const getRows = params => {
     let promise;
-    if (environment === 'development') {
+    if (environment === 'amplify') {
+      promise = API.post(apiName, path, {
+        body: params.request
+      });
+    } else {
       promise = fetch(path, {
         method: 'post',
         body: JSON.stringify(params.request),
@@ -103,10 +107,6 @@ const ServerSideGrid = props => {
       })
         .then(checkStatus)
         .then(httpResponse => httpResponse.json());
-    } else {
-      promise = API.post(apiName, path, {
-        body: params.request
-      });
     }
     promise
       .then(response => {

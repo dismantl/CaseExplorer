@@ -23,12 +23,12 @@ export default class CustomStatusBar extends React.Component {
       ? `/api/v1/bpd/seq/${this.state.seq}/total`
       : `/api/v1/${this.state.table}/total`;
     let promise;
-    if (environment === 'development') {
+    if (environment === 'amplify') {
+      promise = API.get(apiName, path);
+    } else {
       promise = fetch(path)
         .then(checkStatus)
         .then(httpResponse => httpResponse.json());
-    } else {
-      promise = API.get(apiName, path);
     }
     promise
       .then(response => {
@@ -45,16 +45,16 @@ export default class CustomStatusBar extends React.Component {
       ? `/api/v1/bpd/seq/${this.state.seq}/total`
       : `/api/v1/${this.state.table}/filtered/total`;
     let countPromise;
-    if (environment === 'development') {
+    if (environment === 'amplify') {
+      countPromise = API.post(apiName, path, {
+        body: params.request
+      });
+    } else {
       countPromise = fetch(path, {
         method: 'post',
         body: JSON.stringify(params.request),
         headers: { 'Content-Type': 'application/json; charset=utf-8' }
       }).then(checkStatus);
-    } else {
-      countPromise = API.post(apiName, path, {
-        body: params.request
-      });
     }
     countPromise
       .then(response => {

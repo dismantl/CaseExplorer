@@ -1,0 +1,31 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    restart: unless-stopped
+    environment:
+      FLASK_ENV: ${FLASK_ENV:-development}
+      SQLALCHEMY_DATABASE_URI_PRODUCTION: ${SQLALCHEMY_DATABASE_URI_PRODUCTION}
+      SQLALCHEMY_DATABASE_URI_DEVELOPMENT: ${SQLALCHEMY_DATABASE_URI_DEVELOPMENT}
+      CASE_DETAILS_BUCKET: ${CASE_DETAILS_BUCKET}
+      BPDWATCH_DATABASE_URI: ${BPDWATCH_DATABASE_URI}
+    # volumes:
+    #   - ./server/app:/usr/src/app
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+      args:
+        - BUILD_PRODUCTION
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+    # volumes:
+    #   - ./build:/usr/src/app/build
+    #   - ./src:/usr/src/app/src
+    #   - ./public:/usr/src/app/public
+    ports:
+      - '3000:3000'

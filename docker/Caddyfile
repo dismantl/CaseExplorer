@@ -1,0 +1,7 @@
+:3000
+
+reverse_proxy /api/* backend:5000
+
+root * /usr/src/app/build
+encode
+file_server

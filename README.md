@@ -8,21 +8,14 @@ Case Explorer is a web interface and set of APIs for exploring data scraped from
 
 ### Dependencies
 
-Case Explorer requires Node.js 10x, Python3.9+, and GNU Make. It is also recommend to use Virtualenv with Python to set up a local development environment.
-
-If you are running Debian, you can install dependencies with the following:
-
-```
-$ sudo apt-get update && sudo apt-get install -y build-essential libpq-dev nodejs python3 python3-pip virtualenv python3-virtualenv
-```
+Case Explorer requires Node.js 16, Python3.9+, and GNU Make. A Docker compose file (`compose.yml`) is provided for the convenience of running the application for both development and production.
 
 ### Configuration
 
-Create a file at `server/app/.env` with the information for connecting to the production and development case databases. You can connect to Open Justice Baltimore's case databases using the following:
+Create a `.env` file at the root of the repo with the information for connecting to the production and development case databases as well as the S3 bucket for case details. You can connect to Open Justice Baltimore's case databases using the following:
 
 ```
-SQLALCHEMY_DATABASE_URI_PRODUCTION=postgresql://case_explorer:Wt1Wc3yny9XHhChCktVj@db.openjusticebaltimore.org/mjcs
-SQLALCHEMY_DATABASE_URI_DEVELOPMENT=postgresql://case_explorer:qntsu004A&DCxQyqrV5Q@dev.db.openjusticebaltimore.org/mjcs
+SQLALCHEMY_DATABASE_URI_PRODUCTION=postgresql://case_explorer:Wt1Wc3yny9XHhChCktVj@mjcs-prod2.c7q0zmxhx4uo.us-east-1.rds.amazonaws.com/mjcs
 CASE_DETAILS_BUCKET=mjcs-case-details
 ```
 
@@ -32,11 +25,8 @@ To use the Search By BPD Officer feature, you'll also need to set `BPDWATCH_DATA
 
 You can use the following commands to run a local version of Case Explorer for development or testing purposes:
 
-1. Create and/or activate your Python virtual environment
-1. `make install_dependencies`
 1. `make generate_api_specs`
-1. `make start_backend`
-1. (in another terminal) `make start_frontend`
+1. `make start_dev`
 
 ### Generate API specifications
 
@@ -44,7 +34,7 @@ API specs can be generated for both [GraphQL](https://graphql.org/) and [Swagger
 
 ## Deployment
 
-TODO
+### AWS Amplify
 
 ```
 $ npm install -g @aws-amplify/cli
@@ -53,3 +43,8 @@ $ amplify init
 $ make deploy
 ```
 
+### Local production server
+
+```
+make start_prod
+```

@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 from . import commands
 from .config import config
 from .utils import configure_logging
-from .graphql import GraphQL
+from .graphqlapi import GraphQL
 from .api import RESTAPI
 from .service import DataService
 
@@ -22,7 +22,8 @@ def create_app(config_name):
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
     app.config.db_engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
-    app.config.bpdwatch_db_engine = create_engine(app.config['BPDWATCH_DATABASE_URI'])
+    if app.config['BPDWATCH_DATABASE_URI']:
+        app.config.bpdwatch_db_engine = create_engine(app.config['BPDWATCH_DATABASE_URI'])
     app.config.case_details_bucket = boto3.resource('s3').Bucket(app.config['CASE_DETAILS_BUCKET'])
     configure_logging(app)
 

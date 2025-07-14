@@ -1,14 +1,13 @@
-import React, { useRef, useMemo, useState } from 'react';
+import React from 'react';
 import { API } from 'aws-amplify';
 import environment from './config';
-import { AgGridReact, AgGridColumn } from 'ag-grid-react';
+import { AgGridReact } from 'ag-grid-react';
 import SortableHeaderComponent from './SortableHeaderComponent.jsx';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 import 'ag-grid-enterprise';
-import { checkStatus, toTitleCase, genSortedColumns } from './utils';
+import { checkStatus } from './utils';
 import ExportToolPanel from './ExportToolPanel';
-import CustomStatusBar from './StatusBar';
 import apiName from './ApiName';
 
 const sideBarConfig = {
@@ -49,7 +48,11 @@ const BailExplorer = props => {
 
   const getRows = params => {
     let promise;
-    if (environment === 'development') {
+    if (environment === 'amplify') {
+      promise = API.post(apiName, path, {
+        body: params.request
+      });
+    } else {
       promise = fetch(path, {
         method: 'post',
         body: JSON.stringify(params.request),
@@ -57,10 +60,6 @@ const BailExplorer = props => {
       })
         .then(checkStatus)
         .then(httpResponse => httpResponse.json());
-    } else {
-      promise = API.post(apiName, path, {
-        body: params.request
-      });
     }
     promise
       .then(response => {

@@ -11,7 +11,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from flask_restx import marshal
 from app import app, rest_api
 from app.service import DataService
-from app.graphql import transform_filter_model
+from server.app.graphqlapi import transform_filter_model
 from app.utils import get_model_name_by_table_name, get_eager_query, get_orm_class_by_name, TableNotFound
 
 

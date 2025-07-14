@@ -65,14 +65,14 @@ copy_backend: $(BACKEND_DEPS)
 	find $(LAMBDA_TARGET) -name *.pyc -delete
 	find $(LAMBDA_TARGET) -name __pycache__ -delete
 
-.PHONY: start_backend
-start_backend:
-	FLASK_ENV=development FLASK_APP=$(BACKEND_DIR)/app flask run
+.PHONY: start_dev
+start_dev:
+	docker compose build && docker compose up
 
-.PHONY: start_frontend
-start_frontend:
-	@echo "export default 'development';" > $(FRONTEND_DIR)/config.js
-	npm run start
+.PHONY: start_prod
+start_prod:
+	docker compose build --build-arg BUILD_PRODUCTION=1 && \
+	FLASK_ENV=production NODE_ENV=production docker compose up -d
 
 .PHONY: deploy_backend
 deploy_backend: copy_backend .push-docker-image
@@ -80,7 +80,7 @@ deploy_backend: copy_backend .push-docker-image
 
 .PHONY: deploy_frontend
 deploy_frontend:
-	@echo "export default 'production';" > $(FRONTEND_DIR)/config.js
+	@echo "export default 'amplify';" > $(FRONTEND_DIR)/config.js
 	npm run build
 	amplify publish -y
 

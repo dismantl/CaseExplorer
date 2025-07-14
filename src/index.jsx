@@ -19,7 +19,6 @@ import { useEffect } from 'react';
 import SwaggerUI from 'swagger-ui-react';
 import 'swagger-ui-react/swagger-ui.css';
 import { CookiesProvider } from 'react-cookie';
-import AnnouncementModal from './AnnouncementModal';
 
 export const version = '0.3';
 
@@ -27,12 +26,12 @@ Amplify.configure(awsmobile);
 
 const fetchMetadata = callback => {
   let promise;
-  if (environment === 'development') {
+  if (environment === 'amplify') {
+    promise = API.get(apiName, '/api/v1/metadata');
+  } else {
     promise = fetch('/api/v1/metadata')
       .then(checkStatus)
       .then(httpResponse => httpResponse.json());
-  } else {
-    promise = API.get(apiName, '/api/v1/metadata');
   }
   promise.then(metadata => {
     callback(metadata);
@@ -116,12 +115,12 @@ const App = props => {
         const seq_number = getURLLastPart();
         const path = `/api/v1/bpd/label/${seq_number}`;
         let promise;
-        if (environment === 'development') {
+        if (environment === 'amplify') {
+          promise = API.get(apiName, path);
+        } else {
           promise = fetch(path)
             .then(checkStatus)
             .then(httpResponse => httpResponse.json());
-        } else {
-          promise = API.get(apiName, path);
         }
         promise
           .then(response => {
