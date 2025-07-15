@@ -24,7 +24,19 @@ def create_app(config_name):
     app.config.db_engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
     if app.config['BPDWATCH_DATABASE_URI']:
         app.config.bpdwatch_db_engine = create_engine(app.config['BPDWATCH_DATABASE_URI'])
-    app.config.case_details_bucket = boto3.resource('s3').Bucket(app.config['CASE_DETAILS_BUCKET'])
+    minio_url = os.environ.get('MINIO_URL')
+    if minio_url:
+        s3 = boto3.resource('s3', 
+            endpoint_url=minio_url,
+            aws_access_key_id=os.environ.get('MINIO_ACCESS_KEY'),
+            aws_secret_access_key=os.environ.get('MINIO_SECRET_KEY'),
+            aws_session_token=None,
+            config=boto3.session.Config(signature_version='s3v4'),
+            verify=False
+        )
+    else:
+        s3 = boto3.resource('s3')
+    app.config.case_details_bucket = s3.Bucket(app.config['CASE_DETAILS_BUCKET'])
     configure_logging(app)
 
     # Module initialization
