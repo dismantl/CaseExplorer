@@ -13,6 +13,6 @@ EXPOSE 5000
 
 VOLUME /usr/src/app
 
-COPY docker/backend_start.sh /backend_start.sh
+COPY docker/api_start.sh /api_start.sh
 
-ENTRYPOINT ["/backend_start.sh"]
+ENTRYPOINT ["/api_start.sh"]

@@ -1,8 +1,8 @@
 services:
-  backend:
+  api:
     build:
       context: .
-      dockerfile: docker/backend.Dockerfile
+      dockerfile: docker/api.Dockerfile
     restart: unless-stopped
     environment:
       FLASK_ENV: ${FLASK_ENV:-development}
