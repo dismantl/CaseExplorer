@@ -1,7 +1,12 @@
-:3000
+:3000 {
+	handle /api/* {
+		reverse_proxy api:5000
+	}
 
-reverse_proxy /api/* api:5000
-
-root * /usr/src/app/build
-encode
-file_server
+	handle {
+		root * /usr/src/app/build
+		encode
+		try_files {path} /index.html
+		file_server
+	}
+}
