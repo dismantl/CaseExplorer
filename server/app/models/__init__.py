@@ -1,6 +1,5 @@
 from .common import ColumnMetadata
 from .case import Case
-from .scraper import Scrape, ScrapeVersion
 from .DSCR import (DSCR, DSCRCharge, DSCRDefendant, DSCRDefendantAlias,
                    DSCRRelatedPerson, DSCREvent, DSCRTrial, DSCRBailEvent)
 from .DSCP import (DSCP, DSCPCharge, DSCPDefendant, DSCPDefendantAlias,
