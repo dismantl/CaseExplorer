@@ -23,5 +23,6 @@ EXPOSE 3000
 
 VOLUME /usr/src/app/src
 VOLUME /usr/src/app/public
+VOLUME /usr/src/app/exports
 
 CMD ["/frontend_start.sh"]

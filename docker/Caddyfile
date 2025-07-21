@@ -3,6 +3,12 @@
 		reverse_proxy api:5000
 	}
 
+	handle_path /exports* {
+		root * /usr/src/app/exports
+		encode
+		file_server browse
+	}
+
 	handle {
 		root * /usr/src/app/build
 		encode

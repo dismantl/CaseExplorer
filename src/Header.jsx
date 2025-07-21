@@ -42,7 +42,7 @@ const Header = props => {
               ariaLabel: 'CloudDownload',
               iconProps: { iconName: 'CloudDownload' },
               onClick: () =>
-                window.open('https://exports.mdcaseexplorer.com', '_blank')
+                window.open('https://mdcaseexplorer.com/exports', '_blank')
             },
             {
               key: 'donate',
