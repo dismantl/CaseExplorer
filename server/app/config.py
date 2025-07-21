@@ -11,6 +11,8 @@ class BaseConfig(object):
 
     BPDWATCH_DATABASE_URI = os.getenv('BPDWATCH_DATABASE_URI')
     CASE_DETAILS_BUCKET = os.getenv('CASE_DETAILS_BUCKET')
+    CASE_DETAILS_DIRECTORY = os.getenv('CASE_DETAILS_DIRECTORY')
+    MINIO_URL = os.getenv('MINIO_URL')
 
     @staticmethod
     def init_app(app):

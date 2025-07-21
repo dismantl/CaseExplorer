@@ -34,8 +34,12 @@ class RESTAPI:
 
         @bp.route(f'/{root}/html/<string:case_number>')
         def fetch_html(case_number):
-            obj = current_app.config.case_details_bucket.Object(case_number).get()
-            return json.dumps({'html': obj['Body'].read().decode('utf-8')})
+            if current_app.config.case_details_bucket:
+                obj = current_app.config.case_details_bucket.Object(case_number).get()
+                return json.dumps({'html': obj['Body'].read().decode('utf-8')})
+            else:
+                with open(f"{current_app.config['CASE_DETAILS_DIRECTORY']}/{case_number}", 'r') as f:
+                    return json.dumps({'html': f.read()})
 
         api = Api(bp, title='Case Explorer REST API', version='1.0')
         self.api = api
